@@ -29,7 +29,14 @@
           "name": "ConnectionFeedback",
           "caption": "Connection has not been tested yet.",
           "bold": true
-        },
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Visualization settings",
+      "expanded": true,
+      "items": [
         {
           "type": "Select",
           "name": "VehicleDesign",
@@ -45,6 +52,16 @@
         {
           "type": "Label",
           "caption": "Automatic selection uses model information returned by MySkoda. If the model cannot be determined reliably, choose it manually."
+        },
+        {
+          "type": "CheckBox",
+          "name": "HideVisualizationTitle",
+          "caption": "Hide Symcon tile title"
+        },
+        {
+          "type": "Label",
+          "name": "TileTitleSupportFeedback",
+          "caption": "The Symcon tile title can be hidden while the instance name remains unchanged in the object tree."
         }
       ]
     },
@@ -93,15 +110,15 @@
           "caption": "Send a Symcon notification when the API key has 30 days or less remaining"
         },
         {
-          "type": "NumberSpinner",
+          "type": "SelectInstance",
           "name": "NotificationInstanceID",
-          "caption": "Visualization instance ID for notifications",
-          "minimum": 0,
-          "maximum": 999999
+          "caption": "Visualization for notifications",
+          "validModules": []
         },
         {
           "type": "Label",
-          "caption": "Enter the instance ID of a Tile Visualization or WebFront. The module supports VISU_PostNotification and WFC_PushNotification automatically."
+          "name": "NotificationTargetFeedback",
+          "caption": "Select a Tile Visualization or WebFront for notifications."
         }
       ]
     },
@@ -152,7 +169,7 @@
         {
           "type": "Button",
           "caption": "Test notification",
-          "onClick": "echo MSKODA_TestNotification($id) ? 'Notification sent.' : 'Notification could not be sent. Check the visualization instance ID.';"
+          "onClick": "echo MSKODA_TestNotification($id) ? 'Notification sent.' : 'Notification could not be sent. Check the selected visualization and registered mobile devices.';"
         },
         {
           "type": "Button",
