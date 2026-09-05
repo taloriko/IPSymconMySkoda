@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here.
 
+## 1.2 - 2026-09-05
+
+- Improved first-time setup with direct connection feedback after applying VIN and API token.
+- Added a connection test button to the configuration form.
+- Added clear MySkoda app instructions for creating an API key: Profile -> Smart Home -> Create Key.
+- Added a clickable link to the GitHub module and documentation in the configuration form.
+- Added `ApiKeyWarning`, which becomes true 30 days before the API key expires.
+- Added optional Symcon push notification for expiring API keys via Tile Visualization or WebFront instance ID.
+- Added a test-notification button.
+- Redesigned `VehicleTile` for smartphones with a much denser, flatter layout and fewer visual frames.
+- Expanded charging plug visualization for charging, interrupted charging, connect-cable, ready, target-reached and discharging states.
+- Vehicle tile now shows API-key expiry warning when active.
+
 ## 1.1 - 2026-09-05
 
 - Added `LastUpdateAge` as a compact `hh:mm` age indicator since the last successful query.
