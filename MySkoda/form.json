@@ -32,6 +32,22 @@
       "bold": true
     },
     {
+      "type": "Select",
+      "name": "VehicleDesign",
+      "caption": "Vehicle design",
+      "options": [
+        {"caption": "Automatic", "value": "auto"},
+        {"caption": "Enyaq", "value": "enyaq"},
+        {"caption": "Elroq", "value": "elroq"},
+        {"caption": "Epiq", "value": "epiq"},
+        {"caption": "Generic", "value": "generic"}
+      ]
+    },
+    {
+      "type": "Label",
+      "caption": "Automatic selection uses model information returned by MySkoda. If the model cannot be determined reliably, choose it manually."
+    },
+    {
       "type": "NumberSpinner",
       "name": "Interval",
       "caption": "Polling interval",
@@ -108,30 +124,10 @@
     }
   ],
   "status": [
-    {
-      "code": 102,
-      "icon": "active",
-      "caption": "Connected to MySkoda"
-    },
-    {
-      "code": 104,
-      "icon": "inactive",
-      "caption": "Inactive"
-    },
-    {
-      "code": 201,
-      "icon": "error",
-      "caption": "VIN or API token is missing or invalid"
-    },
-    {
-      "code": 202,
-      "icon": "error",
-      "caption": "Connection to MySkoda failed / API error"
-    },
-    {
-      "code": 203,
-      "icon": "warning",
-      "caption": "Rate limit / waiting period active"
-    }
+    {"code": 102, "icon": "active", "caption": "Connected to MySkoda"},
+    {"code": 104, "icon": "inactive", "caption": "Inactive"},
+    {"code": 201, "icon": "error", "caption": "VIN or API token is missing or invalid"},
+    {"code": 202, "icon": "error", "caption": "Connection to MySkoda failed / API error"},
+    {"code": 203, "icon": "warning", "caption": "Rate limit / waiting period active"}
   ]
 }
