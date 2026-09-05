@@ -24,10 +24,10 @@ MySkoda
 Bindet Fahrzeuge über die offizielle MySkoda Public API an IP-Symcon an. Das Modul stellt einen kompakten Fahrzeugstatus bereit und unterstützt – sofern vom Fahrzeug angeboten – Laden, Ladelimit, Lademodus, Klimatisierung, Standheizung und aktive Lüftung.
 ```
 
-**Versionsinformation 1.3**
+**Versionsinformation 1.4**
 
 ```text
-Klarere Ja/Nein-Statusanzeigen mit MySkoda-eigenen Profilen, grün/orange Farblogik für Fahrzeugzustände sowie dokumentiertes Standortverhalten mit 0/0 bei fehlender Profilfreigabe.
+Native Symcon-8.x-Darstellungen ohne eigene Legacy-Profile. Fahrzeugzustände werden semantisch mit Grün für den erwarteten Zustand und Orange für Hinweise dargestellt; Rot bleibt echten Fehlern vorbehalten.
 ```
 
 **Link zur Dokumentation**
@@ -50,10 +50,10 @@ MySkoda
 Connects vehicles to IP-Symcon through the official MySkoda Public API. The module exposes a compact vehicle status and, where supported by the vehicle, controls charging, charge limit, charging mode, air conditioning, auxiliary heating and active ventilation.
 ```
 
-**Version information 1.3**
+**Version information 1.4**
 
 ```text
-Clear Yes/No vehicle-state profiles with green/orange semantics and documented location behavior, including 0/0 coordinates when location sharing is unavailable for the profile.
+Native Symcon 8.x presentations without module-owned legacy profiles. Vehicle states use green for the expected state and orange for informational attention; red is reserved for actual faults.
 ```
 
 **Documentation link**
@@ -69,7 +69,8 @@ https://github.com/taloriko/IPSymconMySkoda/blob/main/MySkoda/README.md
 - Der periodische Abruf nutzt `RegisterTimer`; es werden keine externen Ereignisse erzeugt.
 - Konfigurierbare Eigenschaften werden über `form.json` bereitgestellt.
 - Das Modul verwendet ab Symcon 8.1 `IPSModuleStrict`.
-- Eigene Variablenprofile werden nur für Boolean-Zustände angelegt und eindeutig mit `MySkoda.*` benannt; andere Werte nutzen weiterhin Symcon-Standarddarstellungen bzw. neue Präsentationen.
+- Das Modul legt keine eigenen Legacy-Variablenprofile an. Boolean-Zustände verwenden native Symcon-8.x-Aufzählungsdarstellungen mit Ja/Nein und zustandsabhängigen Farben; die Fahrzeugkachel nutzt die native Darstellung Webinhalt.
+- Grün bedeutet erwarteter Zustand, Orange bedeutet Hinweis/Aufmerksamkeit. Rot wird nur bei echten Fehlern oder Störungen verwendet.
 - Deutsch wird über `locale.json` lokalisiert; englische Texte dienen als Quellsprache.
 - Die Modul-Dokumentation erklärt Installation, Konfiguration, Statusvariablen, Bedienung, PHP-Befehle, Rate-Limit und Einschränkungen.
 

@@ -14,15 +14,13 @@ Der komplette Fahrzeug-Response wird intern als Instanzattribut gespeichert. Der
 
 ## Darstellungen
 
-Das Modul setzt Symcon 8.1+ voraus und nutzt `IPSModuleStrict` sowie die neuen Variablendarstellungen. Vorhandene Symcon-Standardvorlagen werden bevorzugt. Für Boolean-Zustände werden gezielt wenige eigene Profile angelegt, weil die Standardanzeige `An/Aus` für Fahrzeugzustände zu unklar ist. Alle modul-eigenen Profile liegen deshalb eindeutig im Namensraum `MySkoda.*`.
+Das Modul setzt Symcon 8.1+ voraus und nutzt `IPSModuleStrict` sowie die neuen Variablendarstellungen. Vorhandene Symcon-Standardvorlagen werden bevorzugt. Boolean-Zustände verwenden direkt die neue Darstellung `Aufzählung` mit `Ja/Nein` und zustandsabhängigen Farben; eigene Legacy-Variablenprofile werden nicht angelegt. Die Fahrzeugkachel verwendet die native Darstellung `Webinhalt` statt `~HTMLBox`.
 
-Die drei Boolean-Profile bilden unterschiedliche Bedeutungen ab:
+Die Farblogik ist semantisch: Grün bedeutet erwarteter Zustand, Orange bedeutet Hinweis/Aufmerksamkeit. Rot ist nur echten Fehlern oder Störungen vorbehalten.
 
-- `MySkoda.YesNo.GoodTrue`: Ja = grün, Nein = orange
-- `MySkoda.YesNo.GoodFalse`: Nein = grün, Ja = orange
-- `MySkoda.YesNo.ActiveTrue`: Ja = grün, Nein = neutral
+## Migration von 1.3
 
-Rot bleibt bewusst echten Störungen/Fehlerzuständen vorbehalten.
+Version 1.3 hatte kurzzeitig eigene `MySkoda.YesNo.*`-Legacy-Profile verwendet. Version 1.4 entfernt diese Zuweisungen beim Anwenden der Instanz wieder und löscht die Profile, sofern sie nirgendwo sonst verwendet werden. Auch die frühere `~HTMLBox`-Zuweisung der Fahrzeugkachel wird entfernt.
 
 ## Rate-Limit
 
@@ -41,7 +39,7 @@ Englisch ist die Quellsprache der Modultexte. `MySkoda/locale.json` enthält die
 Ab Version 1.1 bleibt `MySkoda/module.php` bewusst klein und lädt thematisch getrennte Traits aus `MySkoda/src/`:
 
 - `CoreTrait.php` – Lebenszyklus, Aktionen und öffentliche Modulmethoden
-- `VariablesTrait.php` – Variablen, Darstellungen, Boolean-Profile und Datenübernahme
+- `VariablesTrait.php` – Variablen, Darstellungen und Datenübernahme
 - `ApiTrait.php` – HTTP, Rate-Limit und Fehlerbehandlung
 - `OpenApiTrait.php` – dynamische OpenAPI-Auswertung
 - `VisualizationTrait.php` – kompakte Elektroauto-Kachel und Anzeigeaufbereitung
