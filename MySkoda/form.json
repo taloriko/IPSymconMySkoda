@@ -1,126 +1,165 @@
 {
   "elements": [
     {
-      "type": "Label",
-      "caption": "MySkoda vehicle data is read directly from the official MySkoda Public API.",
-      "bold": true
-    },
-    {
-      "type": "Label",
-      "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key -> enter any name -> copy VIN and API token into this module."
-    },
-    {
-      "type": "Label",
-      "caption": "Module and documentation: https://github.com/taloriko/IPSymconMySkoda",
-      "link": true
-    },
-    {
-      "type": "ValidationTextBox",
-      "name": "VIN",
-      "caption": "VIN",
-      "validate": "^[A-HJ-NPR-Z0-9]{17}$"
-    },
-    {
-      "type": "PasswordTextBox",
-      "name": "APIToken",
-      "caption": "API token"
-    },
-    {
-      "type": "Label",
-      "name": "ConnectionFeedback",
-      "caption": "Connection has not been tested yet.",
-      "bold": true
-    },
-    {
-      "type": "Select",
-      "name": "VehicleDesign",
-      "caption": "Vehicle design",
-      "options": [
-        {"caption": "Automatic", "value": "auto"},
-        {"caption": "Enyaq", "value": "enyaq"},
-        {"caption": "Elroq", "value": "elroq"},
-        {"caption": "Epiq", "value": "epiq"},
-        {"caption": "Generic", "value": "generic"}
+      "type": "ExpansionPanel",
+      "caption": "Connection and vehicle",
+      "expanded": true,
+      "items": [
+        {
+          "type": "Label",
+          "caption": "MySkoda vehicle data is read directly from the official MySkoda Public API."
+        },
+        {
+          "type": "Label",
+          "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key -> enter any name -> copy VIN and API token into this module."
+        },
+        {
+          "type": "ValidationTextBox",
+          "name": "VIN",
+          "caption": "VIN",
+          "validate": "^[A-HJ-NPR-Z0-9]{17}$"
+        },
+        {
+          "type": "PasswordTextBox",
+          "name": "APIToken",
+          "caption": "API token"
+        },
+        {
+          "type": "Label",
+          "name": "ConnectionFeedback",
+          "caption": "Connection has not been tested yet.",
+          "bold": true
+        },
+        {
+          "type": "Select",
+          "name": "VehicleDesign",
+          "caption": "Vehicle design",
+          "options": [
+            {"caption": "Automatic", "value": "auto"},
+            {"caption": "Enyaq", "value": "enyaq"},
+            {"caption": "Elroq", "value": "elroq"},
+            {"caption": "Epiq", "value": "epiq"},
+            {"caption": "Generic", "value": "generic"}
+          ]
+        },
+        {
+          "type": "Label",
+          "caption": "Automatic selection uses model information returned by MySkoda. If the model cannot be determined reliably, choose it manually."
+        }
       ]
     },
     {
-      "type": "Label",
-      "caption": "Automatic selection uses model information returned by MySkoda. If the model cannot be determined reliably, choose it manually."
+      "type": "ExpansionPanel",
+      "caption": "Polling and control",
+      "expanded": true,
+      "items": [
+        {
+          "type": "NumberSpinner",
+          "name": "Interval",
+          "caption": "Polling interval",
+          "suffix": " seconds",
+          "minimum": 180,
+          "maximum": 3600
+        },
+        {
+          "type": "Label",
+          "caption": "Recommended: 300 seconds. The module observes the rate-limit headers returned by the API."
+        },
+        {
+          "type": "CheckBox",
+          "name": "EnableRemote",
+          "caption": "Enable remote control"
+        },
+        {
+          "type": "CheckBox",
+          "name": "ClimateWithoutExternalPower",
+          "caption": "Allow air conditioning without external power"
+        },
+        {
+          "type": "PasswordTextBox",
+          "name": "SPIN",
+          "caption": "S-PIN (optional, auxiliary heating only)"
+        }
+      ]
     },
     {
-      "type": "NumberSpinner",
-      "name": "Interval",
-      "caption": "Polling interval",
-      "suffix": " seconds",
-      "minimum": 180,
-      "maximum": 3600
+      "type": "ExpansionPanel",
+      "caption": "Notifications",
+      "expanded": false,
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "NotifyKeyExpiry",
+          "caption": "Send a Symcon notification when the API key has 30 days or less remaining"
+        },
+        {
+          "type": "NumberSpinner",
+          "name": "NotificationInstanceID",
+          "caption": "Visualization instance ID for notifications",
+          "minimum": 0,
+          "maximum": 999999
+        },
+        {
+          "type": "Label",
+          "caption": "Enter the instance ID of a Tile Visualization or WebFront. The module supports VISU_PostNotification and WFC_PushNotification automatically."
+        }
+      ]
     },
     {
-      "type": "Label",
-      "caption": "Recommended: 300 seconds. The module observes the rate-limit headers returned by the API."
+      "type": "ExpansionPanel",
+      "caption": "Advanced",
+      "expanded": false,
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "ShowDetails",
+          "caption": "Show detail and diagnostic variables"
+        }
+      ]
     },
     {
-      "type": "CheckBox",
-      "name": "EnableRemote",
-      "caption": "Enable remote control"
-    },
-    {
-      "type": "CheckBox",
-      "name": "ClimateWithoutExternalPower",
-      "caption": "Allow air conditioning without external power"
-    },
-    {
-      "type": "PasswordTextBox",
-      "name": "SPIN",
-      "caption": "S-PIN (optional, auxiliary heating only)"
-    },
-    {
-      "type": "CheckBox",
-      "name": "ShowDetails",
-      "caption": "Show detail and diagnostic variables"
-    },
-    {
-      "type": "Label",
-      "caption": "API key expiry warning",
-      "bold": true
-    },
-    {
-      "type": "CheckBox",
-      "name": "NotifyKeyExpiry",
-      "caption": "Send a Symcon notification when the API key has 30 days or less remaining"
-    },
-    {
-      "type": "NumberSpinner",
-      "name": "NotificationInstanceID",
-      "caption": "Visualization instance ID for notifications",
-      "minimum": 0,
-      "maximum": 999999
-    },
-    {
-      "type": "Label",
-      "caption": "Enter the instance ID of a Tile Visualization or WebFront. The module supports VISU_PostNotification and WFC_PushNotification automatically."
+      "type": "ExpansionPanel",
+      "caption": "Help and documentation",
+      "expanded": false,
+      "items": [
+        {
+          "type": "Label",
+          "caption": "Module and documentation: https://github.com/taloriko/IPSymconMySkoda",
+          "link": true
+        }
+      ]
     }
   ],
   "actions": [
     {
-      "type": "Button",
-      "caption": "Test connection",
-      "onClick": "echo MSKODA_TestConnection($id) ? 'Connection successful - vehicle data received.' : 'Connection failed - check instance status and API data.';"
+      "type": "RowLayout",
+      "items": [
+        {
+          "type": "Button",
+          "caption": "Test connection",
+          "onClick": "echo MSKODA_TestConnection($id) ? 'Connection successful - vehicle data received.' : 'Connection failed - check instance status and API data.';"
+        },
+        {
+          "type": "Button",
+          "caption": "Update now",
+          "onClick": "MSKODA_Update($id); echo 'Update executed';"
+        }
+      ]
     },
     {
-      "type": "Button",
-      "caption": "Update now",
-      "onClick": "MSKODA_Update($id); echo 'Update executed';"
-    },
-    {
-      "type": "Button",
-      "caption": "Test notification",
-      "onClick": "echo MSKODA_TestNotification($id) ? 'Notification sent.' : 'Notification could not be sent. Check the visualization instance ID.';"
-    },
-    {
-      "type": "Button",
-      "caption": "Reload API definition",
-      "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API definition updated' : 'API definition could not be loaded';"
+      "type": "RowLayout",
+      "items": [
+        {
+          "type": "Button",
+          "caption": "Test notification",
+          "onClick": "echo MSKODA_TestNotification($id) ? 'Notification sent.' : 'Notification could not be sent. Check the visualization instance ID.';"
+        },
+        {
+          "type": "Button",
+          "caption": "Reload API definition",
+          "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API definition updated' : 'API definition could not be loaded';"
+        }
+      ]
     }
   ],
   "status": [

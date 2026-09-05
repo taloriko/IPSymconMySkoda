@@ -133,7 +133,12 @@
       "Open": "Offen",
       "On": "An",
       "Not available": "Nicht verfügbar",
-      "Vehicle is not connected": "Fahrzeug ist nicht verbunden"
+      "Vehicle is not connected": "Fahrzeug ist nicht verbunden",
+      "Connection and vehicle": "Verbindung & Fahrzeug",
+      "Polling and control": "Abruf & Steuerung",
+      "Notifications": "Mitteilungen",
+      "Advanced": "Erweitert",
+      "Help and documentation": "Hilfe & Dokumentation"
     }
   }
 }

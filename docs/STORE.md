@@ -24,10 +24,10 @@ MySkoda
 Bindet Fahrzeuge über die offizielle MySkoda Public API an IP-Symcon an. Das Modul stellt einen kompakten Fahrzeugstatus und eine native Smartphone-Kachel bereit und unterstützt – sofern vom Fahrzeug angeboten – Laden, Ladelimit, Lademodus, Klimatisierung, Standheizung und aktive Lüftung.
 ```
 
-**Versionsinformation 1.7**
+**Versionsinformation 1.8**
 
 ```text
-Komplett überarbeitete native Fahrzeugkachel mit wählbarer Fahrzeugdarstellung für Enyaq, Elroq und Epiq, automatischer Modellzuordnung aus MySkoda-Fahrzeugdaten, Schiebedachstatus und kompakter Statusansicht. Weiterhin ausschließlich moderne Symcon-8.x-Darstellungen ohne Legacy-Profile.
+Übersichtlichere Instanzkonfiguration und weiter verdichtete Smartphone-Kachel. Türen, Fenster, Schiebedach, Licht, Kofferraum und Motorhaube werden direkt am Fahrzeug dargestellt; als Textstatus bleibt nur die Verriegelung. Verbesserte Wiederherstellung der Kachelwerte nach Scrollen, Größenänderungen und erneutem Anzeigen.
 ```
 
 **Link zur Dokumentation**
@@ -50,10 +50,10 @@ MySkoda
 Connects vehicles to IP-Symcon through the official MySkoda Public API. The module exposes a compact vehicle status and a native smartphone tile and, where supported by the vehicle, controls charging, charge limit, charging mode, air conditioning, auxiliary heating and active ventilation.
 ```
 
-**Version information 1.7**
+**Version information 1.8**
 
 ```text
-Completely redesigned native vehicle tile with selectable Enyaq, Elroq and Epiq appearances, automatic model selection from MySkoda vehicle metadata, sunroof status and a compact vehicle-state list. Continues to use only modern Symcon 8.x presentations without legacy profiles.
+Cleaner grouped instance configuration and a denser smartphone tile. Doors, windows, sunroof, lights, trunk and bonnet are visualized directly on the vehicle, leaving only the lock state as text. Improved tile-state restoration after scrolling, resizing and returning to the visualization.
 ```
 
 **Documentation link**
@@ -67,12 +67,13 @@ https://github.com/taloriko/IPSymconMySkoda/blob/main/MySkoda/README.md
 - Der sichtbare Modulname bleibt `MySkoda`; `IPSymcon`, `IPS` oder ähnliche Zusätze werden nicht als Store-Name verwendet.
 - Die Instanz erstellt ausschließlich eigene Statusvariablen unterhalb der Instanz.
 - Der periodische Abruf nutzt `RegisterTimer`; es werden keine externen Ereignisse erzeugt.
-- Konfigurierbare Eigenschaften werden über `form.json` bereitgestellt.
+- Konfigurierbare Eigenschaften werden über `form.json` bereitgestellt und ab 1.8 in klaren klappbaren Bereichen gruppiert.
 - Das Modul verwendet ab Symcon 8.1 `IPSModuleStrict`.
 - Das Modul legt keine eigenen Legacy-Variablenprofile an. Passive Boolean-Zustände verwenden native Symcon-Wertanzeigen; bedienbare Boolean-Werte verwenden bei aktiver Remote-Steuerung native Schalter.
 - Seit Version 1.6 stellt die Instanz selbst eine native HTML-Kachel über `SetVisualizationType(1)` / `GetVisualizationTile()` bereit. Die Darstellung liegt in `MySkoda/module.html` und wird über `UpdateVisualizationValue()` aktualisiert.
-- Version 1.7 ergänzt modellabhängige, eigenständig gezeichnete Top-View-SVGs für Enyaq, Elroq und Epiq sowie eine allgemeine Darstellung.
+- Modellabhängige, eigenständig gezeichnete Top-View-SVGs stehen für Enyaq, Elroq und Epiq sowie als allgemeine Darstellung zur Verfügung.
 - Die Fahrzeugdarstellung kann automatisch aus MySkoda-Metadaten gewählt oder manuell überschrieben werden. Die FIN allein wird nicht als sichere Enyaq-/Elroq-Unterscheidung behandelt.
+- Ab Version 1.8 scrollt die eingebettete Kachel nicht selbst. Ihr letzter Zustand wird clientseitig zwischengespeichert und bei Wiederanzeige/Resize erneut gerendert.
 - Die frühere `VehicleTile`-Webinhaltvariable bleibt beim Upgrade nur als versteckte Abwärtskompatibilität bestehen.
 - Grün bedeutet erwarteter Zustand, Orange bedeutet Hinweis/Aufmerksamkeit. Rot wird nur bei echten Fehlern oder Störungen verwendet.
 - Deutsch wird über `locale.json` lokalisiert; englische Texte dienen als Quellsprache.

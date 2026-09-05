@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here.
 
+## 1.8 - 2026-09-05
+
+- Reworked the instance configuration into clear collapsible sections for connection/vehicle, polling/control, notifications, advanced settings and help/documentation.
+- Moved the GitHub/documentation link into a collapsed help section so it is still available without dominating the setup page.
+- Fixed the native tile layout so the embedded HTML itself no longer scrolls; scrolling is left to Symcon.
+- Added client-side state caching and automatic re-render on page show, focus, visibility changes, resize and periodic refresh to prevent values disappearing after scrolling or returning to the tile.
+- Removed the individual text rows for doors, windows, sunroof, lights, trunk and bonnet from the bottom of the tile. These states are now indicated directly on the vehicle graphic; only the lock state remains as a text status.
+- Improved visual highlighting on the vehicle for open doors/windows/sunroof, bonnet/trunk and active lights.
+- Combined climate mode and target temperature into one non-wrapping smartphone line.
+- Made mileage use a compact mobile label to avoid poor line wrapping on narrow screens.
+- Kept the consolidated charging panel and model-specific Enyaq/Elroq/Epiq/generic top views from 1.7.
+
 ## 1.7 - 2026-09-05
 
 - Complete redesign of the native vehicle tile following the compact visual hierarchy of `da8ter/TileVisu-Kachelsammlung` more closely while keeping the MySkoda implementation and SVG artwork original.
