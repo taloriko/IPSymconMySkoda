@@ -10,7 +10,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: PHP syntax
-        run: php -l MySkoda/module.php
+        run: |
+          find MySkoda -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Validate JSON
         run: |
           python3 -m json.tool library.json > /dev/null

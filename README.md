@@ -9,13 +9,14 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 - Offizielle MySkoda Public API mit `X-API-Key`
 - Konfigurationsmaske für FIN, API-Token, Abrufintervall und optionale S-PIN
 - Bewusst kleiner Standard-Objektbaum
+- Fahrzeugkachel für die Symcon-Visualisierung mit generischer Elektroauto-Darstellung
 - Optionale Detail- und Diagnosevariablen
 - Laden und Klimatisierung über Symcon-Variablen steuerbar
 - Ladelimit und Lademodus steuerbar
 - Standheizung und aktive Lüftung über Modulbefehle
 - Berücksichtigung von Rate-Limit und `Retry-After`
 - Neue Variablendarstellungen ab Symcon 8.x und Symcon-Standardvorlagen
-- **Keine Legacy-Variablenprofile**
+- **Keine Legacy-Variablenprofile** im normalen Statusbaum
 - Deutsch über `locale.json`, Englisch als Quellsprache des Moduls
 
 ## Voraussetzungen
@@ -24,6 +25,10 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 - MySkoda API-Key
 - 17-stellige FIN/VIN
 - Optional: S-PIN für die Standheizung
+
+## Version
+
+Aktueller Stand dieser Bibliothek: **1.1**
 
 ## Installation
 

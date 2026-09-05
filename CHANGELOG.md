@@ -2,6 +2,16 @@
 
 All notable changes to this project are documented here.
 
+## 1.1 - 2026-09-05
+
+- Added `LastUpdateAge` as a compact `hh:mm` age indicator since the last successful query.
+- Added `VehicleTile` as a generic electric-vehicle visualization tile for Symcon Visualisation.
+- Tile headline now uses vehicle name, alternatively license plate, and finally VIN as fallback.
+- Tile shows lock state, doors, windows, lights, charging connector state, charging power, time to full, SOC, charging limit, mileage and remaining range.
+- Tile contains dedicated charging and climate sections with a simple, dark-mode friendly design.
+- Added a separate minute-based refresh timer so age/tile data stay current between API polls.
+- Documentation updated for version 1.1.
+
 ## 0.1 - 2026-09-05
 
 - Initial MySkoda IP-Symcon module.

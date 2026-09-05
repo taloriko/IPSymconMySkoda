@@ -30,8 +30,16 @@ def main() -> None:
 
     php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
     assert "class MySkoda extends IPSModuleStrict" in php
-    assert "VARIABLE_PRESENTATION_LEGACY" not in php
-    assert "IPS_CreateVariableProfile" not in php
+
+    php_sources = "\n".join(
+        source.read_text(encoding="utf-8")
+        for source in (ROOT / "MySkoda").rglob("*.php")
+    )
+    assert "VARIABLE_PRESENTATION_LEGACY" not in php_sources
+    assert "IPS_CreateVariableProfile" not in php_sources
+    assert "MSKODA_RefreshVisuals" in php_sources
+    assert "VehicleTile" in php_sources
+    assert "LastUpdateAge" in php_sources
 
 
 if __name__ == "__main__":

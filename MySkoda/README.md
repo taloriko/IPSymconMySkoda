@@ -20,6 +20,8 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 
 - Liest den vollständigen Fahrzeugstatus über die offizielle MySkoda Public API.
 - Stellt standardmäßig nur eine kleine, alltagstaugliche Auswahl an Statusvariablen bereit.
+- Enthält eine generische Elektroauto-Kachel für die Symcon-Visualisierung.
+- Aktualisiert die Visualisierungskachel und das Alter der letzten Abfrage minütlich, auch zwischen zwei API-Abfragen.
 - Kann optional zusätzliche Detail- und Diagnosevariablen anlegen.
 - Steuert Laden und Klimatisierung direkt über Variablenaktionen.
 - Unterstützt Ladelimit und Lademodus, sofern Fahrzeug und API die Funktion anbieten.
@@ -79,6 +81,8 @@ Der Standard-Objektbaum ist absichtlich kompakt.
 | `ChargeMode` | Lademodus | Integer | Ja | Aufzählung aus den Fahrzeugmodi |
 | `Climate` | Klimatisierung | Boolean | Ja | Schalter |
 | `TargetTemperature` | Klima Solltemperatur | Float | Ja | Temperatur-Schieberegler |
+| `VehicleTile` | Fahrzeugübersicht | String | Nein | Visualisierungskachel (`~HTMLBox`) |
+| `LastUpdateAge` | Alter letzte Abfrage | String | Nein | Format `hh:mm` |
 | `LastUpdate` | Letzte Aktualisierung | Integer | Nein | Symcon-Standardvorlage Datum/Uhrzeit |
 
 Bei aktivierter Option **Detail- und Diagnosevariablen anzeigen** werden zusätzlich unter anderem Fahrzeugname, Kennzeichen, Ladestatus/-art, erwartete Voll-Ladezeit, Kofferraum, Motorhaube, Licht, Parkstatus, Koordinaten, API-Key-Ablaufdatum, verbleibende API-Abfragen und Teilfehler bereitgestellt.
@@ -87,11 +91,23 @@ Bei aktivierter Option **Detail- und Diagnosevariablen anzeigen** werden zusätz
 
 Das Modul erzeugt **keine Legacy-Variablenprofile**. Es verwendet die Darstellungen ab Symcon 8.x sowie vorhandene Symcon-Standardvorlagen. Eigene Darstellungsparameter werden nur verwendet, wenn keine passende Standardvorlage existiert.
 
-Derzeit ist deshalb kein persistentes eigenes Profil notwendig. Sollte zukünftig tatsächlich ein eigenes Profil benötigt werden, wird es auf das Minimum reduziert und im Namensraum `MySkoda.*` angelegt.
+Derzeit ist deshalb kein persistentes eigenes Profil notwendig. Eine Ausnahme ist lediglich die Visualisierungskachel `VehicleTile`, die das vorhandene Symcon-Standardprofil `~HTMLBox` verwendet, damit die HTML-Kachel direkt in der Visualisierung dargestellt werden kann. Sollte zukünftig tatsächlich ein eigenes Profil benötigt werden, wird es auf das Minimum reduziert und im Namensraum `MySkoda.*` angelegt.
 
 ## 6. Visualisierung
 
 Es wird keine eigene HTML-/WebFront-Oberfläche benötigt. Die Statusvariablen können direkt in der aktuellen Symcon-Visualisierung verwendet werden. Bedienbare Variablen erhalten nur dann eine Aktion, wenn **Remote-Steuerung aktivieren** gesetzt ist.
+
+Zusätzlich legt das Modul die Variable **`VehicleTile`** an. Diese zeigt eine einfache, bewusst fahrzeugneutrale Elektroauto-Kachel mit:
+
+- Überschrift aus Fahrzeugname, alternativ Kennzeichen
+- Autoansicht von oben
+- Verriegelung, Türen, Fenster und Licht
+- Ladezustand, Ladelimit, Ladeleistung und Zeit bis voll
+- Reichweite und Kilometerstand
+- separaten Bereichen für **Ladesteuerung** und **Klima**
+- unaufdringlichem Design für helle und dunkle Symcon-Themes
+
+Die Variable **`LastUpdateAge`** zeigt das Alter der letzten erfolgreichen API-Abfrage im Format `hh:mm`. Beide Anzeigen werden einmal pro Minute aktualisiert, auch wenn das API-Abrufintervall länger ist.
 
 ## 7. PHP-Befehlsreferenz
 
@@ -169,6 +185,14 @@ $ok = MSKODA_RefreshApiDefinition(12345);
 ```
 
 Die OpenAPI-Definition wird für neuere Ladeoperationen wie Ladelimit, Lademodus und Ladeprofil verwendet.
+
+### Visualisierungskachel und Zeitangaben sofort aktualisieren
+
+```php
+MSKODA_RefreshVisuals(12345);
+```
+
+Normalerweise ist dieser Aufruf nicht nötig, da das Modul die Anzeigen minütlich selbst aktualisiert. Er ist aber praktisch nach manuellen Änderungen oder zum Testen.
 
 ## 8. Rate-Limit und Diagnose
 
