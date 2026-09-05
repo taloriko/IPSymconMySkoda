@@ -4,16 +4,31 @@
 
 Seit Version 1.6 stellt die MySkoda-Instanz selbst eine native Tile-Visualisierung bereit. Die Kachel muss deshalb nicht über eine zusätzliche HTML-Variable konfiguriert werden.
 
-Version 1.7 verwendet einen smartphone-orientierten Aufbau:
+Version **1.8** verwendet einen smartphone-orientierten, bewusst kompakten Aufbau:
 
 - Fahrzeugname, Reichweite und Alter der letzten Abfrage im Kopf
-- Modellabhängige Fahrzeugansicht von oben
+- modellabhängige Fahrzeugansicht von oben
 - SOC als 4-Balken-Batterie im Fahrzeug
 - ein gebündelter Ladebereich mit Steckerzustand, Leistung, Zeit bis voll, Ladelimit und Lademodus
-- Klima und Kilometerstand direkt darunter
-- Statuszeilen für Verriegelung, Türen, Fenster, Schiebedach, Licht, Kofferraum und Motorhaube
+- Klima und Kilometerstand in einer kompakten, umbrechungsarmen Zeile
+- nur noch **Verriegelt / Entriegelt** als eigener Textstatus
+- Türen, Fenster, Schiebedach, Licht, Kofferraum und Motorhaube werden direkt am Fahrzeug hervorgehoben
 
-Die Gestaltung orientiert sich an den kompakten Layout-Prinzipien der öffentlichen [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung). Quellcode und Grafikassets der Kachelsammlung werden nicht übernommen; HTML, CSS und Fahrzeug-SVGs sind eigenständig umgesetzt.
+Die Gestaltung orientiert sich an den kompakten Layout- und Modulprinzipien der öffentlichen [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung). Quellcode und Grafikassets der Kachelsammlung werden nicht übernommen; HTML, CSS und Fahrzeug-SVGs sind eigenständig umgesetzt.
+
+## Verhalten beim Scrollen und Wiederanzeigen
+
+Die eingebettete HTML-Kachel scrollt ab Version 1.8 nicht mehr selbst. Das Scrollen übernimmt ausschließlich die Symcon-Visualisierung.
+
+Damit beim Scrollen, beim Wechsel zwischen Seiten oder bei Größenänderungen keine Werte verloren gehen, hält die Kachel den zuletzt empfangenen vollständigen Zustand clientseitig vor und rendert ihn erneut bei:
+
+- Wiederanzeigen der Seite (`pageshow`)
+- Rückkehr in den Vordergrund
+- Größenänderungen
+- Sichtbarkeitswechsel
+- Änderungen der verfügbaren Kachelgröße
+
+Zusätzlich erfolgt regelmäßig ein lokales Re-Render. Dafür wird **keine zusätzliche MySkoda-API-Abfrage** ausgelöst.
 
 ## Fahrzeugdarstellung
 
@@ -47,24 +62,23 @@ Die Batterie besitzt vier Segmente. Die Farbe wird kontinuierlich zwischen folge
 
 Der Prozentwert und das konfigurierte Ladelimit werden direkt im Fahrzeug angezeigt.
 
-## Statusfarben
+## Fahrzeugzustände
 
-- Grün: erwarteter / sicherer Zustand
-- Orange: Hinweis oder Aufmerksamkeit erforderlich
-- Rot: ausschließlich tatsächliche Fehler oder Störungen
+Die Kachel soll im Normalzustand möglichst ruhig und eindeutig wirken. Deshalb werden die Einzelzustände ab Version 1.8 nicht mehr als lange Liste unterhalb des Fahrzeugs wiederholt.
 
-Beispiele:
+- Verriegelt: Fahrzeugkontur grün und eigener Textstatus **Fahrzeug verriegelt**
+- Entriegelt: Fahrzeugkontur und Verriegelungsstatus orange
+- Tür offen: zugehörige Türmarkierung orange
+- Fenster offen: Fensterbereich orange
+- Schiebedach offen: Dachbereich orange
+- Licht an: Leuchten orange
+- Kofferraum offen: Heckmarkierung orange
+- Motorhaube offen: Frontmarkierung orange
 
-- Verriegelt = grün
-- Türen geschlossen = grün
-- Fenster geschlossen = grün
-- Schiebedach geschlossen = grün
-- Licht aus = grün
-- Kofferraum geschlossen = grün
-- Motorhaube geschlossen = grün
+Ein geschlossener bzw. ausgeschalteter Zustand bleibt am Fahrzeug neutral; die grüne Fahrzeugkontur und der grüne Verriegelungsstatus zeigen den normalen abgestellten Zustand. **Orange bedeutet Hinweis/Aufmerksamkeit. Rot ist tatsächlichen Fehlern oder Störungen vorbehalten.**
 
 Fehlt ein Status in der API, wird er nicht als vermeintlich grüner Zustand dargestellt.
 
 ## Schiebedach
 
-Der Schiebedachstatus wird aus den von MySkoda gelieferten Statusdaten gelesen. Ist das Feld vorhanden, erscheint die Statuszeile in der Kachel und ein geöffnetes Schiebedach wird orange hervorgehoben. Liefert das Fahrzeug keinen Schiebedachstatus, wird keine falsche Aussage erzeugt.
+Der Schiebedachstatus wird aus den von MySkoda gelieferten Statusdaten gelesen. Ist das Feld vorhanden und das Schiebedach geöffnet, wird der Dachbereich orange hervorgehoben. Liefert das Fahrzeug keinen Schiebedachstatus, wird keine falsche Aussage erzeugt.
