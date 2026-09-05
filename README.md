@@ -19,6 +19,7 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 - Berücksichtigung von Rate-Limit und `Retry-After`
 - Neue Variablendarstellungen ab Symcon 8.x und Symcon-Standardvorlagen
 - Boolean-Zustände nutzen ausschließlich die neuen Symcon-Darstellungen ab 8.x; es werden keine eigenen Legacy-Profile angelegt.
+- Eigene neue Darstellungs-Vorlagen sind eindeutig mit `MySkoda.*` benannt.
 - Deutsch über `locale.json`, Englisch als Quellsprache des Moduls
 
 ## Voraussetzungen
@@ -30,7 +31,7 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 
 ## Version
 
-Aktueller Stand dieser Bibliothek: **1.4**
+Aktueller Stand dieser Bibliothek: **1.5**
 
 ## API-Key in der MySkoda App erstellen
 
@@ -42,7 +43,6 @@ Aktueller Stand dieser Bibliothek: **1.4**
 6. Die angezeigte **FIN/VIN** und den **API-Token** in die MySkoda-Instanz in Symcon eintragen.
 
 Nach dem Übernehmen prüft das Modul die Verbindung und zeigt direkt an, ob Fahrzeugdaten erfolgreich empfangen wurden.
-
 
 ### Hinweis zu Standortdaten
 
@@ -89,6 +89,10 @@ Offizielle Symcon-SDK-Referenzen:
 - [Struktur](https://www.symcon.de/de/service/dokumentation/entwicklerbereich/sdk-tools/sdk-php/struktur/)
 - [Lokalisierungen](https://www.symcon.de/de/service/dokumentation/entwicklerbereich/sdk-tools/sdk-php/lokalisierungen/)
 - [Module Store einreichen](https://www.symcon.de/de/service/dokumentation/entwicklerbereich/sdk-tools/sdk-php/store/einreichen/)
+
+## Design-Inspiration
+
+Die kompakte Gestaltung der Fahrzeugkachel orientiert sich an den Layout-Prinzipien der [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung). Insbesondere die klare Aufteilung, schmale Trenner und die Konzentration auf wenige wichtige Werte dienten als Orientierung. Der MySkoda-Code und die Fahrzeug-SVG sind eigenständig umgesetzt; es werden keine Quelltexte oder Grafikdateien aus dem Projekt übernommen.
 
 ## API-Dokumentation
 

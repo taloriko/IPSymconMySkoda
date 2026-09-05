@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here.
 
+## 1.5 - 2026-09-05
+
+- Fixed passive Boolean status variables for the new Symcon presentation system: they now use **Value Presentation** instead of Enumeration, so no variable action is required.
+- Added module-owned presentation templates `MySkoda.Status.GoodTrue`, `MySkoda.Status.GoodFalse`, `MySkoda.Status.Normal` and `MySkoda.Control.Switch`. These are new Symcon presentation templates, not Legacy variable profiles.
+- Corrected the Boolean option schema to use `ColorActive` / `ColorValue` as required by Symcon Value Presentation.
+- Charging and climate use the native Switch presentation when remote control is enabled; with remote control disabled they fall back to a passive green Value Presentation.
+- Redesigned the vehicle tile for smartphones: charging information is consolidated in the upper main area and the duplicate charging row was removed.
+- Climate is now displayed once with a clear operating mode and target temperature instead of duplicated `Aus` values.
+- Reworked the generic top-view vehicle SVG with a more realistic SUV silhouette and visual highlights for lock, doors, windows and lights.
+- Charging power and time-to-full are hidden when no charging cable is connected instead of showing misleading `0.0 kW` / `00:00`.
+- Visual styling is inspired by the compact layout principles of [da8ter/TileVisu-Kachelsammlung](https://github.com/da8ter/TileVisu-Kachelsammlung). No source code or graphical assets are copied.
+
 ## 1.4 - 2026-09-05
 
 - Removed module-owned Legacy variable profiles introduced in 1.3.

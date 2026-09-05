@@ -94,25 +94,32 @@ Der Standard-Objektbaum ist absichtlich kompakt.
 | `StateOfCharge` | Ladezustand | Integer | Nein | Symcon-Standardvorlage Batterie |
 | `Range` | Reichweite | Integer | Nein | Wertanzeige, km |
 | `Mileage` | Kilometerstand | Integer | Nein | Wertanzeige, km |
-| `Locked` | Verriegelt | Boolean | Nein | Ja/Nein-Aufzählung: **Ja grün**, Nein orange |
-| `DoorsOpen` | Türen offen | Boolean | Nein | Ja/Nein-Aufzählung: **Nein grün**, Ja orange |
-| `WindowsOpen` | Fenster offen | Boolean | Nein | Ja/Nein-Aufzählung: **Nein grün**, Ja orange |
-| `Charging` | Laden | Boolean | Ja | Ja/Nein-Aufzählung: **Nein grün**, **Ja grün** |
+| `Locked` | Verriegelt | Boolean | Nein | **Wertanzeige** `MySkoda.Status.GoodTrue`: Ja grün, Nein orange |
+| `DoorsOpen` | Türen offen | Boolean | Nein | **Wertanzeige** `MySkoda.Status.GoodFalse`: Nein grün, Ja orange |
+| `WindowsOpen` | Fenster offen | Boolean | Nein | **Wertanzeige** `MySkoda.Status.GoodFalse`: Nein grün, Ja orange |
+| `Charging` | Laden | Boolean | Ja | Schalter bei Remote-Steuerung; sonst passive Wertanzeige |
 | `ChargePower` | Ladeleistung | Float | Nein | Symcon-Standardvorlage Leistung |
 | `TargetSOC` | Ladelimit | Integer | Ja | Schieberegler 50-100 % |
 | `ChargeMode` | Lademodus | Integer | Ja | Aufzählung aus den Fahrzeugmodi |
-| `Climate` | Klimatisierung | Boolean | Ja | Ja/Nein-Aufzählung: **Nein grün**, **Ja grün** |
+| `Climate` | Klimatisierung | Boolean | Ja | Schalter bei Remote-Steuerung; sonst passive Wertanzeige |
 | `TargetTemperature` | Klima Solltemperatur | Float | Ja | Temperatur-Schieberegler |
 | `VehicleTile` | Fahrzeugübersicht | String | Nein | neue Symcon-Darstellung **Webinhalt** |
-| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein | **Nein grün**, Ja orange; wird 30 Tage vor Ablauf aktiv |
+| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein | **Wertanzeige**: Nein grün, Ja orange; wird 30 Tage vor Ablauf aktiv |
 | `LastUpdateAge` | Alter letzte Abfrage | String | Nein | Format `hh:mm` |
 | `LastUpdate` | Letzte Aktualisierung | Integer | Nein | Symcon-Standardvorlage Datum/Uhrzeit |
 
 Bei aktivierter Option **Detail- und Diagnosevariablen anzeigen** werden zusätzlich unter anderem Fahrzeugname, Kennzeichen, Ladestatus/-art, erwartete Voll-Ladezeit, Kofferraum, Motorhaube, Licht, Parkstatus, Koordinaten, API-Key-Ablaufdatum, verbleibende API-Abfragen und Teilfehler bereitgestellt.
 
-### Keine Legacy-Profile
+### Neue Darstellungs-Vorlagen statt Legacy-Profile
 
-Seit Version **1.4** legt MySkoda **keine eigenen Variablenprofile mehr an**. Die Boolean-Zustände verwenden direkt die neue Symcon-Darstellung **Aufzählung** mit den Werten `Ja` und `Nein` und einer zustandsabhängigen Farbe. Die Fahrzeugkachel nutzt die neue Darstellung **Webinhalt** statt des Legacy-Profils `~HTMLBox`.
+MySkoda legt **keine Legacy-Variablenprofile** an. Seit Version 1.5 werden für die neuen Symcon-Darstellungen eigene Vorlagen verwendet. Sie sind eindeutig dem Modul zugeordnet:
+
+- `MySkoda.Status.GoodTrue` – `Ja` ist der erwartete Zustand: Ja grün, Nein orange
+- `MySkoda.Status.GoodFalse` – `Nein` ist der erwartete Zustand: Nein grün, Ja orange
+- `MySkoda.Status.Normal` – beide Boolean-Zustände sind normale Betriebszustände und werden grün dargestellt
+- `MySkoda.Control.Switch` – Schalterdarstellung für bedienbare Boolean-Werte
+
+Die Status-Vorlagen verwenden die passive Symcon-Darstellung **Wertanzeige**. Damit funktionieren sie korrekt ohne Variablenaktion. Bedienbare Werte wie Laden und Klima verwenden bei aktivierter Remote-Steuerung dagegen die Darstellung **Schalter**, da diese eine Variablenaktion besitzt.
 
 Die Farblogik bewertet den **Zustand**, nicht den reinen Boolean-Wert:
 
@@ -125,31 +132,35 @@ Die Farblogik bewertet den **Zustand**, nicht den reinen Boolean-Wert:
 | Motorhaube offen | **Nein** | Ja |
 | Licht an | **Nein** | Ja |
 | API-Key Warnung | **Nein** | Ja |
-| Laden | **Ja und Nein** | – |
-| Klima | **Ja und Nein** | – |
 
-Damit erscheint ein korrekt abgestelltes und verriegeltes Fahrzeug bei allen normalen Boolean-Zuständen **grün**, obwohl die zugrunde liegenden Werte teils `Ja` und teils `Nein` sind. **Orange** bedeutet lediglich Aufmerksamkeit. **Rot wird für diese Hinweise nicht verwendet**; Rot bleibt echten Fehlern und Störungen vorbehalten.
+Damit erscheint ein korrekt abgestelltes und verriegeltes Fahrzeug bei allen sicherheitsrelevanten Zuständen **grün**. **Rot wird für diese Hinweise nicht verwendet**; Rot bleibt echten Fehlern und Störungen vorbehalten.
 
 Beim Update von Version 1.3 entfernt das Modul die damals erzeugten `MySkoda.YesNo.*`-Legacy-Profile von seinen Variablen und löscht sie, sofern sie nicht anderweitig verwendet werden.
 
 ## 6. Visualisierung
 
-Es wird keine eigene HTML-/WebFront-Oberfläche benötigt. Die Statusvariablen können direkt in der aktuellen Symcon-Visualisierung verwendet werden. Bedienbare Variablen erhalten nur dann eine Aktion, wenn **Remote-Steuerung aktivieren** gesetzt ist.
+Zusätzlich zu den Statusvariablen stellt das Modul die Variable **`VehicleTile`** mit der neuen Symcon-Darstellung **Webinhalt** bereit. Die Kachel ist für Smartphones optimiert und bündelt die Informationen bewusst ohne viele einzelne Rahmen.
 
-Zusätzlich legt das Modul die Variable **`VehicleTile`** an. Die Kachel ist bewusst **smartphone-orientiert und kompakt** aufgebaut. Statt vieler einzelner Rahmen werden zusammengehörige Informationen in einer flachen Ansicht gebündelt:
+Version 1.5 ordnet die Anzeige neu:
 
-- Überschrift aus Fahrzeugname, alternativ Kennzeichen
-- kompakte Autoansicht von oben mit SOC und Ladelimit im Fahrzeug
-- Ladestecker rechts mit den Zuständen Laden, Ladeunterbrechung, Kabel anschließen, bereit, Ladeziel erreicht und Entladen
-- Ladeleistung und Restzeit bis voll im Format `hh:mm`
-- Reichweite und Kilometerstand
-- Verriegelung, Türen, Fenster und Licht als kompakte Statuszeile
-- eigene, platzsparende Zeile für **Laden**
-- eigene, platzsparende Zeile für **Klima**
+- Kopfzeile: Fahrzeugname, alternativ Kennzeichen, Reichweite und Alter der letzten Abfrage
+- realistischere, aber modellneutrale Elektroauto-Ansicht von oben
+- SOC und Ladelimit direkt im Fahrzeug
+- Verriegelungszustand über die Fahrzeugkontur: grün = verriegelt, orange = entriegelt
+- offene Türen/Fenster und eingeschaltetes Licht werden am Fahrzeug orange hervorgehoben
+- **Laden nur einmal** im oberen Hauptbereich: Steckerzustand, AC/DC, Ladeleistung, Zeit bis voll, Ladelimit und Lademodus
+- bei nicht angeschlossenem Ladekabel werden Ladeleistung und Zeit bis voll als `—` statt irreführend als `0,0 kW` / `00:00` angezeigt
+- kompakte Statuszeile für Verriegelung, Türen, Fenster und Licht
+- **Klima nur einmal** als eindeutige Zeile mit Betriebsart (`Aus`, `Kühlen`, `Heizen`, `Standheizung`, `Lüften`) und Solltemperatur
+- Kilometerstand unten rechts
 - API-Key-Warnung bei höchstens 30 Tagen Restlaufzeit
-- transparente/neutral aufgebaute Darstellung für helle und dunkle Symcon-Themes
+- transparente und theme-neutrale Gestaltung für helle, dunkle und individuell eingefärbte Symcon-Designs
 
-Die Variable **`LastUpdateAge`** zeigt das Alter der letzten erfolgreichen API-Abfrage im Format `hh:mm`. Beide Anzeigen werden einmal pro Minute aktualisiert, auch wenn das API-Abrufintervall länger ist.
+### Design-Inspiration
+
+Für die kompakte Kachelgestaltung dient die [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung) als gestalterische Orientierung. Übernommen wurden keine Quelltexte oder Grafikdateien. Die MySkoda-Kachel und das Fahrzeug-SVG sind eigenständig umgesetzt.
+
+Die Variable **`LastUpdateAge`** zeigt das Alter der letzten erfolgreichen API-Abfrage im Format `hh:mm`. Kachel und Altersanzeige werden einmal pro Minute aktualisiert, auch wenn das API-Abrufintervall länger ist.
 
 ## 7. PHP-Befehlsreferenz
 
