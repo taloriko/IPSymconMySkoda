@@ -36,7 +36,16 @@ Ab Version 1.1 bleibt `MySkoda/module.php` bewusst klein und lädt thematisch ge
 - `VariablesTrait.php` – Variablen, Darstellungen und Datenübernahme
 - `ApiTrait.php` – HTTP, Rate-Limit und Fehlerbehandlung
 - `OpenApiTrait.php` – dynamische OpenAPI-Auswertung
-- `VisualizationTrait.php` – Elektroauto-Kachel und Anzeigeaufbereitung
+- `VisualizationTrait.php` – kompakte Elektroauto-Kachel und Anzeigeaufbereitung
+- `NotificationTrait.php` – API-Key-Ablaufwarnung und optionale Symcon-Push-Mitteilungen
 - `HelpersTrait.php` – allgemeine Hilfsfunktionen
 
 Die Aufteilung ist rein intern. Prefix, Modul-ID und öffentliche `MSKODA_*`-Funktionen bleiben unverändert.
+
+## Verbindungsrückmeldung
+
+Die Konfiguration wird über `GetConfigurationForm()` dynamisch aus der `form.json` aufgebaut. Beim erstmaligen Eintragen oder Ändern von FIN/API-Token wird die Verbindung direkt geprüft. Der Status wird als verständliche Rückmeldung im offenen Instanzformular angezeigt und zusätzlich über den normalen Instanzstatus abgebildet.
+
+## API-Key Ablauf
+
+Das Ablaufdatum wird aus `X-API-Key-Expires-At` übernommen. `ApiKeyWarning` wird bei höchstens 30 Tagen Restlaufzeit aktiv. Eine optionale Push-Mitteilung kann über eine konfigurierte Kachel-Visualisierungs- oder WebFront-Instanz gesendet werden. Fehlgeschlagene Sendeversuche werden höchstens einmal täglich wiederholt.

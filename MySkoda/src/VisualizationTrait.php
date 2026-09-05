@@ -17,10 +17,7 @@ trait MySkodaVisualizationTrait
 
     private function refreshVisualValues(?array $vehicle = null): void
     {
-        $lastUpdate = 0;
-        if (@$this->GetIDForIdent('LastUpdate') !== false) {
-            $lastUpdate = (int) $this->GetValue('LastUpdate');
-        }
+        $lastUpdate = @$this->GetIDForIdent('LastUpdate') !== false ? (int) $this->GetValue('LastUpdate') : 0;
         $this->SetValue('LastUpdateAge', $this->formatAgeFromTimestamp($lastUpdate));
 
         if ($vehicle === null) {
@@ -56,6 +53,7 @@ trait MySkodaVisualizationTrait
         $chargeMode = $this->extractChargeModeCaption($vehicle);
         $chargeState = strtoupper((string) $this->path($vehicle, 'charging.status.state', ''));
         $chargeType = strtoupper((string) $this->path($vehicle, 'charging.status.chargeType', ''));
+
         $charging = $this->coerceBool($this->safeValue('Charging'));
         if ($charging === null) {
             $charging = in_array($chargeState, ['CHARGING', 'CONSERVING'], true);
@@ -63,223 +61,131 @@ trait MySkodaVisualizationTrait
 
         $locked = $this->coerceBool($this->safeValue('Locked'));
         if ($locked === null) {
-            $lockedValue = strtoupper((string) ($this->path($vehicle, 'status.overall.doorsLocked', $this->path($vehicle, 'status.overall.locked', 'UNKNOWN'))));
-            $locked = $lockedValue === 'YES' || $lockedValue === 'LOCKED';
+            $lockValue = strtoupper((string) $this->path($vehicle, 'status.overall.doorsLocked', $this->path($vehicle, 'status.overall.locked', 'UNKNOWN')));
+            $locked = in_array($lockValue, ['YES', 'LOCKED'], true);
         }
+
         $doorsOpen = $this->coerceBool($this->safeValue('DoorsOpen'));
         if ($doorsOpen === null) {
             $doorsOpen = strtoupper((string) $this->path($vehicle, 'status.overall.doors', 'CLOSED')) === 'OPEN';
         }
+
         $windowsOpen = $this->coerceBool($this->safeValue('WindowsOpen'));
         if ($windowsOpen === null) {
             $windowsOpen = strtoupper((string) $this->path($vehicle, 'status.overall.windows', 'CLOSED')) === 'OPEN';
         }
-        $lightsOn = strtoupper((string) $this->path($vehicle, 'status.overall.lights', 'OFF')) === 'ON';
 
-        $climate = $this->coerceBool($this->safeValue('Climate'));
+        $lightsOn = strtoupper((string) $this->path($vehicle, 'status.overall.lights', 'OFF')) === 'ON';
         $climateState = strtoupper((string) $this->path($vehicle, 'airConditioning.state', 'OFF'));
+        $climate = $this->coerceBool($this->safeValue('Climate'));
         if ($climate === null) {
             $climate = in_array($climateState, ['COOLING', 'HEATING', 'HEATING_AUXILIARY', 'VENTILATION'], true);
         }
         $targetTemperature = $this->firstValue([$this->safeValue('TargetTemperature'), $this->path($vehicle, 'airConditioning.targetTemperature.value', null)]);
 
-        [$plugStateIcon, $plugStateLabel, $plugClass] = $this->describePlugState($chargeState, $chargeType, $charging, $chargePowerKw, $remainingMinutes);
+        [$plugIcon, $plugLabel, $plugClass] = $this->describePlugState($chargeState, $chargeType, $charging, $chargePowerKw, $remainingMinutes);
 
         $titleEsc = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
         $rangeText = $this->formatIntegerWithUnit($range, 'km');
         $mileageText = $this->formatIntegerWithUnit($mileage, 'km');
-        $socText = $soc !== null ? ((int) round((float) $soc)) . '%' : '--';
-        $targetSocText = $targetSoc !== null ? ((int) round((float) $targetSoc)) . '%' : '--';
+        $socText = is_numeric($soc) ? ((int) round((float) $soc)) . '%' : '--';
+        $targetSocText = is_numeric($targetSoc) ? ((int) round((float) $targetSoc)) . '%' : '--';
         $powerText = $chargePowerKw !== null ? number_format($chargePowerKw, 1, ',', '') . ' kW' : '—';
-        $timeToFullText = $remainingMinutes !== null ? $this->formatMinutesAsHoursMinutes($remainingMinutes) : '--:--';
+        $timeText = $remainingMinutes !== null ? $this->formatMinutesAsHoursMinutes($remainingMinutes) : '--:--';
         $ageText = $this->formatAgeFromTimestamp($lastUpdate);
-        $climateText = $climate ? $this->Translate('Active') : $this->Translate('Off');
-        $climateModeText = $climateState !== '' ? $this->humanizeMode($climateState) : $this->Translate('Unknown');
         $tempText = is_numeric($targetTemperature) ? number_format((float) $targetTemperature, 1, ',', '') . ' °C' : '—';
-        $lockBadge = $locked ? '🔒 ' . $this->Translate('Locked') : '🔓 ' . $this->Translate('Unlocked');
-        $doorsBadge = $doorsOpen ? '🚪 ' . $this->Translate('Doors open') : '🚪 ' . $this->Translate('Doors closed');
-        $windowsBadge = $windowsOpen ? '🪟 ' . $this->Translate('Windows open') : '🪟 ' . $this->Translate('Windows closed');
-        $lightsBadge = $lightsOn ? '💡 ' . $this->Translate('Lights on') : '💡 ' . $this->Translate('Lights off');
-        $chargingBadge = $charging ? '⚡ ' . $this->Translate('Charging') : '🔌 ' . $this->Translate('Not charging');
-        $climateBadge = $climate ? '🌡️ ' . $this->Translate('Air conditioning') : '🌡️ ' . $this->Translate('Climate off');
+        $climateMode = $climateState !== '' ? $this->humanizeMode($climateState) : $this->Translate('Unknown');
+        $climateText = $climate ? $this->Translate('Active') : $this->Translate('Off');
+        $chargeTypeText = $chargeType !== '' ? $this->humanizeMode($chargeType) : $this->Translate('Unknown');
+        $chargeClass = $charging ? 'ms-on' : 'ms-off';
+        $climateClass = $climate ? 'ms-on' : 'ms-off';
 
-        $svg = $this->buildVehicleSvg($locked, $doorsOpen, $windowsOpen, $lightsOn, $socText, $targetSocText, $rangeText);
+        $lockIcon = $locked ? '🔒' : '🔓';
+        $doorIcon = $doorsOpen ? '🚪!' : '🚪';
+        $windowIcon = $windowsOpen ? '🪟!' : '🪟';
+        $lightIcon = $lightsOn ? '💡' : '◌';
+
+        $days = $this->keyExpiryDays();
+        $keyWarning = ($days !== null && $days <= 30)
+            ? '<div class="ms-keywarn">⚠ ' . htmlspecialchars(sprintf($this->Translate('API key expires in %d days'), $days), ENT_QUOTES, 'UTF-8') . '</div>'
+            : '';
+
+        $svg = $this->buildVehicleSvg($locked, $doorsOpen, $windowsOpen, $lightsOn, $socText, $targetSocText);
+        $rangeLabel = $this->Translate('Range');
+        $mileageLabel = $this->Translate('Mileage');
+        $updateLabel = $this->Translate('Last update age');
+        $powerLabel = $this->Translate('Charging power');
+        $timeLabel = $this->Translate('Time to full');
+        $limitLabel = $this->Translate('Charging limit');
+        $chargingLabel = $this->Translate('Charging');
+        $modeLabel = $this->Translate('Charging mode');
+        $climateLabel = $this->Translate('Climate');
+        $tempLabel = $this->Translate('Target temperature');
 
         return <<<HTML
-<div class="mskoda-card">
-  <style>
-    .mskoda-card{font-family:Arial,Helvetica,sans-serif;color:inherit;background:transparent;box-sizing:border-box;padding:12px;border:1px solid rgba(127,127,127,.24);border-radius:14px;color-scheme:light dark}
-    .mskoda-card *{box-sizing:border-box}
-    .mskoda-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px}
-    .mskoda-title{font-size:1.2rem;font-weight:700;line-height:1.2}
-    .mskoda-sub{font-size:.85rem;opacity:.72;margin-top:2px}
-    .mskoda-badges{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end}
-    .mskoda-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;border:1px solid rgba(127,127,127,.22);background:rgba(127,127,127,.10);font-size:.78rem;white-space:nowrap}
-    .mskoda-main{display:grid;grid-template-columns:minmax(280px,1.7fr) minmax(180px,1fr);gap:12px;align-items:stretch}
-    .mskoda-panel{border:1px solid rgba(127,127,127,.20);background:rgba(127,127,127,.08);border-radius:12px;padding:12px}
-    .mskoda-carwrap{display:flex;flex-direction:column;gap:10px}
-    .mskoda-statrow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
-    .mskoda-stat{padding:10px;border-radius:10px;background:rgba(127,127,127,.10);border:1px solid rgba(127,127,127,.18)}
-    .mskoda-stat-label{font-size:.78rem;opacity:.72;margin-bottom:4px}
-    .mskoda-stat-value{font-size:1rem;font-weight:700}
-    .mskoda-plug{display:flex;flex-direction:column;gap:10px;height:100%;justify-content:space-between}
-    .mskoda-plug-state{display:flex;align-items:center;gap:10px;padding:12px;border-radius:12px;border:1px solid rgba(127,127,127,.20);background:rgba(127,127,127,.08)}
-    .mskoda-plug-icon{font-size:2rem;line-height:1}
-    .mskoda-plug-title{font-size:1rem;font-weight:700}
-    .mskoda-plug-sub{font-size:.82rem;opacity:.72}
-    .mskoda-status-ok{background:rgba(34,197,94,.14);border-color:rgba(34,197,94,.28)}
-    .mskoda-status-warn{background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.30)}
-    .mskoda-status-idle{background:rgba(127,127,127,.10);border-color:rgba(127,127,127,.20)}
-    .mskoda-status-done{background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.28)}
-    .mskoda-status-error{background:rgba(239,68,68,.14);border-color:rgba(239,68,68,.30)}
-    .mskoda-sections{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px}
-    .mskoda-section-title{font-size:.86rem;font-weight:700;margin-bottom:10px;opacity:.9}
-    .mskoda-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
-    .mskoda-item{padding:9px 10px;border-radius:10px;background:rgba(127,127,127,.08);border:1px solid rgba(127,127,127,.16)}
-    .mskoda-item-label{font-size:.75rem;opacity:.68;margin-bottom:4px}
-    .mskoda-item-value{font-size:.95rem;font-weight:700;line-height:1.2}
-    .mskoda-foot{margin-top:10px;font-size:.78rem;opacity:.68;text-align:right}
-    @media (max-width:700px){.mskoda-main,.mskoda-sections,.mskoda-statrow,.mskoda-grid{grid-template-columns:1fr}.mskoda-badges{justify-content:flex-start}}
-  </style>
-  <div class="mskoda-head">
-    <div>
-      <div class="mskoda-title">{$titleEsc}</div>
-      <div class="mskoda-sub">{$this->Translate('Last update age')}: {$ageText}</div>
-    </div>
-    <div class="mskoda-badges">
-      <div class="mskoda-badge">{$lockBadge}</div>
-      <div class="mskoda-badge">{$doorsBadge}</div>
-      <div class="mskoda-badge">{$windowsBadge}</div>
-      <div class="mskoda-badge">{$lightsBadge}</div>
+<div class="ms-card">
+<style>
+.ms-card{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;color:inherit;color-scheme:light dark;background:transparent;padding:8px 10px;box-sizing:border-box;line-height:1.2;max-width:520px;margin:0 auto}
+.ms-card *{box-sizing:border-box}.ms-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:2px 0 7px;border-bottom:1px solid rgba(127,127,127,.22)}
+.ms-title{min-width:0;font-size:17px;font-weight:750;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ms-age{font-size:11px;opacity:.62;white-space:nowrap}.ms-range{font-size:12px;opacity:.72;margin-top:2px}.ms-range b{font-size:15px;opacity:1}
+.ms-lock{font-size:19px;line-height:1}.ms-keywarn{margin:7px 0 0;padding:6px 8px;border-radius:8px;background:rgba(245,158,11,.13);font-size:11px;font-weight:650}
+.ms-hero{display:grid;grid-template-columns:minmax(128px,44%) 1fr;gap:8px;align-items:center;padding:7px 0}.ms-car{min-width:0}.ms-charge{min-width:0;padding-left:9px;border-left:1px solid rgba(127,127,127,.22)}
+.ms-plugline{display:flex;align-items:center;gap:7px;margin-bottom:6px}.ms-plug{font-size:26px;line-height:1}.ms-plugtext{min-width:0}.ms-plugtitle{font-size:13px;font-weight:750}.ms-plugtype{font-size:10px;opacity:.62;margin-top:1px}
+.ms-ok .ms-plugtitle{color:#22a35a}.ms-warn .ms-plugtitle{color:#d58a00}.ms-error .ms-plugtitle{color:#d94b4b}.ms-done .ms-plugtitle{color:#3f7fd8}
+.ms-chargemetrics{display:grid;grid-template-columns:1fr 1fr;gap:5px 8px}.ms-metric{min-width:0}.ms-label{font-size:9px;opacity:.58;text-transform:uppercase;letter-spacing:.02em}.ms-value{font-size:13px;font-weight:720;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.ms-status{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 0;border-top:1px solid rgba(127,127,127,.18);border-bottom:1px solid rgba(127,127,127,.18);font-size:11px}.ms-icons{display:flex;gap:8px;font-size:14px}.ms-km{opacity:.74;white-space:nowrap}.ms-rows{padding-top:2px}.ms-row{display:grid;grid-template-columns:62px 1fr;align-items:center;gap:5px;padding:7px 0;border-bottom:1px solid rgba(127,127,127,.16)}.ms-row:last-child{border-bottom:0}.ms-rowname{font-size:12px;font-weight:760}.ms-rowvals{display:flex;justify-content:flex-end;gap:7px;min-width:0;flex-wrap:wrap;font-size:11px}.ms-rowvals span{white-space:nowrap}.ms-strong{font-weight:720}.ms-on{color:#22a35a}.ms-off{opacity:.62}
+@media(max-width:360px){.ms-card{padding:7px 7px}.ms-hero{grid-template-columns:122px 1fr;gap:5px}.ms-charge{padding-left:6px}.ms-chargemetrics{gap:4px 5px}.ms-value{font-size:12px}.ms-row{grid-template-columns:54px 1fr}.ms-rowvals{gap:5px}}
+</style>
+<div class="ms-head">
+  <div style="min-width:0">
+    <div class="ms-title">{$titleEsc}</div>
+    <div class="ms-range">{$rangeLabel} <b>{$rangeText}</b></div>
+  </div>
+  <div style="text-align:right"><div class="ms-lock">{$lockIcon}</div><div class="ms-age">{$updateLabel} {$ageText}</div></div>
+</div>
+{$keyWarning}
+<div class="ms-hero">
+  <div class="ms-car">{$svg}</div>
+  <div class="ms-charge {$plugClass}">
+    <div class="ms-plugline"><div class="ms-plug">{$plugIcon}</div><div class="ms-plugtext"><div class="ms-plugtitle">{$plugLabel}</div><div class="ms-plugtype">{$chargeTypeText}</div></div></div>
+    <div class="ms-chargemetrics">
+      <div class="ms-metric"><div class="ms-label">{$powerLabel}</div><div class="ms-value">{$powerText}</div></div>
+      <div class="ms-metric"><div class="ms-label">{$timeLabel}</div><div class="ms-value">{$timeText}</div></div>
+      <div class="ms-metric"><div class="ms-label">{$limitLabel}</div><div class="ms-value">{$targetSocText}</div></div>
+      <div class="ms-metric"><div class="ms-label">{$modeLabel}</div><div class="ms-value">{$chargeMode}</div></div>
     </div>
   </div>
-
-  <div class="mskoda-main">
-    <div class="mskoda-panel mskoda-carwrap">
-      {$svg}
-      <div class="mskoda-statrow">
-        <div class="mskoda-stat">
-          <div class="mskoda-stat-label">{$this->Translate('State of charge')}</div>
-          <div class="mskoda-stat-value">{$socText}</div>
-        </div>
-        <div class="mskoda-stat">
-          <div class="mskoda-stat-label">{$this->Translate('Range')}</div>
-          <div class="mskoda-stat-value">{$rangeText}</div>
-        </div>
-        <div class="mskoda-stat">
-          <div class="mskoda-stat-label">{$this->Translate('Mileage')}</div>
-          <div class="mskoda-stat-value">{$mileageText}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mskoda-panel mskoda-plug">
-      <div class="mskoda-plug-state {$plugClass}">
-        <div class="mskoda-plug-icon">{$plugStateIcon}</div>
-        <div>
-          <div class="mskoda-plug-title">{$plugStateLabel}</div>
-          <div class="mskoda-plug-sub">{$chargingBadge}</div>
-        </div>
-      </div>
-      <div class="mskoda-grid">
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Charging power')}</div>
-          <div class="mskoda-item-value">{$powerText}</div>
-        </div>
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Time to full')}</div>
-          <div class="mskoda-item-value">{$timeToFullText}</div>
-        </div>
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Charging limit')}</div>
-          <div class="mskoda-item-value">{$targetSocText}</div>
-        </div>
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Charging mode')}</div>
-          <div class="mskoda-item-value">{$chargeMode}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="mskoda-sections">
-    <div class="mskoda-panel">
-      <div class="mskoda-section-title">{$this->Translate('Charging control')}</div>
-      <div class="mskoda-grid">
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Charging')}</div>
-          <div class="mskoda-item-value">{$chargingBadge}</div>
-        </div>
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Charge type')}</div>
-          <div class="mskoda-item-value">{$this->humanizeMode($chargeType !== '' ? $chargeType : 'UNKNOWN')}</div>
-        </div>
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Charging state')}</div>
-          <div class="mskoda-item-value">{$this->humanizeMode($chargeState !== '' ? $chargeState : 'UNKNOWN')}</div>
-        </div>
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Last update')}</div>
-          <div class="mskoda-item-value">{$ageText}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mskoda-panel">
-      <div class="mskoda-section-title">{$this->Translate('Climate')}</div>
-      <div class="mskoda-grid">
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Air conditioning')}</div>
-          <div class="mskoda-item-value">{$climateBadge}</div>
-        </div>
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Climate state')}</div>
-          <div class="mskoda-item-value">{$climateModeText}</div>
-        </div>
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Target temperature')}</div>
-          <div class="mskoda-item-value">{$tempText}</div>
-        </div>
-        <div class="mskoda-item">
-          <div class="mskoda-item-label">{$this->Translate('Status')}</div>
-          <div class="mskoda-item-value">{$climateText}</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div class="mskoda-foot">{$plugStateLabel} • {$climateText} • {$rangeText}</div>
+</div>
+<div class="ms-status"><div class="ms-icons"><span title="Lock">{$lockIcon}</span><span title="Doors">{$doorIcon}</span><span title="Windows">{$windowIcon}</span><span title="Lights">{$lightIcon}</span></div><div class="ms-km">{$mileageLabel}: <b>{$mileageText}</b></div></div>
+<div class="ms-rows">
+  <div class="ms-row"><div class="ms-rowname">{$chargingLabel}</div><div class="ms-rowvals"><span class="ms-strong {$chargeClass}">{$plugLabel}</span><span>{$targetSocText}</span><span>{$chargeMode}</span></div></div>
+  <div class="ms-row"><div class="ms-rowname">{$climateLabel}</div><div class="ms-rowvals"><span class="ms-strong {$climateClass}">{$climateText}</span><span>{$tempLabel}: {$tempText}</span><span>{$climateMode}</span></div></div>
+</div>
 </div>
 HTML;
     }
 
-    private function buildVehicleSvg(bool $locked, bool $doorsOpen, bool $windowsOpen, bool $lightsOn, string $socText, string $targetSocText, string $rangeText): string
+    private function buildVehicleSvg(bool $locked, bool $doorsOpen, bool $windowsOpen, bool $lightsOn, string $socText, string $targetSocText): string
     {
-        $bodyStroke = $locked ? '#22c55e' : '#ef4444';
-        $doorFill = $doorsOpen ? '#f59e0b' : 'rgba(127,127,127,0.18)';
-        $windowFill = $windowsOpen ? '#38bdf8' : 'rgba(127,127,127,0.14)';
-        $lightFill = $lightsOn ? '#facc15' : 'rgba(127,127,127,0.18)';
-        $lockText = $locked ? '🔒' : '🔓';
+        $outline = $locked ? '#27a35b' : '#d94b4b';
+        $door = $doorsOpen ? '#d58a00' : 'rgba(127,127,127,.20)';
+        $window = $windowsOpen ? '#2f9acb' : 'rgba(127,127,127,.15)';
+        $light = $lightsOn ? '#d9ab00' : 'rgba(127,127,127,.18)';
+        $limitLabel = htmlspecialchars($this->Translate('Charging limit'), ENT_QUOTES, 'UTF-8');
 
         return <<<SVG
-<svg viewBox="0 0 360 220" width="100%" height="220" role="img" aria-label="Vehicle overview">
-  <rect x="122" y="18" width="116" height="184" rx="40" fill="rgba(127,127,127,0.08)" stroke="{$bodyStroke}" stroke-width="4" />
-  <rect x="137" y="44" width="86" height="46" rx="18" fill="{$windowFill}" stroke="rgba(127,127,127,0.25)" stroke-width="2" />
-  <rect x="137" y="130" width="86" height="46" rx="18" fill="{$windowFill}" stroke="rgba(127,127,127,0.25)" stroke-width="2" />
-  <rect x="104" y="64" width="16" height="38" rx="6" fill="{$doorFill}" />
-  <rect x="240" y="64" width="16" height="38" rx="6" fill="{$doorFill}" />
-  <rect x="104" y="118" width="16" height="38" rx="6" fill="{$doorFill}" />
-  <rect x="240" y="118" width="16" height="38" rx="6" fill="{$doorFill}" />
-  <rect x="150" y="24" width="60" height="8" rx="3" fill="{$lightFill}" />
-  <rect x="150" y="188" width="60" height="8" rx="3" fill="{$lightFill}" />
-  <ellipse cx="112" cy="72" rx="10" ry="22" fill="rgba(127,127,127,0.24)" />
-  <ellipse cx="248" cy="72" rx="10" ry="22" fill="rgba(127,127,127,0.24)" />
-  <ellipse cx="112" cy="148" rx="10" ry="22" fill="rgba(127,127,127,0.24)" />
-  <ellipse cx="248" cy="148" rx="10" ry="22" fill="rgba(127,127,127,0.24)" />
-  <text x="180" y="101" text-anchor="middle" style="font:700 24px Arial,Helvetica,sans-serif;fill:currentColor">{$socText}</text>
-  <text x="180" y="122" text-anchor="middle" style="font:600 12px Arial,Helvetica,sans-serif;fill:currentColor;opacity:.78">{$this->Translate('Charging limit')}: {$targetSocText}</text>
-  <text x="180" y="144" text-anchor="middle" style="font:600 12px Arial,Helvetica,sans-serif;fill:currentColor;opacity:.78">{$this->Translate('Range')}: {$rangeText}</text>
-  <text x="180" y="164" text-anchor="middle" style="font:600 18px Arial,Helvetica,sans-serif;fill:currentColor">{$lockText}</text>
+<svg viewBox="0 0 160 190" width="100%" height="165" role="img" aria-label="Vehicle">
+  <path d="M51 13 Q80 2 109 13 Q126 29 128 57 L132 129 Q130 158 110 176 Q80 187 50 176 Q30 158 28 129 L32 57 Q34 29 51 13Z" fill="rgba(127,127,127,.055)" stroke="{$outline}" stroke-width="2.8"/>
+  <path d="M50 31 Q80 21 110 31 L113 67 Q80 58 47 67Z" fill="{$window}" stroke="rgba(127,127,127,.28)"/>
+  <path d="M47 124 Q80 133 113 124 L110 159 Q80 169 50 159Z" fill="{$window}" stroke="rgba(127,127,127,.28)"/>
+  <rect x="19" y="61" width="11" height="30" rx="5" fill="{$door}"/><rect x="130" y="61" width="11" height="30" rx="5" fill="{$door}"/>
+  <rect x="19" y="102" width="11" height="30" rx="5" fill="{$door}"/><rect x="130" y="102" width="11" height="30" rx="5" fill="{$door}"/>
+  <rect x="54" y="14" width="52" height="5" rx="2.5" fill="{$light}"/><rect x="54" y="171" width="52" height="5" rx="2.5" fill="{$light}"/>
+  <ellipse cx="28" cy="49" rx="7" ry="15" fill="rgba(127,127,127,.27)"/><ellipse cx="132" cy="49" rx="7" ry="15" fill="rgba(127,127,127,.27)"/>
+  <ellipse cx="28" cy="143" rx="7" ry="15" fill="rgba(127,127,127,.27)"/><ellipse cx="132" cy="143" rx="7" ry="15" fill="rgba(127,127,127,.27)"/>
+  <rect x="48" y="72" width="64" height="47" rx="9" fill="rgba(35,157,210,.16)" stroke="rgba(35,157,210,.65)" stroke-width="1.5"/>
+  <text x="80" y="94" text-anchor="middle" style="font:750 24px system-ui;fill:currentColor">{$socText}</text>
+  <text x="80" y="110" text-anchor="middle" style="font:600 9px system-ui;fill:currentColor;opacity:.68">{$limitLabel} {$targetSocText}</text>
 </svg>
 SVG;
     }
@@ -288,19 +194,32 @@ SVG;
     {
         $state = strtoupper($chargeState);
         $type = strtoupper($chargeType);
+
         if (in_array($state, ['ERROR', 'FAULT', 'UNAVAILABLE'], true)) {
-            return ['⛔', $this->Translate('Charging error'), 'mskoda-status-error'];
+            return ['⛔', $this->Translate('Charging error'), 'ms-error'];
+        }
+        if ($state === 'CHARGING_INTERRUPTED') {
+            return ['⚠️', $this->Translate('Charging interrupted'), 'ms-warn'];
+        }
+        if ($state === 'CONNECT_CABLE') {
+            return ['🔌', $this->Translate('Connect charging cable'), 'ms-warn'];
+        }
+        if ($state === 'DISCHARGING') {
+            return ['↔️', $this->Translate('Discharging'), 'ms-warn'];
         }
         if ($charging || ($chargePowerKw !== null && $chargePowerKw > 0.05) || in_array($state, ['CHARGING', 'CONSERVING'], true)) {
-            return ['⚡', $this->Translate('Charging in progress'), 'mskoda-status-ok'];
+            return ['⚡', $state === 'CONSERVING' ? $this->Translate('Conserving charge') : $this->Translate('Charging in progress'), 'ms-ok'];
         }
-        if (in_array($state, ['COMPLETED', 'FINISHED', 'READY_FOR_CHARGING', 'TARGET_REACHED'], true) || ($remainingMinutes === 0 && $type !== '')) {
-            return ['✅', $this->Translate('Ready / target reached'), 'mskoda-status-done'];
+        if (in_array($state, ['COMPLETED', 'FINISHED', 'TARGET_REACHED'], true) || ($remainingMinutes === 0 && $type !== '' && $type !== 'OFF')) {
+            return ['✓', $this->Translate('Charge target reached'), 'ms-done'];
         }
-        if ($type !== '' || in_array($state, ['CONNECTED', 'AVAILABLE', 'WAITING_FOR_CHARGING', 'READY'], true)) {
-            return ['🔌', $this->Translate('Connected'), 'mskoda-status-warn'];
+        if ($state === 'READY_FOR_CHARGING' || in_array($state, ['CONNECTED', 'AVAILABLE', 'WAITING_FOR_CHARGING', 'READY'], true)) {
+            return ['🔌', $this->Translate('Ready for charging'), 'ms-done'];
         }
-        return ['🔌', $this->Translate('Not connected'), 'mskoda-status-idle'];
+        if ($type !== '' && $type !== 'OFF') {
+            return ['🔌', $this->Translate('Connected'), 'ms-warn'];
+        }
+        return ['○', $this->Translate('Not connected'), 'ms-idle'];
     }
 
     private function extractRemainingChargeMinutes(array $vehicle): ?int
@@ -325,8 +244,7 @@ SVG;
         if ($mode === '' && @$this->GetIDForIdent('ChargeMode') !== false) {
             $map = json_decode($this->ReadAttributeString('ChargeModeMap'), true);
             if (is_array($map)) {
-                $index = (string) ((int) $this->GetValue('ChargeMode'));
-                $mode = (string) ($map[$index] ?? '');
+                $mode = (string) ($map[(string) ((int) $this->GetValue('ChargeMode'))] ?? '');
             }
         }
         return $mode !== '' ? $this->humanizeMode((string) $mode) : $this->Translate('Unknown');
@@ -338,9 +256,7 @@ SVG;
             return '--:--';
         }
         $seconds = max(0, time() - $timestamp);
-        $hours = intdiv($seconds, 3600);
-        $minutes = intdiv($seconds % 3600, 60);
-        return sprintf('%02d:%02d', $hours, $minutes);
+        return sprintf('%02d:%02d', intdiv($seconds, 3600), intdiv($seconds % 3600, 60));
     }
 
     private function formatMinutesAsHoursMinutes(int $minutes): string
@@ -356,5 +272,4 @@ SVG;
         }
         return number_format((float) $value, 0, ',', '.') . ' ' . $unit;
     }
-
 }

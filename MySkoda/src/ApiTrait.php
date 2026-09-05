@@ -134,6 +134,7 @@ trait MySkodaApiTrait
                 $this->WriteAttributeInteger('ApiKeyExpiresAt', $timestamp);
             }
         }
+        $this->updateKeyExpiryWarning();
     }
 
     private function canRequest(bool $userAction): bool

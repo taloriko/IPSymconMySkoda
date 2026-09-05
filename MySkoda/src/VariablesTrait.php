@@ -68,6 +68,8 @@ trait MySkodaVariablesTrait
         $this->RegisterVariableString('VehicleTile', $this->Translate('Vehicle overview'), [], 130);
         $this->applyHtmlBoxProfile('VehicleTile');
 
+        $this->RegisterVariableBoolean('ApiKeyWarning', $this->Translate('API key warning'), [], 140);
+
         if ((float) $this->GetValue('TargetTemperature') === 0.0) {
             $this->SetValue('TargetTemperature', 22.0);
         }
@@ -285,7 +287,14 @@ trait MySkodaVariablesTrait
             'PREFERRED_CHARGING_TIMES' => $this->Translate('Preferred charging times'),
             'ONLY_OWN_CURRENT' => $this->Translate('Only own current'),
             'IMMEDIATE_DISCHARGING' => $this->Translate('Immediate discharging'),
-            'HOME_STORAGE_CHARGING' => $this->Translate('Home storage charging')
+            'HOME_STORAGE_CHARGING' => $this->Translate('Home storage charging'),
+            'AC' => 'AC',
+            'DC' => 'DC',
+            'OFF' => $this->Translate('Off'),
+            'COOLING' => $this->Translate('Cooling'),
+            'HEATING' => $this->Translate('Heating'),
+            'HEATING_AUXILIARY' => $this->Translate('Auxiliary heating'),
+            'VENTILATION' => $this->Translate('Ventilation')
         ];
         return $known[$mode] ?? ucwords(strtolower(str_replace('_', ' ', $mode)));
     }

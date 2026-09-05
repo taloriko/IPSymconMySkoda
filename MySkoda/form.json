@@ -2,7 +2,17 @@
   "elements": [
     {
       "type": "Label",
-      "caption": "Official MySkoda Public API. The API key and VIN are managed in the MySkoda app."
+      "caption": "MySkoda vehicle data is read directly from the official MySkoda Public API.",
+      "bold": true
+    },
+    {
+      "type": "Label",
+      "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key -> enter any name -> copy VIN and API token into this module."
+    },
+    {
+      "type": "Label",
+      "caption": "Module and documentation: https://github.com/taloriko/IPSymconMySkoda",
+      "link": true
     },
     {
       "type": "ValidationTextBox",
@@ -14,6 +24,12 @@
       "type": "PasswordTextBox",
       "name": "APIToken",
       "caption": "API token"
+    },
+    {
+      "type": "Label",
+      "name": "ConnectionFeedback",
+      "caption": "Connection has not been tested yet.",
+      "bold": true
     },
     {
       "type": "NumberSpinner",
@@ -46,13 +62,44 @@
       "type": "CheckBox",
       "name": "ShowDetails",
       "caption": "Show detail and diagnostic variables"
+    },
+    {
+      "type": "Label",
+      "caption": "API key expiry warning",
+      "bold": true
+    },
+    {
+      "type": "CheckBox",
+      "name": "NotifyKeyExpiry",
+      "caption": "Send a Symcon notification when the API key has 30 days or less remaining"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "NotificationInstanceID",
+      "caption": "Visualization instance ID for notifications",
+      "minimum": 0,
+      "maximum": 999999
+    },
+    {
+      "type": "Label",
+      "caption": "Enter the instance ID of a Tile Visualization or WebFront. The module supports VISU_PostNotification and WFC_PushNotification automatically."
     }
   ],
   "actions": [
     {
       "type": "Button",
+      "caption": "Test connection",
+      "onClick": "echo MSKODA_TestConnection($id) ? 'Connection successful - vehicle data received.' : 'Connection failed - check instance status and API data.';"
+    },
+    {
+      "type": "Button",
       "caption": "Update now",
       "onClick": "MSKODA_Update($id); echo 'Update executed';"
+    },
+    {
+      "type": "Button",
+      "caption": "Test notification",
+      "onClick": "echo MSKODA_TestNotification($id) ? 'Notification sent.' : 'Notification could not be sent. Check the visualization instance ID.';"
     },
     {
       "type": "Button",
@@ -64,7 +111,7 @@
     {
       "code": 102,
       "icon": "active",
-      "caption": "Active"
+      "caption": "Connected to MySkoda"
     },
     {
       "code": 104,
@@ -79,7 +126,7 @@
     {
       "code": 202,
       "icon": "error",
-      "caption": "API error"
+      "caption": "Connection to MySkoda failed / API error"
     },
     {
       "code": 203,

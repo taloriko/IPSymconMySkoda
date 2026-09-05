@@ -15,6 +15,8 @@ trait MySkodaCoreTrait
         $this->RegisterPropertyBoolean('ClimateWithoutExternalPower', true);
         $this->RegisterPropertyString('SPIN', '');
         $this->RegisterPropertyBoolean('ShowDetails', false);
+        $this->RegisterPropertyBoolean('NotifyKeyExpiry', false);
+        $this->RegisterPropertyInteger('NotificationInstanceID', 0);
 
         $this->RegisterAttributeString('RawData', '');
         $this->RegisterAttributeString('OpenApiOperations', '');
@@ -26,6 +28,11 @@ trait MySkodaCoreTrait
         $this->RegisterAttributeInteger('BlockedUntil', 0);
         $this->RegisterAttributeInteger('ApiKeyExpiresAt', 0);
         $this->RegisterAttributeString('LastError', '');
+        $this->RegisterAttributeString('ConnectionState', 'not_configured');
+        $this->RegisterAttributeString('ConnectionMessage', '');
+        $this->RegisterAttributeString('ConfigFingerprint', '');
+        $this->RegisterAttributeInteger('KeyExpiryNotifiedFor', 0);
+        $this->RegisterAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
 
         $this->RegisterTimer('UpdateTimer', 0, 'MSKODA_Update($_IPS[\'TARGET\']);');
         $this->RegisterTimer('VisualTimer', 0, 'MSKODA_RefreshVisuals($_IPS[\'TARGET\']);');
@@ -47,6 +54,11 @@ trait MySkodaCoreTrait
         if (!$this->isVinValid($vin) || $token === '') {
             $this->SetTimerInterval('UpdateTimer', 0);
             $this->SetTimerInterval('VisualTimer', $this->ReadAttributeString('RawData') === '' ? 0 : 60000);
+            $this->WriteAttributeInteger('ApiKeyExpiresAt', 0);
+            $this->WriteAttributeInteger('KeyExpiryNotifiedFor', 0);
+            $this->WriteAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
+            $this->updateKeyExpiryWarning();
+            $this->setConnectionFeedback('not_configured', $this->Translate('Enter VIN and API token, then apply the configuration.'));
             $this->RefreshVisuals();
             $this->SetStatus(201);
             return;
@@ -54,25 +66,74 @@ trait MySkodaCoreTrait
 
         $this->SetTimerInterval('UpdateTimer', $interval * 1000);
         $this->SetTimerInterval('VisualTimer', 60000);
-        $this->SetStatus(102);
 
-        if ($this->ReadAttributeString('RawData') === '') {
-            $this->Update();
+        $fingerprint = hash('sha256', $vin . '|' . $token);
+        $configurationChanged = $fingerprint !== $this->ReadAttributeString('ConfigFingerprint');
+        $this->WriteAttributeString('ConfigFingerprint', $fingerprint);
+        if ($configurationChanged) {
+            $this->WriteAttributeInteger('ApiKeyExpiresAt', 0);
+            $this->WriteAttributeInteger('KeyExpiryNotifiedFor', 0);
+            $this->WriteAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
+        }
+        $this->updateKeyExpiryWarning();
+
+        if ($configurationChanged || $this->ReadAttributeString('RawData') === '') {
+            $this->setConnectionFeedback('checking', $this->Translate('Checking connection to MySkoda...'));
+            $this->TestConnection();
         } else {
+            $this->SetStatus(102);
             $this->RefreshVisuals();
+            $this->refreshConnectionForm();
         }
     }
 
     public function Update(): void
     {
-        if (!$this->configurationValid()) {
-            $this->SetStatus(201);
-            return;
+        $this->fetchVehicle(false);
+    }
+
+    public function TestConnection(): bool
+    {
+        return $this->fetchVehicle(true);
+    }
+
+    public function GetConfigurationForm(): string
+    {
+        $formPath = __DIR__ . '/../form.json';
+        $form = json_decode((string) @file_get_contents($formPath), true);
+        if (!is_array($form)) {
+            return '{}';
         }
 
-        if (!$this->canRequest(false)) {
+        $caption = $this->connectionFeedbackCaption();
+        foreach (['elements', 'actions'] as $section) {
+            if (!isset($form[$section]) || !is_array($form[$section])) {
+                continue;
+            }
+            foreach ($form[$section] as &$element) {
+                if (($element['name'] ?? '') === 'ConnectionFeedback') {
+                    $element['caption'] = $caption;
+                }
+            }
+            unset($element);
+        }
+
+        return json_encode($form, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+    }
+
+    private function fetchVehicle(bool $userAction): bool
+    {
+        if (!$this->configurationValid()) {
+            $this->setConnectionFeedback('not_configured', $this->Translate('Enter VIN and API token, then apply the configuration.'));
+            $this->SetStatus(201);
+            return false;
+        }
+
+        if (!$this->canRequest($userAction)) {
+            $message = $this->Translate('MySkoda rate limit / waiting period is active.');
+            $this->setConnectionFeedback('error', $message);
             $this->SetStatus(203);
-            return;
+            return false;
         }
 
         $vin = strtoupper(trim($this->ReadPropertyString('VIN')));
@@ -81,15 +142,18 @@ trait MySkodaCoreTrait
 
         if (!$response['ok'] || !is_array($response['json'])) {
             $this->setApiError($response);
-            return;
+            $this->setConnectionFeedback('error', $this->ReadAttributeString('LastError'));
+            return false;
         }
 
         $envelope = $response['json'];
         $vehicle = isset($envelope['vehicle']) && is_array($envelope['vehicle']) ? $envelope['vehicle'] : [];
         if ($vehicle === []) {
-            $this->WriteAttributeString('LastError', $this->Translate('Vehicle data is missing in the API response.'));
+            $message = $this->Translate('Vehicle data is missing in the API response.');
+            $this->WriteAttributeString('LastError', $message);
+            $this->setConnectionFeedback('error', $message);
             $this->SetStatus(202);
-            return;
+            return false;
         }
 
         $this->WriteAttributeString('RawData', json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
@@ -99,7 +163,42 @@ trait MySkodaCoreTrait
         $this->WriteAttributeString('LastError', '');
         $this->SetValue('LastUpdate', time());
         $this->refreshVisualValues($vehicle);
+        $this->updateKeyExpiryWarning();
+        $this->setConnectionFeedback('success', $this->Translate('Connection successful. Vehicle data was received from MySkoda.'));
         $this->SetStatus(102);
+        return true;
+    }
+
+    private function setConnectionFeedback(string $state, string $message): void
+    {
+        $this->WriteAttributeString('ConnectionState', $state);
+        $this->WriteAttributeString('ConnectionMessage', $message);
+        $this->refreshConnectionForm();
+    }
+
+    private function refreshConnectionForm(): void
+    {
+        try {
+            $this->UpdateFormField('ConnectionFeedback', 'caption', $this->connectionFeedbackCaption());
+        } catch (Throwable $e) {
+            // The configuration form may not be open. The stored state is used on the next open.
+        }
+    }
+
+    private function connectionFeedbackCaption(): string
+    {
+        $state = $this->ReadAttributeString('ConnectionState');
+        $message = trim($this->ReadAttributeString('ConnectionMessage'));
+        if ($message === '') {
+            $message = $this->Translate('Connection has not been tested yet.');
+        }
+
+        return match ($state) {
+            'success' => '✅ ' . $message,
+            'error' => '❌ ' . $message,
+            'checking' => '⏳ ' . $message,
+            default => 'ℹ️ ' . $message
+        };
     }
 
     public function RequestAction(string $Ident, mixed $Value): void
