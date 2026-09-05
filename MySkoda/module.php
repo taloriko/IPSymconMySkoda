@@ -3,34 +3,46 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/src/CoreTrait.php';
+require_once __DIR__ . '/src/BootstrapV16Trait.php';
 require_once __DIR__ . '/src/VariablesTrait.php';
 require_once __DIR__ . '/src/PresentationTrait.php';
 require_once __DIR__ . '/src/ApiTrait.php';
 require_once __DIR__ . '/src/OpenApiTrait.php';
 require_once __DIR__ . '/src/VisualizationTrait.php';
 require_once __DIR__ . '/src/VisualizationV15Trait.php';
+require_once __DIR__ . '/src/VisualizationV16Trait.php';
 require_once __DIR__ . '/src/NotificationTrait.php';
 require_once __DIR__ . '/src/HelpersTrait.php';
 
 final class MySkoda extends IPSModuleStrict
 {
-    use MySkodaCoreTrait;
+    use MySkodaCoreTrait, MySkodaBootstrapV16Trait {
+        MySkodaBootstrapV16Trait::Create insteadof MySkodaCoreTrait;
+        MySkodaBootstrapV16Trait::ApplyChanges insteadof MySkodaCoreTrait;
+        MySkodaCoreTrait::Create as private createCoreV15;
+        MySkodaCoreTrait::ApplyChanges as private applyChangesCoreV15;
+    }
+
     use MySkodaVariablesTrait, MySkodaPresentationTrait {
         MySkodaPresentationTrait::booleanYesNoPresentation insteadof MySkodaVariablesTrait;
         MySkodaPresentationTrait::booleanActivePresentation insteadof MySkodaVariablesTrait;
     }
+
     use MySkodaApiTrait;
     use MySkodaOpenApiTrait;
-    use MySkodaVisualizationTrait, MySkodaVisualizationV15Trait {
+
+    use MySkodaVisualizationTrait, MySkodaVisualizationV15Trait, MySkodaVisualizationV16Trait {
         MySkodaVisualizationV15Trait::buildVehicleTileHtml insteadof MySkodaVisualizationTrait;
         MySkodaVisualizationV15Trait::buildVehicleSvg insteadof MySkodaVisualizationTrait;
         MySkodaVisualizationV15Trait::extractRemainingChargeMinutes insteadof MySkodaVisualizationTrait;
+        MySkodaVisualizationV16Trait::refreshVisualValues insteadof MySkodaVisualizationTrait;
     }
+
     use MySkodaNotificationTrait;
     use MySkodaHelpersTrait;
 
     private const API_ROOT = 'https://public.api.connect.skoda-auto.cz';
     private const OPENAPI_URL = self::API_ROOT . '/v3/api-docs';
-    private const USER_AGENT = 'IP-Symcon-MySkoda/1.5';
+    private const USER_AGENT = 'IP-Symcon-MySkoda/1.6';
     private const QUOTA_RESERVE = 2;
 }
