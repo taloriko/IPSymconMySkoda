@@ -4,17 +4,6 @@ declare(strict_types=1);
 
 trait MySkodaVisualizationTrait
 {
-    private function applyHtmlBoxProfile(string $ident): void
-    {
-        if (!function_exists('IPS_VariableProfileExists') || !IPS_VariableProfileExists('~HTMLBox')) {
-            return;
-        }
-        $id = @$this->GetIDForIdent($ident);
-        if ($id !== false) {
-            IPS_SetVariableCustomProfile($id, '~HTMLBox');
-        }
-    }
-
     private function refreshVisualValues(?array $vehicle = null): void
     {
         $lastUpdate = @$this->GetIDForIdent('LastUpdate') !== false ? (int) $this->GetValue('LastUpdate') : 0;
