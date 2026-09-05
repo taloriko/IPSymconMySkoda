@@ -10,6 +10,8 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 - Konfigurationsmaske für FIN, API-Token, Abrufintervall und optionale S-PIN
 - Bewusst kleiner Standard-Objektbaum
 - Fahrzeugkachel für die Symcon-Visualisierung mit generischer Elektroauto-Darstellung
+- Warnung 30 Tage vor Ablauf des API-Keys, optional mit Symcon-Mitteilung
+- Verbindungstest mit direkter Rückmeldung in der Konfiguration
 - Optionale Detail- und Diagnosevariablen
 - Laden und Klimatisierung über Symcon-Variablen steuerbar
 - Ladelimit und Lademodus steuerbar
@@ -28,7 +30,18 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 
 ## Version
 
-Aktueller Stand dieser Bibliothek: **1.1**
+Aktueller Stand dieser Bibliothek: **1.2**
+
+## API-Key in der MySkoda App erstellen
+
+1. **MySkoda App** öffnen.
+2. **Profil** auswählen.
+3. **Smart Home** öffnen.
+4. **Create Key** wählen.
+5. Einen beliebigen Namen vergeben.
+6. Die angezeigte **FIN/VIN** und den **API-Token** in die MySkoda-Instanz in Symcon eintragen.
+
+Nach dem Übernehmen prüft das Modul die Verbindung und zeigt direkt an, ob Fahrzeugdaten erfolgreich empfangen wurden.
 
 ## Installation
 
