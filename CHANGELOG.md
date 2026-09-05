@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here.
 
+## 1.9 - 2026-09-05
+
+- Hardened the native HTML-SDK tile against Symcon scroll/recycle behavior: the complete vehicle state is embedded directly into the tile HTML on creation.
+- Added an instance-specific `sessionStorage` fallback so multiple MySkoda vehicles cannot overwrite each other's cached visualization state.
+- The tile now requests a full cached-state refresh through `requestAction('VisualizationRefresh', ...)` after load, page show, focus and visibility changes. This refresh uses the module's stored `RawData` and does **not** consume a MySkoda API request.
+- Added an optional **Hide Symcon tile title** setting. On Symcon 9.1+ the outer tile title is hidden with `IPS_SetHiddenTitle()` while the instance/object name in the console remains unchanged. Older compatible Symcon versions keep the title and the tile reserves additional top space.
+- Replaced the numeric notification visualization ID field with a `SelectInstance` chooser.
+- Notification chooser is dynamically restricted to installed visualization module types where possible and the selected instance is additionally checked for Symcon `ModuleType = 6` before notifications are sent.
+- Added clear feedback showing the selected notification target and improved notification test/error messages.
+- Updated documentation, localization and structure tests for version 1.9.
+
 ## 1.8 - 2026-09-05
 
 - Reworked the instance configuration into clear collapsible sections for connection/vehicle, polling/control, notifications, advanced settings and help/documentation.
