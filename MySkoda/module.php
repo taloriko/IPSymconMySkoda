@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 require_once __DIR__ . '/src/CoreTrait.php';
+require_once __DIR__ . '/src/CoreV19Trait.php';
 require_once __DIR__ . '/src/BootstrapV16Trait.php';
 require_once __DIR__ . '/src/BootstrapV17Trait.php';
 require_once __DIR__ . '/src/BootstrapV19Trait.php';
@@ -16,11 +17,16 @@ require_once __DIR__ . '/src/VisualizationV16Trait.php';
 require_once __DIR__ . '/src/VisualizationV17Trait.php';
 require_once __DIR__ . '/src/VisualizationV19Trait.php';
 require_once __DIR__ . '/src/NotificationTrait.php';
+require_once __DIR__ . '/src/NotificationV19Trait.php';
 require_once __DIR__ . '/src/HelpersTrait.php';
 
 final class MySkoda extends IPSModuleStrict
 {
-    use MySkodaCoreTrait, MySkodaBootstrapV16Trait, MySkodaBootstrapV17Trait, MySkodaBootstrapV19Trait {
+    use MySkodaCoreTrait, MySkodaCoreV19Trait, MySkodaBootstrapV16Trait, MySkodaBootstrapV17Trait, MySkodaBootstrapV19Trait {
+        MySkodaCoreV19Trait::GetConfigurationForm insteadof MySkodaCoreTrait;
+        MySkodaCoreTrait::GetConfigurationForm as private getConfigurationFormCoreV18;
+        MySkodaCoreV19Trait::RequestAction insteadof MySkodaCoreTrait;
+        MySkodaCoreTrait::RequestAction as private requestActionCoreV18;
         MySkodaBootstrapV19Trait::Create insteadof MySkodaBootstrapV17Trait, MySkodaBootstrapV16Trait, MySkodaCoreTrait;
         MySkodaBootstrapV19Trait::ApplyChanges insteadof MySkodaBootstrapV17Trait, MySkodaBootstrapV16Trait, MySkodaCoreTrait;
         MySkodaBootstrapV17Trait::Create as private createBootstrapV17;
@@ -50,7 +56,10 @@ final class MySkoda extends IPSModuleStrict
         MySkodaVisualizationV16Trait::getVisualizationState as private getVisualizationStateV16;
     }
 
-    use MySkodaNotificationTrait;
+    use MySkodaNotificationTrait, MySkodaNotificationV19Trait {
+        MySkodaNotificationV19Trait::TestNotification insteadof MySkodaNotificationTrait;
+        MySkodaNotificationV19Trait::sendSymconNotification insteadof MySkodaNotificationTrait;
+    }
     use MySkodaHelpersTrait;
 
     private const API_ROOT = 'https://public.api.connect.skoda-auto.cz';
