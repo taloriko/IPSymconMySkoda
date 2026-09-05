@@ -11,7 +11,7 @@ All notable changes to this project are documented here.
 - Safety-related states are green when the vehicle is in the expected state, regardless of whether that means `Ja` or `Nein`.
 - Doors, windows, trunk, bonnet, lights and API-key warning: `Nein` is green and `Ja` is orange.
 - Locked: `Ja` is green and `Nein` is orange.
-- Charging and climate: `Ja` is green, `Nein` is neutral.
+- Charging and climate: both `Ja` and `Nein` are green because neither normal operating state is a warning.
 - No red color is used for informational Boolean states; red remains reserved for actual faults/errors.
 
 ## 1.3 - 2026-09-05
