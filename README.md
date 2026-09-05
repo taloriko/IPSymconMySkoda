@@ -1,29 +1,28 @@
 # MySkoda für IP-Symcon
 
-IP-Symcon Bibliothek für die offizielle **MySkoda Public API**.
-
-**Version 2.0 ist bewusst ein harter Schnitt:** Dieses Repository enthält nur noch die MySkoda-Datenanbindung und Fahrzeugsteuerung. Eine Fahrzeug-Visualisierung gehört nicht mehr in das herstellerspezifische API-Modul.
+IP-Symcon Bibliothek zur Anbindung von Fahrzeugen über die offizielle **MySkoda Public API**.
 
 ## Funktionsumfang
 
 - Fahrzeugstatus über die offizielle MySkoda Public API
-- FIN/VIN und API-Key über die Instanzkonfiguration
-- zyklischer Abruf mit Rate-Limit-Beachtung
-- SOC, Reichweite, Kilometerstand und Fahrzeugstatus
-- Laden, Ladelimit und Lademodus
-- Klimatisierung sowie optionale Remote-Funktionen
-- API-Key-Ablaufwarnung
-- optionale Symcon-Push-Mitteilung über eine explizit ausgewählte Visualisierungsinstanz
+- Konfiguration über FIN/VIN und API-Key
+- zyklischer Abruf mit Berücksichtigung der API-Rate-Limits
+- Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
+- Ladezustand, Ladeleistung, Ladelimit und Lademodus
+- Klimatisierung und unterstützte Remote-Funktionen
+- optionale Standheizung und aktive Lüftung
+- API-Key-Ablaufwarnung 30 Tage vor Ablauf
+- optionale Symcon-Push-Mitteilung über eine ausgewählte Visualisierungsinstanz
 - optionale Detail- und Diagnosevariablen
 - native Symcon-8.x-Darstellungen ohne Legacy-Variablenprofile
-- keine eigene HTML-/Tile-Visualisierung
 
 ## Voraussetzungen
 
-- IP-Symcon 8.1 oder neuer
+- IP-Symcon **8.1 oder neuer**
 - 17-stellige FIN/VIN
 - MySkoda API-Key
 - optional S-PIN für Standheizung
+- für die gewünschte Funktion aktive MySkoda/Škoda-Connect-Dienste
 
 ## Installation
 
@@ -33,13 +32,27 @@ Repository im **Module Control** hinzufügen:
 https://github.com/taloriko/IPSymconMySkoda
 ```
 
-Danach eine Instanz **MySkoda** anlegen.
+Danach eine Instanz **MySkoda** anlegen und FIN/VIN sowie API-Token konfigurieren.
 
-Die vollständige Dokumentation befindet sich unter [MySkoda/README.md](MySkoda/README.md).
+Die vollständige Modul-Dokumentation befindet sich unter [MySkoda/README.md](MySkoda/README.md).
 
-## Trennung von Daten und Visualisierung
+## API-Key erstellen
 
-MySkoda stellt ausschließlich Datenpunkte und Aktionen bereit. Eine allgemeine Elektroauto-Visualisierung sollte als separates, herstellerunabhängiges Symcon-Modul umgesetzt werden und kann dann ebenso Daten anderer Fahrzeughersteller verwenden.
+In der **MySkoda App**:
+
+1. **Profil**
+2. **Smart Home**
+3. **Create Key**
+4. beliebigen Namen vergeben
+5. FIN/VIN und API-Token in die Symcon-Instanz übernehmen
+
+Nach dem Übernehmen prüft das Modul die Verbindung zur MySkoda Public API.
+
+## Daten und Steuerung
+
+Das Modul stellt Fahrzeugdaten als native Symcon-Variablen bereit. Unterstützte Lade- und Klimafunktionen können direkt über Variablenaktionen oder die öffentlichen Modulmethoden ausgeführt werden.
+
+Die vollständige API-Antwort kann über `MSKODA_GetRawData()` abgerufen werden.
 
 ## Hinweis
 
