@@ -27,91 +27,63 @@ def main() -> None:
     form = load(ROOT / "MySkoda" / "form.json")
     locale = load(ROOT / "MySkoda" / "locale.json")
 
-    assert GUID.match(library["id"]), "Invalid library GUID"
-    assert GUID.match(module["id"]), "Invalid module GUID"
+    assert GUID.match(library["id"])
+    assert GUID.match(module["id"])
     assert library["compatibility"]["version"] >= "8.1"
-    assert library["version"] == "1.9"
+    assert library["version"] == "2.0"
     assert module["name"] == "MySkoda"
+    assert module["vendor"] == "taloriko"
     assert module["prefix"].isalnum()
-    assert isinstance(form.get("elements"), list)
-    assert isinstance(form.get("actions"), list)
     assert isinstance(locale.get("translations", {}).get("de"), dict)
 
     all_elements = list(walk(form["elements"]))
-    vehicle_design = next((element for element in all_elements if element.get("name") == "VehicleDesign"), None)
-    assert vehicle_design is not None, "VehicleDesign configuration is missing"
-    assert vehicle_design.get("type") == "Select"
-    design_values = {option.get("value") for option in vehicle_design.get("options", [])}
-    assert {"auto", "enyaq", "elroq", "epiq", "generic"}.issubset(design_values)
-
-    hide_title = next((element for element in all_elements if element.get("name") == "HideVisualizationTitle"), None)
-    assert hide_title is not None and hide_title.get("type") == "CheckBox"
-
-    notification_target = next((element for element in all_elements if element.get("name") == "NotificationInstanceID"), None)
-    assert notification_target is not None
-    assert notification_target.get("type") == "SelectInstance"
-    assert isinstance(notification_target.get("validModules"), list)
-    assert any(element.get("name") == "NotificationTargetFeedback" for element in all_elements)
+    names = {element.get("name") for element in all_elements}
+    assert "VehicleDesign" not in names
+    assert "HideVisualizationTitle" not in names
+    target = next(element for element in all_elements if element.get("name") == "NotificationInstanceID")
+    assert target.get("type") == "SelectInstance"
 
     panels = {element.get("caption") for element in form["elements"] if element.get("type") == "ExpansionPanel"}
-    assert {
-        "Connection and vehicle",
-        "Visualization settings",
-        "Polling and control",
-        "Notifications",
-        "Advanced",
-        "Help and documentation",
-    }.issubset(panels)
+    assert {"Connection", "Polling and control", "Notifications", "Advanced", "Help and documentation"}.issubset(panels)
+    assert "Visualization settings" not in panels
 
     php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
     assert "class MySkoda extends IPSModuleStrict" in php
-    assert "CoreV19Trait.php" in php
-    assert "BootstrapV19Trait.php" in php
-    assert "VisualizationV19Trait.php" in php
-    assert "NotificationV19Trait.php" in php
-    assert "IP-Symcon-MySkoda/1.9" in php
+    assert "IP-Symcon-MySkoda/2.0" in php
+    for legacy in ["BootstrapV", "CoreV19Trait", "Visualization", "NotificationV19Trait", "PresentationTrait"]:
+        assert legacy not in php
 
     php_sources = "\n".join(source.read_text(encoding="utf-8") for source in (ROOT / "MySkoda").rglob("*.php"))
+    assert "SetVisualizationType(1)" not in php_sources
+    assert "SetVisualizationType(0)" in php_sources
+    assert "GetVisualizationTile" not in php_sources
+    assert "UpdateVisualizationValue" not in php_sources
+    assert "RefreshVisuals" not in php_sources
+    assert "VehicleDesign" not in php_sources
+    assert "IPS_SetHiddenTitle" not in php_sources
+    assert "VARIABLE_PRESENTATION_WEB_CONTENT" not in php_sources
     assert "VARIABLE_PRESENTATION_LEGACY" not in php_sources
     assert "IPS_CreateVariableProfile" not in php_sources
-    assert "IPS_SetVariableProfileAssociation" not in php_sources
-    assert "VARIABLE_PRESENTATION_ENUMERATION" in php_sources
-    assert "VARIABLE_PRESENTATION_WEB_CONTENT" in php_sources
-    assert "SetVisualizationType(1)" in php_sources
-    assert "GetVisualizationTile" in php_sources
-    assert "UpdateVisualizationValue" in php_sources
-    assert "MSKODA_RefreshVisuals" in php_sources
-    assert "VisualizationRefresh" in php_sources
-    assert "IPS_SetHiddenTitle" in php_sources
+    assert "IPS_CreateTemplate" not in php_sources
+    assert "IPS_SetTemplate" not in php_sources
+    assert "IPS_LogMessage" not in php_sources
+    assert "IPS_SetProperty" not in php_sources
+    assert "IPS_ApplyChanges" not in php_sources
+    assert "SunroofOpen" in php_sources
     assert "IPS_GetInstanceListByModuleType(6)" in php_sources
-    assert "ModuleType" in php_sources
-    assert "VehicleTile" in php_sources
-    assert "LastUpdateAge" in php_sources
-    assert "VehicleDesign" in php_sources
-    assert "status.detail.sunroof" in php_sources
 
-    tile = (ROOT / "MySkoda" / "module.html").read_text(encoding="utf-8")
-    assert "handleMessage" in tile
-    assert "batteryColor" in tile
-    assert 'id="bat1"' in tile and 'id="bat4"' in tile
-    assert "CAR_DESIGNS" in tile
-    assert "enyaq:" in tile and "elroq:" in tile and "epiq:" in tile and "generic:" in tile
-    assert 'id="lockLine"' in tile
-    assert 'id="rowSunroof"' not in tile and 'id="rowTrunk"' not in tile and 'id="rowBonnet"' not in tile
-    assert "__MYSKODA_INSTANCE_ID__" in tile
-    assert "__MYSKODA_INITIAL_STATE__" in tile
-    assert "VisualizationRefresh" in tile
-    assert "requestAction" in tile
-    assert "CACHE_KEY" in tile
-    assert "sessionStorage" in tile
-    assert "visibilitychange" in tile and "ResizeObserver" in tile
-    assert "external-title-space" in tile
-    assert "overflow:hidden" in tile
-    assert "TileVisu" not in tile
+    assert not (ROOT / "MySkoda" / "module.html").exists()
+    assert not (ROOT / "docs" / "VISUALIZATION.md").exists()
 
-    visu_doc = (ROOT / "docs" / "VISUALIZATION.md").read_text(encoding="utf-8")
-    assert "Enyaq" in visu_doc and "Elroq" in visu_doc and "Epiq" in visu_doc
-    assert "FIN allein" in visu_doc
+    src_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
+    assert src_names == {
+        "ApiTrait.php",
+        "CoreTrait.php",
+        "HelpersTrait.php",
+        "NotificationTrait.php",
+        "OpenApiTrait.php",
+        "VariablesTrait.php",
+    }
 
 
 if __name__ == "__main__":
