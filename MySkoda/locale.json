@@ -116,7 +116,24 @@
       "Auxiliary heating": "Standheizung",
       "Ventilation": "Lüften",
       "Yes": "Ja",
-      "No": "Nein"
+      "No": "Nein",
+      "Automatic": "Automatisch",
+      "Generic": "Allgemein",
+      "Vehicle design": "Fahrzeugdarstellung",
+      "Automatic selection uses model information returned by MySkoda. If the model cannot be determined reliably, choose it manually.": "Automatisch wertet die von MySkoda gelieferten Modellinformationen aus. Kann das Modell nicht zuverlässig bestimmt werden, bitte manuell auswählen.",
+      "Generic vehicle": "Allgemeines Fahrzeug",
+      "Vehicle locked": "Fahrzeug verriegelt",
+      "Doors": "Türen",
+      "Windows": "Fenster",
+      "Sunroof": "Schiebedach",
+      "Lights": "Licht",
+      "Trunk": "Kofferraum",
+      "Bonnet": "Motorhaube",
+      "Closed": "Geschlossen",
+      "Open": "Offen",
+      "On": "An",
+      "Not available": "Nicht verfügbar",
+      "Vehicle is not connected": "Fahrzeug ist nicht verbunden"
     }
   }
 }
