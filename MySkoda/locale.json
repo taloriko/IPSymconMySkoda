@@ -57,7 +57,28 @@
       "Unknown charge mode. Please refresh vehicle data.": "Unbekannter Lademodus. Bitte Fahrzeugdaten aktualisieren.",
       "Vehicle data is missing in the API response.": "Fahrzeugdaten fehlen in der API-Antwort.",
       "Invalid charging profile JSON": "Ungültiges Ladeprofil-JSON",
-      "S-PIN is missing": "S-PIN fehlt"
+      "S-PIN is missing": "S-PIN fehlt",
+      "Vehicle overview": "Fahrzeugübersicht",
+      "Last update age": "Alter letzte Abfrage",
+      "Vehicle": "Fahrzeug",
+      "Off": "Aus",
+      "Unknown": "Unbekannt",
+      "Unlocked": "Entriegelt",
+      "Doors closed": "Türen geschlossen",
+      "Windows closed": "Fenster geschlossen",
+      "Lights off": "Licht aus",
+      "Not charging": "Lädt nicht",
+      "Climate off": "Klima aus",
+      "Time to full": "Zeit bis voll",
+      "Charging control": "Ladesteuerung",
+      "Climate": "Klima",
+      "Climate state": "Klimastatus",
+      "Status": "Status",
+      "Charging error": "Ladefehler",
+      "Charging in progress": "Ladevorgang aktiv",
+      "Ready / target reached": "Bereit / Ladeziel erreicht",
+      "Connected": "Angesteckt",
+      "Not connected": "Nicht verbunden"
     }
   }
 }
