@@ -98,6 +98,7 @@
       "Test notification": "Mitteilung testen",
       "Notification sent.": "Mitteilung gesendet.",
       "Notification could not be sent. Check the visualization instance ID.": "Mitteilung konnte nicht gesendet werden. Instanz-ID der Visualisierung prüfen.",
+      "Notification could not be sent. Check the selected visualization and registered mobile devices.": "Mitteilung konnte nicht gesendet werden. Gewählte Visualisierung und registrierte Mobilgeräte prüfen.",
       "API key warning": "API-Key Warnung",
       "The MySkoda API key expires in %d days. Please create a new key in the MySkoda app.": "Der MySkoda API-Key läuft in %d Tagen ab. Bitte in der MySkoda App einen neuen Key erstellen.",
       "MySkoda API key warning": "MySkoda API-Key Warnung",
@@ -138,7 +139,20 @@
       "Polling and control": "Abruf & Steuerung",
       "Notifications": "Mitteilungen",
       "Advanced": "Erweitert",
-      "Help and documentation": "Hilfe & Dokumentation"
+      "Help and documentation": "Hilfe & Dokumentation",
+      "Visualization": "Visualisierung",
+      "Visualization settings": "Visualisierung",
+      "Hide Symcon tile title": "Symcon-Kacheltitel ausblenden",
+      "The Symcon tile title can be hidden while the instance name remains unchanged in the object tree.": "Der Symcon-Kacheltitel kann ausgeblendet werden; der Instanzname im Objektbaum bleibt unverändert.",
+      "Hiding the Symcon tile title requires Symcon 9.1 or newer. The instance name itself is never changed.": "Das Ausblenden des Symcon-Kacheltitels benötigt Symcon 9.1 oder neuer. Der Instanzname selbst wird nicht verändert.",
+      "Visualization for notifications": "Visualisierung für Mitteilungen",
+      "Select a Tile Visualization or WebFront for notifications.": "Kachel-Visualisierung oder WebFront für Mitteilungen auswählen.",
+      "Notification target: %s (%s)": "Mitteilungsziel: %s (%s)",
+      "The selected notification target does not exist.": "Das gewählte Mitteilungsziel existiert nicht.",
+      "The selected object is not a Symcon visualization instance.": "Das gewählte Objekt ist keine Symcon-Visualisierungsinstanz.",
+      "The selected notification target could not be validated.": "Das gewählte Mitteilungsziel konnte nicht geprüft werden.",
+      "The configured notification target is not a valid visualization instance.": "Das konfigurierte Mitteilungsziel ist keine gültige Visualisierungsinstanz.",
+      "Notification could not be sent. Check the selected visualization and registered mobile devices.": "Mitteilung konnte nicht gesendet werden. Gewählte Visualisierung und registrierte Mobilgeräte prüfen."
     }
   }
 }
