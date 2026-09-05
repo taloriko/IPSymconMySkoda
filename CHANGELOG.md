@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here.
 
+## 1.7 - 2026-09-05
+
+- Complete redesign of the native vehicle tile following the compact visual hierarchy of `da8ter/TileVisu-Kachelsammlung` more closely while keeping the MySkoda implementation and SVG artwork original.
+- Added selectable vehicle designs: **Automatic**, **Enyaq**, **Elroq**, **Epiq** and **Generic**.
+- Automatic design selection prefers model/specification metadata returned by MySkoda, then known system-model identifiers, and finally a conservative vehicle-name hint.
+- VIN-only detection intentionally does not force Enyaq vs. Elroq because both vehicle families can use the Skoda type code `NY`; manual override is always available.
+- Added distinct top-view silhouettes for Enyaq, Elroq and Epiq.
+- Added panoramic/sliding-roof visualization and a dedicated **Sunroof** status row when the API reports that status.
+- Vehicle tile now follows the approved mockup structure: vehicle left, one consolidated charging panel right, climate and mileage below it, then clear status rows for lock, doors, windows, sunroof, lights, trunk and bonnet.
+- SOC remains a four-segment battery in the vehicle with the 10% red / 25% orange / 80% light-green / >80% dark-green colour progression.
+- Exterior lights remain neutral when the API reports lights off; orange highlighting is used only when lights are on.
+- Missing sunroof/trunk/bonnet status is not shown as a false green state.
+
 ## 1.6 - 2026-09-05
 
 - The MySkoda **instance itself** now exposes a native Symcon Tile Visualization through `SetVisualizationType(1)`, `GetVisualizationTile()` and `UpdateVisualizationValue()`.
