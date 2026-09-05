@@ -4,17 +4,6 @@ declare(strict_types=1);
 
 trait MySkodaVisualizationTrait
 {
-    private function applyHtmlBoxProfile(string $ident): void
-    {
-        if (!function_exists('IPS_VariableProfileExists') || !IPS_VariableProfileExists('~HTMLBox')) {
-            return;
-        }
-        $id = @$this->GetIDForIdent($ident);
-        if ($id !== false) {
-            IPS_SetVariableCustomProfile($id, '~HTMLBox');
-        }
-    }
-
     private function refreshVisualValues(?array $vehicle = null): void
     {
         $lastUpdate = @$this->GetIDForIdent('LastUpdate') !== false ? (int) $this->GetValue('LastUpdate') : 0;
@@ -167,9 +156,9 @@ HTML;
 
     private function buildVehicleSvg(bool $locked, bool $doorsOpen, bool $windowsOpen, bool $lightsOn, string $socText, string $targetSocText): string
     {
-        $outline = $locked ? '#27a35b' : '#d94b4b';
+        $outline = $locked ? '#27a35b' : '#d58a00';
         $door = $doorsOpen ? '#d58a00' : 'rgba(127,127,127,.20)';
-        $window = $windowsOpen ? '#2f9acb' : 'rgba(127,127,127,.15)';
+        $window = $windowsOpen ? '#d58a00' : 'rgba(127,127,127,.15)';
         $light = $lightsOn ? '#d9ab00' : 'rgba(127,127,127,.18)';
         $limitLabel = htmlspecialchars($this->Translate('Charging limit'), ENT_QUOTES, 'UTF-8');
 

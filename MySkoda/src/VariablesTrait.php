@@ -6,7 +6,7 @@ trait MySkodaVariablesTrait
 {
     private function registerCoreVariables(): void
     {
-        $this->registerBooleanProfiles();
+        $this->cleanupLegacyModuleProfiles();
         $this->RegisterVariableInteger('StateOfCharge', $this->Translate('State of charge'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_BATTERY
@@ -25,15 +25,11 @@ trait MySkodaVariablesTrait
             'THOUSANDS_SEPARATOR' => '.'
         ], 30);
 
-        $this->RegisterVariableBoolean('Locked', $this->Translate('Locked'), [], 40);
-        $this->applyBooleanProfile('Locked', 'MySkoda.YesNo.GoodTrue');
-        $this->RegisterVariableBoolean('DoorsOpen', $this->Translate('Doors open'), [], 50);
-        $this->applyBooleanProfile('DoorsOpen', 'MySkoda.YesNo.GoodFalse');
-        $this->RegisterVariableBoolean('WindowsOpen', $this->Translate('Windows open'), [], 60);
-        $this->applyBooleanProfile('WindowsOpen', 'MySkoda.YesNo.GoodFalse');
+        $this->RegisterVariableBoolean('Locked', $this->Translate('Locked'), $this->booleanYesNoPresentation(true), 40);
+        $this->RegisterVariableBoolean('DoorsOpen', $this->Translate('Doors open'), $this->booleanYesNoPresentation(false), 50);
+        $this->RegisterVariableBoolean('WindowsOpen', $this->Translate('Windows open'), $this->booleanYesNoPresentation(false), 60);
 
-        $this->RegisterVariableBoolean('Charging', $this->Translate('Charging'), [], 70);
-        $this->applyBooleanProfile('Charging', 'MySkoda.YesNo.ActiveTrue');
+        $this->RegisterVariableBoolean('Charging', $this->Translate('Charging'), $this->booleanActivePresentation(), 70);
 
         $this->RegisterVariableFloat('ChargePower', $this->Translate('Charging power'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -52,8 +48,7 @@ trait MySkodaVariablesTrait
 
         $this->RegisterVariableInteger('ChargeMode', $this->Translate('Charging mode'), $this->chargeModePresentation([]), 100);
 
-        $this->RegisterVariableBoolean('Climate', $this->Translate('Air conditioning'), [], 110);
-        $this->applyBooleanProfile('Climate', 'MySkoda.YesNo.ActiveTrue');
+        $this->RegisterVariableBoolean('Climate', $this->Translate('Air conditioning'), $this->booleanActivePresentation(), 110);
 
         $this->RegisterVariableFloat('TargetTemperature', $this->Translate('Target temperature'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
@@ -67,11 +62,13 @@ trait MySkodaVariablesTrait
             'DIGITS' => 1
         ], 120);
 
-        $this->RegisterVariableString('VehicleTile', $this->Translate('Vehicle overview'), [], 130);
-        $this->applyHtmlBoxProfile('VehicleTile');
+        $this->RegisterVariableString('VehicleTile', $this->Translate('Vehicle overview'), [
+            'PRESENTATION' => VARIABLE_PRESENTATION_WEB_CONTENT,
+            'HTML_TYPE' => 0,
+            'PADDING' => true
+        ], 130);
 
-        $this->RegisterVariableBoolean('ApiKeyWarning', $this->Translate('API key warning'), [], 140);
-        $this->applyBooleanProfile('ApiKeyWarning', 'MySkoda.YesNo.GoodFalse');
+        $this->RegisterVariableBoolean('ApiKeyWarning', $this->Translate('API key warning'), $this->booleanYesNoPresentation(false), 140);
 
         if ((float) $this->GetValue('TargetTemperature') === 0.0) {
             $this->SetValue('TargetTemperature', 22.0);
@@ -106,12 +103,9 @@ trait MySkodaVariablesTrait
             'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
             'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
         ], 240);
-        $this->RegisterVariableBoolean('TrunkOpen', $this->Translate('Trunk open'), [], 250);
-        $this->applyBooleanProfile('TrunkOpen', 'MySkoda.YesNo.GoodFalse');
-        $this->RegisterVariableBoolean('BonnetOpen', $this->Translate('Bonnet open'), [], 260);
-        $this->applyBooleanProfile('BonnetOpen', 'MySkoda.YesNo.GoodFalse');
-        $this->RegisterVariableBoolean('LightsOn', $this->Translate('Lights on'), [], 270);
-        $this->applyBooleanProfile('LightsOn', 'MySkoda.YesNo.GoodFalse');
+        $this->RegisterVariableBoolean('TrunkOpen', $this->Translate('Trunk open'), $this->booleanYesNoPresentation(false), 250);
+        $this->RegisterVariableBoolean('BonnetOpen', $this->Translate('Bonnet open'), $this->booleanYesNoPresentation(false), 260);
+        $this->RegisterVariableBoolean('LightsOn', $this->Translate('Lights on'), $this->booleanYesNoPresentation(false), 270);
         $this->RegisterVariableString('ParkingState', $this->Translate('Parking state'), [], 280);
         $this->RegisterVariableFloat('Latitude', $this->Translate('Latitude'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -237,42 +231,93 @@ trait MySkodaVariablesTrait
         $this->setIfExists('PartialErrors', $errors === [] ? '' : json_encode($errors, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
 
-    private function registerBooleanProfiles(): void
+    private function booleanYesNoPresentation(bool $goodValue): array
     {
-        $yes = $this->Translate('Yes');
-        $no = $this->Translate('No');
+        $green = 0x22C55E;
+        $orange = 0xF59E0B;
 
-        // Gruen = erwarteter/guter Zustand, Orange = Aufmerksamkeit.
-        // Rot bleibt bewusst echten Stoerungen/Fehlern vorbehalten.
-        $this->ensureBooleanProfile('MySkoda.YesNo.GoodTrue', $no, 0xF59E0B, $yes, 0x22C55E);
-        $this->ensureBooleanProfile('MySkoda.YesNo.GoodFalse', $no, 0x22C55E, $yes, 0xF59E0B);
-        $this->ensureBooleanProfile('MySkoda.YesNo.ActiveTrue', $no, -1, $yes, 0x22C55E);
+        return $this->booleanEnumerationPresentation(
+            $goodValue === false ? $green : $orange,
+            $goodValue === true ? $green : $orange
+        );
     }
 
-    private function ensureBooleanProfile(string $name, string $falseText, int $falseColor, string $trueText, int $trueColor): void
+    private function booleanActivePresentation(): array
     {
-        if (!IPS_VariableProfileExists($name)) {
-            IPS_CreateVariableProfile($name, 0);
-        }
-
-        $profile = IPS_GetVariableProfile($name);
-        if ((int) ($profile['ProfileType'] ?? -1) !== 0) {
-            $this->SendDebug('Variablenprofil', $name . ' hat nicht den Typ Boolean und wird nicht veraendert.', 0);
-            return;
-        }
-
-        IPS_SetVariableProfileAssociation($name, 0, $falseText, '', $falseColor);
-        IPS_SetVariableProfileAssociation($name, 1, $trueText, '', $trueColor);
+        // Laden/Klima sind Betriebszustände: Aktiv = grün, Inaktiv = neutral.
+        // Orange wird nur für Zustände verwendet, die Aufmerksamkeit benötigen.
+        return $this->booleanEnumerationPresentation(-1, 0x22C55E);
     }
 
-    private function applyBooleanProfile(string $ident, string $profile): void
+    private function booleanEnumerationPresentation(int $falseColor, int $trueColor): array
     {
-        if (!IPS_VariableProfileExists($profile)) {
-            return;
+        $options = [
+            [
+                'Value' => false,
+                'Caption' => $this->Translate('No'),
+                'IconActive' => false,
+                'IconValue' => '',
+                'Color' => $falseColor
+            ],
+            [
+                'Value' => true,
+                'Caption' => $this->Translate('Yes'),
+                'IconActive' => false,
+                'IconValue' => '',
+                'Color' => $trueColor
+            ]
+        ];
+
+        return [
+            'PRESENTATION' => VARIABLE_PRESENTATION_ENUMERATION,
+            'LAYOUT' => 0,
+            'DISPLAY' => 0,
+            'OPTIONS' => json_encode($options, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        ];
+    }
+
+    private function cleanupLegacyModuleProfiles(): void
+    {
+        // Migration von Version 1.3: Die damals vom Modul erzeugten Legacy-Profile
+        // werden von den Modulvariablen entfernt. Ab 1.4 kommen ausschließlich
+        // die neuen Darstellungen (Symcon >= 8.0) zum Einsatz.
+        $legacyProfiles = [
+            'MySkoda.YesNo.GoodTrue',
+            'MySkoda.YesNo.GoodFalse',
+            'MySkoda.YesNo.ActiveTrue'
+        ];
+        $idents = [
+            'Locked', 'DoorsOpen', 'WindowsOpen', 'Charging', 'Climate',
+            'ApiKeyWarning', 'TrunkOpen', 'BonnetOpen', 'LightsOn', 'VehicleTile'
+        ];
+
+        foreach ($idents as $ident) {
+            $id = @$this->GetIDForIdent($ident);
+            if ($id === false) {
+                continue;
+            }
+            $variable = IPS_GetVariable($id);
+            $customProfile = (string) ($variable['VariableCustomProfile'] ?? '');
+            if (in_array($customProfile, $legacyProfiles, true) || ($ident === 'VehicleTile' && $customProfile === '~HTMLBox')) {
+                IPS_SetVariableCustomProfile($id, '');
+            }
         }
-        $id = @$this->GetIDForIdent($ident);
-        if ($id !== false) {
-            IPS_SetVariableCustomProfile($id, $profile);
+
+        foreach ($legacyProfiles as $profileName) {
+            if (!IPS_VariableProfileExists($profileName)) {
+                continue;
+            }
+            $inUse = false;
+            foreach (IPS_GetVariableList() as $variableId) {
+                $variable = IPS_GetVariable($variableId);
+                if (($variable['VariableCustomProfile'] ?? '') === $profileName || ($variable['VariableProfile'] ?? '') === $profileName) {
+                    $inUse = true;
+                    break;
+                }
+            }
+            if (!$inUse) {
+                IPS_DeleteVariableProfile($profileName);
+            }
         }
     }
 

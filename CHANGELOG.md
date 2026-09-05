@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented here.
 
+## 1.4 - 2026-09-05
+
+- Removed module-owned Legacy variable profiles introduced in 1.3.
+- Boolean values now use native Symcon 8.x enumeration presentations with `Ja` / `Nein` captions and per-state colors.
+- Vehicle tile now uses the native Symcon Web Content presentation instead of the `~HTMLBox` Legacy profile.
+- Added migration cleanup for the former `MySkoda.YesNo.*` profiles and the old `~HTMLBox` assignment.
+- Safety-related states are green when the vehicle is in the expected state, regardless of whether that means `Ja` or `Nein`.
+- Doors, windows, trunk, bonnet, lights and API-key warning: `Nein` is green and `Ja` is orange.
+- Locked: `Ja` is green and `Nein` is orange.
+- Charging and climate: `Ja` is green, `Nein` is neutral.
+- No red color is used for informational Boolean states; red remains reserved for actual faults/errors.
+
 ## 1.3 - 2026-09-05
 
 - Added module-owned Boolean profiles under `MySkoda.*` with clear `Ja` / `Nein` labels.
