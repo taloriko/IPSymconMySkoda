@@ -28,6 +28,8 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 - Stellt PHP-Befehle für Standheizung, aktive Lüftung und Ladeprofil-Updates bereit.
 - Speichert die vollständige API-Antwort intern und stellt sie über `MSKODA_GetRawData()` zur Verfügung.
 - Beachtet die Rate-Limit-Header und `Retry-After` der API.
+- Prüft nach der Ersteinrichtung automatisch die Verbindung und zeigt das Ergebnis im Instanzformular an.
+- Warnt 30 Tage vor Ablauf des API-Keys und kann optional eine Symcon-Mitteilung versenden.
 
 ## 2. Voraussetzungen
 
@@ -36,6 +38,18 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 - 17-stellige FIN/VIN
 - Optional: S-PIN für die Standheizung
 - Für die jeweiligen Daten/Funktionen aktive Škoda-Connect-Dienste am Fahrzeug
+
+### API-Key erstellen
+
+Der API-Key kommt direkt aus der **MySkoda App**:
+
+1. **Profil**
+2. **Smart Home**
+3. **Create Key**
+4. Beliebigen Namen eingeben
+5. FIN/VIN und API-Token aus der App in das Modul eintragen
+
+Projekt und Dokumentation: <https://github.com/taloriko/IPSymconMySkoda>
 
 ## 3. Software-Installation
 
@@ -60,6 +74,8 @@ Die Konfigurationsseite enthält folgende Einstellungen:
 | Klimatisierung ohne externe Stromversorgung | Wird beim Start der Klimatisierung an die API übergeben | aktiv |
 | S-PIN | Optional; zum Starten der Standheizung erforderlich | leer |
 | Detail- und Diagnosevariablen | Blendet zusätzliche Fahrzeug- und API-Daten ein | aus |
+| API-Key Ablaufwarnung als Mitteilung | Sendet bei höchstens 30 Tagen Restlaufzeit einmalig eine Push-Mitteilung | aus |
+| Visualisierungs-ID | ID einer Kachel-Visualisierung oder eines WebFronts für die Mitteilung | 0 |
 
 Die Instanz kann auch ohne FIN oder Token fehlerfrei angelegt werden. Solange Pflichtangaben fehlen, wird der Timer deaktiviert und der Instanzstatus `201` gesetzt.
 
@@ -81,7 +97,8 @@ Der Standard-Objektbaum ist absichtlich kompakt.
 | `ChargeMode` | Lademodus | Integer | Ja | Aufzählung aus den Fahrzeugmodi |
 | `Climate` | Klimatisierung | Boolean | Ja | Schalter |
 | `TargetTemperature` | Klima Solltemperatur | Float | Ja | Temperatur-Schieberegler |
-| `VehicleTile` | Fahrzeugübersicht | String | Nein | Visualisierungskachel (`~HTMLBox`) |
+| `VehicleTile` | Fahrzeugübersicht | String | Nein | kompakte Visualisierungskachel (`~HTMLBox`) |
+| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein | Wird 30 Tage vor Ablauf aktiv |
 | `LastUpdateAge` | Alter letzte Abfrage | String | Nein | Format `hh:mm` |
 | `LastUpdate` | Letzte Aktualisierung | Integer | Nein | Symcon-Standardvorlage Datum/Uhrzeit |
 
@@ -97,15 +114,18 @@ Derzeit ist deshalb kein persistentes eigenes Profil notwendig. Eine Ausnahme is
 
 Es wird keine eigene HTML-/WebFront-Oberfläche benötigt. Die Statusvariablen können direkt in der aktuellen Symcon-Visualisierung verwendet werden. Bedienbare Variablen erhalten nur dann eine Aktion, wenn **Remote-Steuerung aktivieren** gesetzt ist.
 
-Zusätzlich legt das Modul die Variable **`VehicleTile`** an. Diese zeigt eine einfache, bewusst fahrzeugneutrale Elektroauto-Kachel mit:
+Zusätzlich legt das Modul die Variable **`VehicleTile`** an. Die Kachel ist in Version 1.2 bewusst **smartphone-orientiert und kompakt** aufgebaut. Statt vieler einzelner Rahmen werden zusammengehörige Informationen in einer flachen Ansicht gebündelt:
 
 - Überschrift aus Fahrzeugname, alternativ Kennzeichen
-- Autoansicht von oben
-- Verriegelung, Türen, Fenster und Licht
-- Ladezustand, Ladelimit, Ladeleistung und Zeit bis voll
+- kompakte Autoansicht von oben mit SOC und Ladelimit im Fahrzeug
+- Ladestecker rechts mit den Zuständen Laden, Ladeunterbrechung, Kabel anschließen, bereit, Ladeziel erreicht und Entladen
+- Ladeleistung und Restzeit bis voll im Format `hh:mm`
 - Reichweite und Kilometerstand
-- separaten Bereichen für **Ladesteuerung** und **Klima**
-- unaufdringlichem Design für helle und dunkle Symcon-Themes
+- Verriegelung, Türen, Fenster und Licht als kompakte Statuszeile
+- eigene, platzsparende Zeile für **Laden**
+- eigene, platzsparende Zeile für **Klima**
+- API-Key-Warnung bei höchstens 30 Tagen Restlaufzeit
+- transparente/neutral aufgebaute Darstellung für helle und dunkle Symcon-Themes
 
 Die Variable **`LastUpdateAge`** zeigt das Alter der letzten erfolgreichen API-Abfrage im Format `hh:mm`. Beide Anzeigen werden einmal pro Minute aktualisiert, auch wenn das API-Abrufintervall länger ist.
 
@@ -193,6 +213,12 @@ MSKODA_RefreshVisuals(12345);
 ```
 
 Normalerweise ist dieser Aufruf nicht nötig, da das Modul die Anzeigen minütlich selbst aktualisiert. Er ist aber praktisch nach manuellen Änderungen oder zum Testen.
+
+### API-Key Ablaufwarnung
+
+Die API liefert das Ablaufdatum des Keys über den Header `X-API-Key-Expires-At`. Sobald die Restlaufzeit **30 Tage oder weniger** beträgt, setzt das Modul `ApiKeyWarning` auf `true`.
+
+Optional kann zusätzlich eine Push-Mitteilung versendet werden. Dazu in der Instanz eine **Kachel-Visualisierung** oder ein **WebFront** als Instanz-ID eintragen und die Benachrichtigung aktivieren. Das Modul versucht automatisch `VISU_PostNotification` und anschließend `WFC_PushNotification`. Für einen Funktionstest steht im Instanzformular die Schaltfläche **Mitteilung testen** bereit.
 
 ## 8. Rate-Limit und Diagnose
 
