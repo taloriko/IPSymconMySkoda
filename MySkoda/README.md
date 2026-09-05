@@ -20,8 +20,8 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 
 - Liest den vollständigen Fahrzeugstatus über die offizielle MySkoda Public API.
 - Stellt standardmäßig nur eine kleine, alltagstaugliche Auswahl an Statusvariablen bereit.
-- Enthält eine generische Elektroauto-Kachel für die Symcon-Visualisierung.
-- Aktualisiert die Visualisierungskachel und das Alter der letzten Abfrage minütlich, auch zwischen zwei API-Abfragen.
+- Stellt ab Version **1.6 eine native Symcon-Kachel direkt an der MySkoda-Instanz** bereit.
+- Aktualisiert die Visualisierung und das Alter der letzten Abfrage minütlich, auch zwischen zwei API-Abfragen.
 - Kann optional zusätzliche Detail- und Diagnosevariablen anlegen.
 - Steuert Laden und Klimatisierung direkt über Variablenaktionen.
 - Unterstützt Ladelimit und Lademodus, sofern Fahrzeug und API die Funktion anbieten.
@@ -103,7 +103,6 @@ Der Standard-Objektbaum ist absichtlich kompakt.
 | `ChargeMode` | Lademodus | Integer | Ja | Aufzählung aus den Fahrzeugmodi |
 | `Climate` | Klimatisierung | Boolean | Ja | Schalter bei Remote-Steuerung; sonst passive Wertanzeige |
 | `TargetTemperature` | Klima Solltemperatur | Float | Ja | Temperatur-Schieberegler |
-| `VehicleTile` | Fahrzeugübersicht | String | Nein | neue Symcon-Darstellung **Webinhalt** |
 | `ApiKeyWarning` | API-Key Warnung | Boolean | Nein | **Wertanzeige**: Nein grün, Ja orange; wird 30 Tage vor Ablauf aktiv |
 | `LastUpdateAge` | Alter letzte Abfrage | String | Nein | Format `hh:mm` |
 | `LastUpdate` | Letzte Aktualisierung | Integer | Nein | Symcon-Standardvorlage Datum/Uhrzeit |
@@ -112,14 +111,14 @@ Bei aktivierter Option **Detail- und Diagnosevariablen anzeigen** werden zusätz
 
 ### Neue Darstellungs-Vorlagen statt Legacy-Profile
 
-MySkoda legt **keine Legacy-Variablenprofile** an. Seit Version 1.5 werden für die neuen Symcon-Darstellungen eigene Vorlagen verwendet. Sie sind eindeutig dem Modul zugeordnet:
+MySkoda legt **keine Legacy-Variablenprofile** an. Für die neuen Symcon-Darstellungen werden eigene Vorlagen verwendet. Sie sind eindeutig dem Modul zugeordnet:
 
 - `MySkoda.Status.GoodTrue` – `Ja` ist der erwartete Zustand: Ja grün, Nein orange
 - `MySkoda.Status.GoodFalse` – `Nein` ist der erwartete Zustand: Nein grün, Ja orange
 - `MySkoda.Status.Normal` – beide Boolean-Zustände sind normale Betriebszustände und werden grün dargestellt
 - `MySkoda.Control.Switch` – Schalterdarstellung für bedienbare Boolean-Werte
 
-Die Status-Vorlagen verwenden die passive Symcon-Darstellung **Wertanzeige**. Damit funktionieren sie korrekt ohne Variablenaktion. Bedienbare Werte wie Laden und Klima verwenden bei aktivierter Remote-Steuerung dagegen die Darstellung **Schalter**, da diese eine Variablenaktion besitzt.
+Die Status-Vorlagen verwenden die passive Symcon-Darstellung **Wertanzeige**. Damit funktionieren sie korrekt ohne Variablenaktion. Bedienbare Werte wie Laden und Klima verwenden bei aktivierter Remote-Steuerung die Darstellung **Schalter**.
 
 Die Farblogik bewertet den **Zustand**, nicht den reinen Boolean-Wert:
 
@@ -133,32 +132,48 @@ Die Farblogik bewertet den **Zustand**, nicht den reinen Boolean-Wert:
 | Licht an | **Nein** | Ja |
 | API-Key Warnung | **Nein** | Ja |
 
-Damit erscheint ein korrekt abgestelltes und verriegeltes Fahrzeug bei allen sicherheitsrelevanten Zuständen **grün**. **Rot wird für diese Hinweise nicht verwendet**; Rot bleibt echten Fehlern und Störungen vorbehalten.
+Damit erscheint ein korrekt abgestelltes und verriegeltes Fahrzeug bei allen sicherheitsrelevanten Zuständen **grün**. **Orange** bedeutet Hinweis/Aufmerksamkeit. **Rot wird für diese Hinweise nicht verwendet**; Rot bleibt echten Fehlern und Störungen vorbehalten.
 
 Beim Update von Version 1.3 entfernt das Modul die damals erzeugten `MySkoda.YesNo.*`-Legacy-Profile von seinen Variablen und löscht sie, sofern sie nicht anderweitig verwendet werden.
 
 ## 6. Visualisierung
 
-Zusätzlich zu den Statusvariablen stellt das Modul die Variable **`VehicleTile`** mit der neuen Symcon-Darstellung **Webinhalt** bereit. Die Kachel ist für Smartphones optimiert und bündelt die Informationen bewusst ohne viele einzelne Rahmen.
+### Native Instanz-Kachel ab Version 1.6
 
-Version 1.5 ordnet die Anzeige neu:
+Ab Version **1.6 stellt die MySkoda-Instanz selbst die Kachel-Visualisierung bereit**. Technisch wird dafür der native Symcon-Weg mit `SetVisualizationType(1)`, `GetVisualizationTile()` und `UpdateVisualizationValue()` verwendet.
 
-- Kopfzeile: Fahrzeugname, alternativ Kennzeichen, Reichweite und Alter der letzten Abfrage
-- realistischere, aber modellneutrale Elektroauto-Ansicht von oben
-- SOC und Ladelimit direkt im Fahrzeug
-- Verriegelungszustand über die Fahrzeugkontur: grün = verriegelt, orange = entriegelt
-- offene Türen/Fenster und eingeschaltetes Licht werden am Fahrzeug orange hervorgehoben
-- **Laden nur einmal** im oberen Hauptbereich: Steckerzustand, AC/DC, Ladeleistung, Zeit bis voll, Ladelimit und Lademodus
+Dadurch muss nicht mehr eine Stringvariable als Einzelelement eingefügt und anschließend manuell auf die Darstellung **Webinhalt** umgestellt werden. Die MySkoda-Instanz kann direkt in der Kachel-Visualisierung verwendet werden.
+
+Bei einem Update von Version 1.1-1.5 bleibt die bisherige Variable `VehicleTile` nur aus Kompatibilitätsgründen erhalten und wird im Objektbaum ausgeblendet. Bereits vorhandene Visualisierungen können dadurch weiter funktionieren; für neue Visualisierungen soll die native Instanz-Kachel verwendet werden.
+
+### Aufbau der Fahrzeugkachel
+
+Die Kachel ist bewusst smartphone-orientiert und eng gebündelt:
+
+- Kopfzeile: Fahrzeugname, alternativ Kennzeichen/FIN, Reichweite und Alter der letzten Abfrage
+- modellneutrale, aber deutlich automotivere Fahrzeugansicht von oben mit Rädern, Spiegeln und Glasflächen
+- Fahrzeugkontur: **grün = verriegelt**, **orange = entriegelt**
+- offene Türen/Fenster und eingeschaltetes Licht werden am Fahrzeug orange markiert
+- SOC als **4-Balken-Batterie direkt in der Fahrzeugmitte**
+- Batterie-Farbverlauf mit Referenzpunkten:
+  - bis **10 %** rot
+  - bei **25 %** orange
+  - bei **80 %** hellgrün
+  - darüber zunehmend dunkelgrün
+- Ladelimit direkt unter der Batterie
+- **Laden nur einmal** im oberen Hauptbereich mit Steckerzustand, AC/DC, Ladeleistung, Zeit bis voll, Ladelimit und Lademodus
 - bei nicht angeschlossenem Ladekabel werden Ladeleistung und Zeit bis voll als `—` statt irreführend als `0,0 kW` / `00:00` angezeigt
 - kompakte Statuszeile für Verriegelung, Türen, Fenster und Licht
-- **Klima nur einmal** als eindeutige Zeile mit Betriebsart (`Aus`, `Kühlen`, `Heizen`, `Standheizung`, `Lüften`) und Solltemperatur
+- **Klima nur einmal** mit Betriebsart (`Aus`, `Kühlen`, `Heizen`, `Standheizung`, `Lüften`) und Solltemperatur
 - Kilometerstand unten rechts
 - API-Key-Warnung bei höchstens 30 Tagen Restlaufzeit
 - transparente und theme-neutrale Gestaltung für helle, dunkle und individuell eingefärbte Symcon-Designs
 
-### Design-Inspiration
+### Design- und Modul-Inspiration
 
-Für die kompakte Kachelgestaltung dient die [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung) als gestalterische Orientierung. Übernommen wurden keine Quelltexte oder Grafikdateien. Die MySkoda-Kachel und das Fahrzeug-SVG sind eigenständig umgesetzt.
+Die Kachel orientiert sich stärker an den Layout- und Modulprinzipien der [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung). Dazu gehören insbesondere die native Instanz-Kachel mit eigener `module.html`, das Aktualisieren über `UpdateVisualizationValue()`, eine klare Bild-/Informationsaufteilung und wenige kompakte Hauptwerte.
+
+**Es wurden keine Quelltexte oder Grafikdateien aus dem Projekt übernommen.** Fahrzeug-SVG, Batterieanzeige, Datenmodell und HTML-/JavaScript-Umsetzung sind eigenständig.
 
 Die Variable **`LastUpdateAge`** zeigt das Alter der letzten erfolgreichen API-Abfrage im Format `hh:mm`. Kachel und Altersanzeige werden einmal pro Minute aktualisiert, auch wenn das API-Abrufintervall länger ist.
 
@@ -239,7 +254,7 @@ $ok = MSKODA_RefreshApiDefinition(12345);
 
 Die OpenAPI-Definition wird für neuere Ladeoperationen wie Ladelimit, Lademodus und Ladeprofil verwendet.
 
-### Visualisierungskachel und Zeitangaben sofort aktualisieren
+### Visualisierung und Zeitangaben sofort aktualisieren
 
 ```php
 MSKODA_RefreshVisuals(12345);
@@ -273,6 +288,7 @@ Die komplette letzte API-Antwort bleibt als Instanzattribut gespeichert, statt f
 - Nicht unterstützte Bereiche können in der API-Antwort fehlen oder als Teilfehler gemeldet werden.
 - Remote-Befehle können vom Fahrzeug abgelehnt werden, etwa bei fehlender Berechtigung, deaktivierter Funktion oder temporärer Fahrzeugsperre.
 - Das Modul kann den von Škoda vorgegebenen API-Request-Rahmen nicht erhöhen und hält deshalb bewusst Reserve für manuelle Befehle.
+- Die native Kachel wird in Version 1.6 erstmals produktiv genutzt; Unterschiede zwischen Symcon-Versionen oder Visualisierungsgrößen können weitere Layoutanpassungen erforderlich machen.
 
 ## 10. Versionshistorie
 
