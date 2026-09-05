@@ -7,7 +7,7 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 ## Funktionsumfang
 
 - Offizielle MySkoda Public API mit `X-API-Key`
-- übersichtliche Konfigurationsmaske mit klappbaren Bereichen für Verbindung, Steuerung, Mitteilungen und erweiterte Optionen
+- übersichtliche Konfigurationsmaske mit klappbaren Bereichen für Verbindung, Visualisierung, Steuerung, Mitteilungen und erweiterte Optionen
 - Konfiguration für FIN, API-Token, Abrufintervall und optionale S-PIN
 - Bewusst kleiner Standard-Objektbaum
 - **Native Symcon-Fahrzeugkachel direkt an der MySkoda-Instanz**
@@ -17,8 +17,10 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 - Fahrzeugzustände für Türen, Fenster, Schiebedach, Licht, Kofferraum und Motorhaube werden direkt am Fahrzeug visualisiert; als Textstatus bleibt nur die Verriegelung
 - 4-Balken-Batterie mit SOC-Farbverlauf von Rot über Orange und Hellgrün bis Dunkelgrün
 - Laden, Ladelimit, Lademodus, Klima und Kilometerstand kompakt in der Kachel
-- Visu-Zustand wird lokal zwischengespeichert und bei Wiederanzeige/Resize erneut gerendert
+- robuster Visu-Lifecycle: vollständiger Startzustand in der Kachel, instanzbezogener Cache und erneutes Senden der zwischengespeicherten Fahrzeugdaten nach Wiederanzeige/Scroll-Recycling **ohne zusätzliche MySkoda-API-Abfrage**
+- optionaler ausgeblendeter Symcon-Kacheltitel bei Symcon 9.1 oder neuer; der Instanzname im Objektbaum bleibt unverändert
 - Warnung 30 Tage vor Ablauf des API-Keys, optional mit Symcon-Mitteilung
+- Mitteilungsziel wird per Instanzauswahl gewählt und als Visualisierungsinstanz geprüft
 - Verbindungstest mit direkter Rückmeldung in der Konfiguration
 - Optionale Detail- und Diagnosevariablen
 - Laden und Klimatisierung über Symcon-Variablen steuerbar
@@ -35,9 +37,11 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 - 17-stellige FIN/VIN
 - Optional: S-PIN für die Standheizung
 
+Hinweis: Das programmgesteuerte Ausblenden des äußeren Symcon-Kacheltitels ist ab **Symcon 9.1** verfügbar. Auf älteren kompatiblen Versionen bleibt der Titel sichtbar und die MySkoda-Kachel reserviert dafür zusätzlichen Platz.
+
 ## Version
 
-Aktueller Stand dieser Bibliothek: **1.8**
+Aktueller Stand dieser Bibliothek: **1.9**
 
 ## API-Key in der MySkoda App erstellen
 

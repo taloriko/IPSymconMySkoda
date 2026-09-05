@@ -20,7 +20,7 @@ trait MySkodaBootstrapV19Trait
     {
         $this->applyChangesBootstrapV17();
         $this->applyVisualizationTitlePreference();
-        $this->validateNotificationTarget(false);
+        $this->validateNotificationTarget(true);
         $this->RefreshVisuals();
     }
 

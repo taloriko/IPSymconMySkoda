@@ -30,7 +30,7 @@ def main() -> None:
     assert GUID.match(library["id"]), "Invalid library GUID"
     assert GUID.match(module["id"]), "Invalid module GUID"
     assert library["compatibility"]["version"] >= "8.1"
-    assert library["version"] == "1.8"
+    assert library["version"] == "1.9"
     assert module["name"] == "MySkoda"
     assert module["prefix"].isalnum()
     assert isinstance(form.get("elements"), list)
@@ -43,14 +43,33 @@ def main() -> None:
     assert vehicle_design.get("type") == "Select"
     design_values = {option.get("value") for option in vehicle_design.get("options", [])}
     assert {"auto", "enyaq", "elroq", "epiq", "generic"}.issubset(design_values)
+
+    hide_title = next((element for element in all_elements if element.get("name") == "HideVisualizationTitle"), None)
+    assert hide_title is not None and hide_title.get("type") == "CheckBox"
+
+    notification_target = next((element for element in all_elements if element.get("name") == "NotificationInstanceID"), None)
+    assert notification_target is not None
+    assert notification_target.get("type") == "SelectInstance"
+    assert isinstance(notification_target.get("validModules"), list)
+    assert any(element.get("name") == "NotificationTargetFeedback" for element in all_elements)
+
     panels = {element.get("caption") for element in form["elements"] if element.get("type") == "ExpansionPanel"}
-    assert {"Connection and vehicle", "Polling and control", "Notifications", "Advanced", "Help and documentation"}.issubset(panels)
+    assert {
+        "Connection and vehicle",
+        "Visualization settings",
+        "Polling and control",
+        "Notifications",
+        "Advanced",
+        "Help and documentation",
+    }.issubset(panels)
 
     php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
     assert "class MySkoda extends IPSModuleStrict" in php
-    assert "BootstrapV17Trait.php" in php
-    assert "VisualizationV17Trait.php" in php
-    assert "IP-Symcon-MySkoda/1.8" in php
+    assert "CoreV19Trait.php" in php
+    assert "BootstrapV19Trait.php" in php
+    assert "VisualizationV19Trait.php" in php
+    assert "NotificationV19Trait.php" in php
+    assert "IP-Symcon-MySkoda/1.9" in php
 
     php_sources = "\n".join(source.read_text(encoding="utf-8") for source in (ROOT / "MySkoda").rglob("*.php"))
     assert "VARIABLE_PRESENTATION_LEGACY" not in php_sources
@@ -62,6 +81,10 @@ def main() -> None:
     assert "GetVisualizationTile" in php_sources
     assert "UpdateVisualizationValue" in php_sources
     assert "MSKODA_RefreshVisuals" in php_sources
+    assert "VisualizationRefresh" in php_sources
+    assert "IPS_SetHiddenTitle" in php_sources
+    assert "IPS_GetInstanceListByModuleType(6)" in php_sources
+    assert "ModuleType" in php_sources
     assert "VehicleTile" in php_sources
     assert "LastUpdateAge" in php_sources
     assert "VehicleDesign" in php_sources
@@ -75,8 +98,14 @@ def main() -> None:
     assert "enyaq:" in tile and "elroq:" in tile and "epiq:" in tile and "generic:" in tile
     assert 'id="lockLine"' in tile
     assert 'id="rowSunroof"' not in tile and 'id="rowTrunk"' not in tile and 'id="rowBonnet"' not in tile
+    assert "__MYSKODA_INSTANCE_ID__" in tile
+    assert "__MYSKODA_INITIAL_STATE__" in tile
+    assert "VisualizationRefresh" in tile
+    assert "requestAction" in tile
+    assert "CACHE_KEY" in tile
     assert "sessionStorage" in tile
     assert "visibilitychange" in tile and "ResizeObserver" in tile
+    assert "external-title-space" in tile
     assert "overflow:hidden" in tile
     assert "TileVisu" not in tile
 

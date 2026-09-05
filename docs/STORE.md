@@ -24,10 +24,10 @@ MySkoda
 Bindet Fahrzeuge über die offizielle MySkoda Public API an IP-Symcon an. Das Modul stellt einen kompakten Fahrzeugstatus und eine native Smartphone-Kachel bereit und unterstützt – sofern vom Fahrzeug angeboten – Laden, Ladelimit, Lademodus, Klimatisierung, Standheizung und aktive Lüftung.
 ```
 
-**Versionsinformation 1.8**
+**Versionsinformation 1.9**
 
 ```text
-Übersichtlichere Instanzkonfiguration und weiter verdichtete Smartphone-Kachel. Türen, Fenster, Schiebedach, Licht, Kofferraum und Motorhaube werden direkt am Fahrzeug dargestellt; als Textstatus bleibt nur die Verriegelung. Verbesserte Wiederherstellung der Kachelwerte nach Scrollen, Größenänderungen und erneutem Anzeigen.
+Robustere native Fahrzeugkachel bei Scrollen und Wiederanzeigen: vollständiger Startzustand, instanzbezogener Browser-Cache und erneutes Senden der bereits gespeicherten Fahrzeugdaten ohne zusätzliche MySkoda-API-Abfrage. Zusätzlich kann der äußere Symcon-Kacheltitel auf Symcon 9.1+ ausgeblendet werden, während der Instanzname erhalten bleibt. Das Mitteilungsziel wird jetzt per Instanzauswahl gewählt und als Visualisierungsinstanz geprüft.
 ```
 
 **Link zur Dokumentation**
@@ -50,10 +50,10 @@ MySkoda
 Connects vehicles to IP-Symcon through the official MySkoda Public API. The module exposes a compact vehicle status and a native smartphone tile and, where supported by the vehicle, controls charging, charge limit, charging mode, air conditioning, auxiliary heating and active ventilation.
 ```
 
-**Version information 1.8**
+**Version information 1.9**
 
 ```text
-Cleaner grouped instance configuration and a denser smartphone tile. Doors, windows, sunroof, lights, trunk and bonnet are visualized directly on the vehicle, leaving only the lock state as text. Improved tile-state restoration after scrolling, resizing and returning to the visualization.
+More robust native vehicle tile after scrolling and reappearing: embedded initial state, per-instance browser cache and re-sending of already cached vehicle data without an additional MySkoda API call. On Symcon 9.1+ the outer tile title can be hidden while preserving the instance name. Notification targets are now selected through an instance chooser and validated as visualization instances.
 ```
 
 **Documentation link**
@@ -67,13 +67,15 @@ https://github.com/taloriko/IPSymconMySkoda/blob/main/MySkoda/README.md
 - Der sichtbare Modulname bleibt `MySkoda`; `IPSymcon`, `IPS` oder ähnliche Zusätze werden nicht als Store-Name verwendet.
 - Die Instanz erstellt ausschließlich eigene Statusvariablen unterhalb der Instanz.
 - Der periodische Abruf nutzt `RegisterTimer`; es werden keine externen Ereignisse erzeugt.
-- Konfigurierbare Eigenschaften werden über `form.json` bereitgestellt und ab 1.8 in klaren klappbaren Bereichen gruppiert.
+- Konfigurierbare Eigenschaften werden über `form.json` bereitgestellt und in klaren klappbaren Bereichen gruppiert.
 - Das Modul verwendet ab Symcon 8.1 `IPSModuleStrict`.
 - Das Modul legt keine eigenen Legacy-Variablenprofile an. Passive Boolean-Zustände verwenden native Symcon-Wertanzeigen; bedienbare Boolean-Werte verwenden bei aktiver Remote-Steuerung native Schalter.
 - Seit Version 1.6 stellt die Instanz selbst eine native HTML-Kachel über `SetVisualizationType(1)` / `GetVisualizationTile()` bereit. Die Darstellung liegt in `MySkoda/module.html` und wird über `UpdateVisualizationValue()` aktualisiert.
 - Modellabhängige, eigenständig gezeichnete Top-View-SVGs stehen für Enyaq, Elroq und Epiq sowie als allgemeine Darstellung zur Verfügung.
 - Die Fahrzeugdarstellung kann automatisch aus MySkoda-Metadaten gewählt oder manuell überschrieben werden. Die FIN allein wird nicht als sichere Enyaq-/Elroq-Unterscheidung behandelt.
-- Ab Version 1.8 scrollt die eingebettete Kachel nicht selbst. Ihr letzter Zustand wird clientseitig zwischengespeichert und bei Wiederanzeige/Resize erneut gerendert.
+- Ab Version 1.9 wird der vollständige Visu-Zustand bereits beim Aufbau der Kachel eingebettet. Zusätzlich wird ein instanzbezogener Browser-Cache verwendet und die Kachel kann über das HTML-SDK einen vollständigen Refresh der bereits gespeicherten Fahrzeugdaten anfordern. Dieser Refresh führt keine neue MySkoda-API-Abfrage aus.
+- `IPS_SetHiddenTitle()` wird nur verwendet, wenn die Funktion in der installierten Symcon-Version verfügbar ist. Die Mindestkompatibilität bleibt deshalb Symcon 8.1; das automatische Ausblenden des äußeren Kacheltitels benötigt Symcon 9.1+.
+- Das Mitteilungsziel wird mit `SelectInstance` ausgewählt. Das Formular schränkt die Auswahl soweit möglich auf vorhandene Visualisierungsmodule ein; zur Laufzeit wird zusätzlich `ModuleType = 6` geprüft.
 - Die frühere `VehicleTile`-Webinhaltvariable bleibt beim Upgrade nur als versteckte Abwärtskompatibilität bestehen.
 - Grün bedeutet erwarteter Zustand, Orange bedeutet Hinweis/Aufmerksamkeit. Rot wird nur bei echten Fehlern oder Störungen verwendet.
 - Deutsch wird über `locale.json` lokalisiert; englische Texte dienen als Quellsprache.

@@ -4,7 +4,7 @@
 
 Seit Version 1.6 stellt die MySkoda-Instanz selbst eine native Tile-Visualisierung bereit. Die Kachel muss deshalb nicht über eine zusätzliche HTML-Variable konfiguriert werden.
 
-Version **1.8** verwendet einen smartphone-orientierten, bewusst kompakten Aufbau:
+Version **1.9** verwendet einen smartphone-orientierten, bewusst kompakten Aufbau:
 
 - Fahrzeugname, Reichweite und Alter der letzten Abfrage im Kopf
 - modellabhängige Fahrzeugansicht von oben
@@ -18,17 +18,28 @@ Die Gestaltung orientiert sich an den kompakten Layout- und Modulprinzipien der 
 
 ## Verhalten beim Scrollen und Wiederanzeigen
 
-Die eingebettete HTML-Kachel scrollt ab Version 1.8 nicht mehr selbst. Das Scrollen übernimmt ausschließlich die Symcon-Visualisierung.
+Symcon kann HTML-SDK-Kacheln beim Scrollen aus dem sichtbaren Bereich entfernen und später erneut aufbauen. Ein reines JavaScript-Re-Render reicht deshalb nicht in allen Fällen aus.
 
-Damit beim Scrollen, beim Wechsel zwischen Seiten oder bei Größenänderungen keine Werte verloren gehen, hält die Kachel den zuletzt empfangenen vollständigen Zustand clientseitig vor und rendert ihn erneut bei:
+Version 1.9 verwendet mehrere Ebenen zur Wiederherstellung:
 
-- Wiederanzeigen der Seite (`pageshow`)
-- Rückkehr in den Vordergrund
-- Größenänderungen
-- Sichtbarkeitswechsel
-- Änderungen der verfügbaren Kachelgröße
+1. Der aktuelle vollständige Fahrzeugzustand wird bereits serverseitig in die von `GetVisualizationTile()` gelieferte HTML-Kachel eingebettet.
+2. Zusätzlich speichert der Browser den zuletzt empfangenen Zustand mit einem **instanzbezogenen** `sessionStorage`-Schlüssel. Mehrere MySkoda-Fahrzeuge können sich dadurch nicht gegenseitig überschreiben.
+3. Beim Laden, `pageshow`, Fokus- und Sichtbarkeitswechsel fordert die Kachel über das HTML-SDK `requestAction()` einen vollständigen Refresh an.
+4. Das Modul beantwortet diesen Refresh ausschließlich aus den bereits gespeicherten Fahrzeugdaten (`RawData`) und sendet sie erneut mit `UpdateVisualizationValue()`.
 
-Zusätzlich erfolgt regelmäßig ein lokales Re-Render. Dafür wird **keine zusätzliche MySkoda-API-Abfrage** ausgelöst.
+Der Lifecycle-Refresh erzeugt **keine zusätzliche MySkoda-API-Abfrage** und belastet somit nicht das Fahrzeug-Rate-Limit.
+
+Die eingebettete HTML-Kachel scrollt selbst nicht; das Scrollen übernimmt ausschließlich die Symcon-Visualisierung.
+
+## Symcon-Kacheltitel
+
+Die MySkoda-Kachel besitzt bereits einen eigenen Kopf mit Fahrzeugname. Ein zusätzlicher äußerer Symcon-Kacheltitel kann deshalb doppelt wirken.
+
+In der Instanz gibt es ab Version 1.9 die Option **Symcon-Kacheltitel ausblenden**:
+
+- Ab **Symcon 9.1** wird dafür `IPS_SetHiddenTitle()` verwendet.
+- Der eigentliche Instanzname im Objektbaum / in der Management Console bleibt unverändert.
+- Auf Symcon 8.1 bis 9.0 bleibt die Bibliothek weiterhin kompatibel; dort kann das Modul den äußeren Titel noch nicht programmgesteuert ausblenden und reserviert stattdessen zusätzlichen Platz im oberen Bereich.
 
 ## Fahrzeugdarstellung
 
@@ -64,7 +75,7 @@ Der Prozentwert und das konfigurierte Ladelimit werden direkt im Fahrzeug angeze
 
 ## Fahrzeugzustände
 
-Die Kachel soll im Normalzustand möglichst ruhig und eindeutig wirken. Deshalb werden die Einzelzustände ab Version 1.8 nicht mehr als lange Liste unterhalb des Fahrzeugs wiederholt.
+Die Kachel soll im Normalzustand möglichst ruhig und eindeutig wirken. Deshalb werden die Einzelzustände nicht als lange Liste unterhalb des Fahrzeugs wiederholt.
 
 - Verriegelt: Fahrzeugkontur grün und eigener Textstatus **Fahrzeug verriegelt**
 - Entriegelt: Fahrzeugkontur und Verriegelungsstatus orange

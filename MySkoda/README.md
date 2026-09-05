@@ -1,299 +1,205 @@
 # MySkoda
 
-Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySkoda Public API. Eine Instanz repräsentiert genau eine FIN.
-
-## Inhaltsverzeichnis
-
-1. [Funktionsumfang](#1-funktionsumfang)
-2. [Voraussetzungen](#2-voraussetzungen)
-3. [Software-Installation](#3-software-installation)
-4. [Einrichten der Instanz in IP-Symcon](#4-einrichten-der-instanz-in-ip-symcon)
-5. [Statusvariablen und Darstellungen](#5-statusvariablen-und-darstellungen)
-6. [Visualisierung](#6-visualisierung)
-7. [PHP-Befehlsreferenz](#7-php-befehlsreferenz)
-8. [Rate-Limit und Diagnose](#8-rate-limit-und-diagnose)
-9. [Bekannte Einschränkungen](#9-bekannte-einschränkungen)
-10. [Versionshistorie](#10-versionshistorie)
-11. [Lizenz](#11-lizenz)
+Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySkoda Public API. Eine Instanz repräsentiert genau eine FIN/VIN.
 
 ## 1. Funktionsumfang
 
-- Liest den vollständigen Fahrzeugstatus über die offizielle MySkoda Public API.
-- Stellt standardmäßig nur eine kleine, alltagstaugliche Auswahl an Statusvariablen bereit.
-- Stellt ab Version **1.6 eine native Symcon-Kachel direkt an der MySkoda-Instanz** bereit.
-- Aktualisiert die Visualisierung und das Alter der letzten Abfrage minütlich, auch zwischen zwei API-Abfragen.
-- Kann optional zusätzliche Detail- und Diagnosevariablen anlegen.
-- Steuert Laden und Klimatisierung direkt über Variablenaktionen.
-- Unterstützt Ladelimit und Lademodus, sofern Fahrzeug und API die Funktion anbieten.
-- Stellt PHP-Befehle für Standheizung, aktive Lüftung und Ladeprofil-Updates bereit.
-- Speichert die vollständige API-Antwort intern und stellt sie über `MSKODA_GetRawData()` zur Verfügung.
-- Beachtet die Rate-Limit-Header und `Retry-After` der API.
-- Prüft nach der Ersteinrichtung automatisch die Verbindung und zeigt das Ergebnis im Instanzformular an.
-- Warnt 30 Tage vor Ablauf des API-Keys und kann optional eine Symcon-Mitteilung versenden.
+- Fahrzeugstatus über die offizielle MySkoda Public API
+- native, smartphone-optimierte Symcon-Kachel direkt an der Instanz
+- automatische oder manuelle Fahrzeugdarstellung für Enyaq, Elroq, Epiq und allgemeine Fahrzeuge
+- SOC, Reichweite, Kilometerstand, Ladezustand, Ladeleistung, Zeit bis voll, Ladelimit und Lademodus
+- Verriegelung als Textstatus; Türen, Fenster, Schiebedach, Licht, Kofferraum und Motorhaube direkt am Fahrzeug visualisiert
+- Klimatisierung, Laden, Ladelimit und Lademodus steuerbar, soweit Fahrzeug/API dies unterstützen
+- Standheizung und aktive Lüftung über PHP-Befehle
+- Verbindungstest nach Ersteinrichtung
+- API-Key-Ablaufwarnung 30 Tage vor Ablauf, optional als Symcon-Mitteilung
+- Rate-Limit- und `Retry-After`-Behandlung
+- moderne Symcon-Darstellungen ohne eigene Legacy-Variablenprofile
 
 ## 2. Voraussetzungen
 
 - IP-Symcon **8.1 oder neuer**
-- MySkoda API-Key
 - 17-stellige FIN/VIN
-- Optional: S-PIN für die Standheizung
-- Für die jeweiligen Daten/Funktionen aktive Škoda-Connect-Dienste am Fahrzeug
+- MySkoda API-Key
+- optional S-PIN für Standheizung
+- für die gewünschte Funktion aktive MySkoda/Škoda-Connect-Dienste
 
-### API-Key erstellen
+Das programmgesteuerte Ausblenden des äußeren Symcon-Kacheltitels benötigt **Symcon 9.1 oder neuer**. Das Modul bleibt auf älteren kompatiblen Versionen funktionsfähig.
 
-Der API-Key kommt direkt aus der **MySkoda App**:
+## 3. Installation
 
-1. **Profil**
-2. **Smart Home**
-3. **Create Key**
-4. Beliebigen Namen eingeben
-5. FIN/VIN und API-Token aus der App in das Modul eintragen
-
-Projekt und Dokumentation: <https://github.com/taloriko/IPSymconMySkoda>
-
-## 3. Software-Installation
-
-Über **Module Control** folgende Repository-URL hinzufügen:
+Repository im **Module Control** hinzufügen:
 
 ```text
 https://github.com/taloriko/IPSymconMySkoda
 ```
 
-Anschließend kann unter **Instanz hinzufügen** das Modul **MySkoda** gefunden und angelegt werden.
+Danach eine Instanz **MySkoda** anlegen.
 
-## 4. Einrichten der Instanz in IP-Symcon
+### API-Key erstellen
 
-Die Konfigurationsseite enthält folgende Einstellungen:
+In der **MySkoda App**:
 
-| Einstellung | Beschreibung | Standard |
-|---|---|---:|
-| FIN / VIN | 17-stellige Fahrzeug-Identifikationsnummer | leer |
-| API-Token | MySkoda Public API-Key | leer |
-| Abrufintervall | Automatischer Abruf in Sekunden | 300 |
-| Remote-Steuerung aktivieren | Aktiviert Aktionen und Remote-Befehle | aktiv |
-| Klimatisierung ohne externe Stromversorgung | Wird beim Start der Klimatisierung an die API übergeben | aktiv |
-| S-PIN | Optional; zum Starten der Standheizung erforderlich | leer |
-| Detail- und Diagnosevariablen | Blendet zusätzliche Fahrzeug- und API-Daten ein | aus |
-| API-Key Ablaufwarnung als Mitteilung | Sendet bei höchstens 30 Tagen Restlaufzeit einmalig eine Push-Mitteilung | aus |
-| Visualisierungs-ID | ID einer Kachel-Visualisierung oder eines WebFronts für die Mitteilung | 0 |
+1. **Profil**
+2. **Smart Home**
+3. **Create Key**
+4. beliebigen Namen vergeben
+5. FIN/VIN und API-Token in die Symcon-Instanz übernehmen
 
-Die Instanz kann auch ohne FIN oder Token fehlerfrei angelegt werden. Solange Pflichtangaben fehlen, wird der Timer deaktiviert und der Instanzstatus `201` gesetzt.
+Nach dem Übernehmen prüft das Modul die Verbindung und zeigt das Ergebnis direkt im Instanzformular.
 
-### Standortfreigabe in MySkoda
+## 4. Konfiguration
 
-Standortdaten werden von der MySkoda API nur geliefert, wenn im verwendeten **MySkoda-Profil die Standortfreigabe erteilt** wurde. Diese Freigabe gilt profilbezogen: Wird dasselbe Fahrzeug mit mehreren MySkoda-Profilen verwendet, muss die Standortfreigabe **in jedem Profil separat** aktiviert werden.
+Die Einstellungen sind in übersichtliche Bereiche aufgeteilt.
 
-Ist für das Profil keine Standortfreigabe vorhanden oder liefert die API keine Position, schreibt das Modul bewusst **`0.0` für Breitengrad und `0.0` für Längengrad**. Dadurch bleiben keine veralteten Koordinaten aus einem früheren Abruf stehen.
+| Bereich | Einstellung | Beschreibung |
+|---|---|---|
+| Verbindung & Fahrzeug | FIN / VIN | 17-stellige Fahrzeug-Identifikationsnummer |
+| Verbindung & Fahrzeug | API-Token | MySkoda Public API-Key |
+| Visualisierung | Fahrzeugdarstellung | Automatisch, Enyaq, Elroq, Epiq oder Allgemein |
+| Visualisierung | Symcon-Kacheltitel ausblenden | blendet ab Symcon 9.1 den äußeren Kacheltitel aus; Instanzname bleibt erhalten |
+| Abruf & Steuerung | Abrufintervall | Standard 300 s, Minimum 180 s |
+| Abruf & Steuerung | Remote-Steuerung | aktiviert bedienbare Lade-/Klimafunktionen |
+| Abruf & Steuerung | Klima ohne externe Stromversorgung | Übergabe an die MySkoda-Klimafunktion |
+| Abruf & Steuerung | S-PIN | optional für Standheizung |
+| Mitteilungen | API-Key-Ablaufwarnung | Push-Mitteilung bei höchstens 30 Tagen Restlaufzeit |
+| Mitteilungen | Visualisierung für Mitteilungen | Auswahl per Symcon-Instanzdialog statt manueller ID-Eingabe |
+| Erweitert | Detail-/Diagnosevariablen | zusätzliche Fahrzeug- und API-Daten |
+
+### Mitteilungsziel
+
+Das Mitteilungsziel wird über **SelectInstance** ausgewählt. Das Formular schränkt die Auswahl soweit möglich auf vorhandene Symcon-Visualisierungsmodule ein. Zusätzlich prüft das Modul den gewählten Eintrag zur Laufzeit als Symcon-Visualisierungsinstanz (`ModuleType = 6`).
+
+Mit **Mitteilung testen** kann die Konfiguration direkt geprüft werden. Das Modul verwendet je nach Ziel `VISU_PostNotification` bzw. `WFC_PushNotification`.
+
+### Standortfreigabe
+
+Standortdaten werden nur geliefert, wenn im verwendeten **MySkoda-Profil die Standortfreigabe** aktiviert wurde. Bei mehreren Profilen für dasselbe Fahrzeug muss die Freigabe **je Profil separat** erfolgen.
+
+Liefert die API keine Position, setzt das Modul Breitengrad und Längengrad bewusst auf **`0.0 / 0.0`**, damit keine alten Koordinaten stehen bleiben.
 
 ## 5. Statusvariablen und Darstellungen
 
-Der Standard-Objektbaum ist absichtlich kompakt.
+Der Standard-Objektbaum bleibt absichtlich klein.
 
-| Ident | Variablenname | Typ | Bedienbar | Darstellung |
-|---|---|---|---|---|
-| `StateOfCharge` | Ladezustand | Integer | Nein | Symcon-Standardvorlage Batterie |
-| `Range` | Reichweite | Integer | Nein | Wertanzeige, km |
-| `Mileage` | Kilometerstand | Integer | Nein | Wertanzeige, km |
-| `Locked` | Verriegelt | Boolean | Nein | **Wertanzeige** `MySkoda.Status.GoodTrue`: Ja grün, Nein orange |
-| `DoorsOpen` | Türen offen | Boolean | Nein | **Wertanzeige** `MySkoda.Status.GoodFalse`: Nein grün, Ja orange |
-| `WindowsOpen` | Fenster offen | Boolean | Nein | **Wertanzeige** `MySkoda.Status.GoodFalse`: Nein grün, Ja orange |
-| `Charging` | Laden | Boolean | Ja | Schalter bei Remote-Steuerung; sonst passive Wertanzeige |
-| `ChargePower` | Ladeleistung | Float | Nein | Symcon-Standardvorlage Leistung |
-| `TargetSOC` | Ladelimit | Integer | Ja | Schieberegler 50-100 % |
-| `ChargeMode` | Lademodus | Integer | Ja | Aufzählung aus den Fahrzeugmodi |
-| `Climate` | Klimatisierung | Boolean | Ja | Schalter bei Remote-Steuerung; sonst passive Wertanzeige |
-| `TargetTemperature` | Klima Solltemperatur | Float | Ja | Temperatur-Schieberegler |
-| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein | **Wertanzeige**: Nein grün, Ja orange; wird 30 Tage vor Ablauf aktiv |
-| `LastUpdateAge` | Alter letzte Abfrage | String | Nein | Format `hh:mm` |
-| `LastUpdate` | Letzte Aktualisierung | Integer | Nein | Symcon-Standardvorlage Datum/Uhrzeit |
+| Ident | Variable | Typ | Bedienbar |
+|---|---|---|---|
+| `StateOfCharge` | Ladezustand | Integer | Nein |
+| `Range` | Reichweite | Integer | Nein |
+| `Mileage` | Kilometerstand | Integer | Nein |
+| `Locked` | Verriegelt | Boolean | Nein |
+| `DoorsOpen` | Türen offen | Boolean | Nein |
+| `WindowsOpen` | Fenster offen | Boolean | Nein |
+| `Charging` | Laden | Boolean | Ja |
+| `ChargePower` | Ladeleistung | Float | Nein |
+| `TargetSOC` | Ladelimit | Integer | Ja |
+| `ChargeMode` | Lademodus | Integer | Ja |
+| `Climate` | Klimatisierung | Boolean | Ja |
+| `TargetTemperature` | Klima Solltemperatur | Float | Ja |
+| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein |
+| `LastUpdateAge` | Alter letzte Abfrage | String | Nein |
+| `LastUpdate` | Letzte Aktualisierung | Integer | Nein |
 
-Bei aktivierter Option **Detail- und Diagnosevariablen anzeigen** werden zusätzlich unter anderem Fahrzeugname, Kennzeichen, Ladestatus/-art, erwartete Voll-Ladezeit, Kofferraum, Motorhaube, Licht, Parkstatus, Koordinaten, API-Key-Ablaufdatum, verbleibende API-Abfragen und Teilfehler bereitgestellt.
+### Darstellungen statt Legacy-Profile
 
-### Neue Darstellungs-Vorlagen statt Legacy-Profile
+MySkoda legt **keine eigenen Legacy-Variablenprofile** an. Boolean-Status verwenden moderne Symcon-Wertanzeigen, bedienbare Werte moderne Schalter-/Aufzählungsdarstellungen.
 
-MySkoda legt **keine Legacy-Variablenprofile** an. Für die neuen Symcon-Darstellungen werden eigene Vorlagen verwendet. Sie sind eindeutig dem Modul zugeordnet:
+Die Statuslogik bewertet den tatsächlichen Fahrzeugzustand:
 
-- `MySkoda.Status.GoodTrue` – `Ja` ist der erwartete Zustand: Ja grün, Nein orange
-- `MySkoda.Status.GoodFalse` – `Nein` ist der erwartete Zustand: Nein grün, Ja orange
-- `MySkoda.Status.Normal` – beide Boolean-Zustände sind normale Betriebszustände und werden grün dargestellt
-- `MySkoda.Control.Switch` – Schalterdarstellung für bedienbare Boolean-Werte
+- **grün** = erwarteter Zustand
+- **orange** = Hinweis / Aufmerksamkeit
+- **rot** = nur echte Fehler / Störungen
 
-Die Status-Vorlagen verwenden die passive Symcon-Darstellung **Wertanzeige**. Damit funktionieren sie korrekt ohne Variablenaktion. Bedienbare Werte wie Laden und Klima verwenden bei aktivierter Remote-Steuerung die Darstellung **Schalter**.
-
-Die Farblogik bewertet den **Zustand**, nicht den reinen Boolean-Wert:
-
-| Zustand | Grün | Orange |
-|---|---|---|
-| Verriegelt | **Ja** | Nein |
-| Türen offen | **Nein** | Ja |
-| Fenster offen | **Nein** | Ja |
-| Kofferraum offen | **Nein** | Ja |
-| Motorhaube offen | **Nein** | Ja |
-| Licht an | **Nein** | Ja |
-| API-Key Warnung | **Nein** | Ja |
-
-Damit erscheint ein korrekt abgestelltes und verriegeltes Fahrzeug bei allen sicherheitsrelevanten Zuständen **grün**. **Orange** bedeutet Hinweis/Aufmerksamkeit. **Rot wird für diese Hinweise nicht verwendet**; Rot bleibt echten Fehlern und Störungen vorbehalten.
-
-Beim Update von Version 1.3 entfernt das Modul die damals erzeugten `MySkoda.YesNo.*`-Legacy-Profile von seinen Variablen und löscht sie, sofern sie nicht anderweitig verwendet werden.
+Beispiele: Verriegelt = grün, Türen geschlossen = grün, Fenster geschlossen = grün, Licht aus = grün.
 
 ## 6. Visualisierung
 
-### Native Instanz-Kachel ab Version 1.6
+Die Instanz stellt die native Kachel über `SetVisualizationType(1)`, `GetVisualizationTile()` und `UpdateVisualizationValue()` bereit. Für neue Visualisierungen soll deshalb die **MySkoda-Instanz selbst** eingefügt werden.
 
-Ab Version **1.6 stellt die MySkoda-Instanz selbst die Kachel-Visualisierung bereit**. Technisch wird dafür der native Symcon-Weg mit `SetVisualizationType(1)`, `GetVisualizationTile()` und `UpdateVisualizationValue()` verwendet.
+### Scroll- und Wiederanzeige-Verhalten ab 1.9
 
-Dadurch muss nicht mehr eine Stringvariable als Einzelelement eingefügt und anschließend manuell auf die Darstellung **Webinhalt** umgestellt werden. Die MySkoda-Instanz kann direkt in der Kachel-Visualisierung verwendet werden.
+Symcon kann HTML-SDK-Kacheln beim Scrollen aus dem sichtbaren Bereich recyceln. Version 1.9 stellt den Zustand deshalb mehrstufig wieder her:
 
-Bei einem Update von Version 1.1-1.5 bleibt die bisherige Variable `VehicleTile` nur aus Kompatibilitätsgründen erhalten und wird im Objektbaum ausgeblendet. Bereits vorhandene Visualisierungen können dadurch weiter funktionieren; für neue Visualisierungen soll die native Instanz-Kachel verwendet werden.
+- vollständiger Fahrzeugzustand ist bereits in der initial gelieferten HTML-Kachel enthalten
+- Browser-Cache ist **instanzbezogen**, damit mehrere Fahrzeuge getrennt bleiben
+- beim Wiederanzeigen fordert die Kachel über `requestAction('VisualizationRefresh', ...)` den vollständigen Zustand erneut an
+- das Modul antwortet dabei nur aus dem gespeicherten `RawData`
+- diese Wiederherstellung löst **keinen neuen MySkoda-API-Aufruf** aus
 
-### Aufbau der Fahrzeugkachel
+Zusätzlich wird bei `pageshow`, Fokus, Sichtbarkeits- und Größenänderungen erneut gerendert.
 
-Die Kachel ist bewusst smartphone-orientiert und eng gebündelt:
+### Kacheltitel
 
-- Kopfzeile: Fahrzeugname, alternativ Kennzeichen/FIN, Reichweite und Alter der letzten Abfrage
-- modellneutrale, aber deutlich automotivere Fahrzeugansicht von oben mit Rädern, Spiegeln und Glasflächen
-- Fahrzeugkontur: **grün = verriegelt**, **orange = entriegelt**
-- offene Türen/Fenster und eingeschaltetes Licht werden am Fahrzeug orange markiert
-- SOC als **4-Balken-Batterie direkt in der Fahrzeugmitte**
-- Batterie-Farbverlauf mit Referenzpunkten:
-  - bis **10 %** rot
-  - bei **25 %** orange
-  - bei **80 %** hellgrün
-  - darüber zunehmend dunkelgrün
-- Ladelimit direkt unter der Batterie
-- **Laden nur einmal** im oberen Hauptbereich mit Steckerzustand, AC/DC, Ladeleistung, Zeit bis voll, Ladelimit und Lademodus
-- bei nicht angeschlossenem Ladekabel werden Ladeleistung und Zeit bis voll als `—` statt irreführend als `0,0 kW` / `00:00` angezeigt
-- kompakte Statuszeile für Verriegelung, Türen, Fenster und Licht
-- **Klima nur einmal** mit Betriebsart (`Aus`, `Kühlen`, `Heizen`, `Standheizung`, `Lüften`) und Solltemperatur
-- Kilometerstand unten rechts
-- API-Key-Warnung bei höchstens 30 Tagen Restlaufzeit
-- transparente und theme-neutrale Gestaltung für helle, dunkle und individuell eingefärbte Symcon-Designs
+Die Kachel besitzt bereits einen eigenen Kopf mit Fahrzeugname. Mit **Symcon-Kacheltitel ausblenden** wird auf Symcon 9.1+ der äußere Symcon-Titel ausgeblendet, ohne den Instanznamen im Objektbaum zu verändern.
 
-### Design- und Modul-Inspiration
+Auf Symcon 8.1 bis 9.0 bleibt der äußere Titel sichtbar; die Kachel reserviert dafür zusätzlichen oberen Platz.
 
-Die Kachel orientiert sich stärker an den Layout- und Modulprinzipien der [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung). Dazu gehören insbesondere die native Instanz-Kachel mit eigener `module.html`, das Aktualisieren über `UpdateVisualizationValue()`, eine klare Bild-/Informationsaufteilung und wenige kompakte Hauptwerte.
+### Fahrzeugdarstellung
 
-**Es wurden keine Quelltexte oder Grafikdateien aus dem Projekt übernommen.** Fahrzeug-SVG, Batterieanzeige, Datenmodell und HTML-/JavaScript-Umsetzung sind eigenständig.
+Bei **Automatisch** wertet das Modul zuerst Modell-/Spezifikationsdaten der MySkoda-Antwort aus und nutzt danach konservative Modellhinweise. Die FIN allein wird nicht als sichere Enyaq-/Elroq-Unterscheidung verwendet. Die manuelle Auswahl hat immer Vorrang.
 
-Die Variable **`LastUpdateAge`** zeigt das Alter der letzten erfolgreichen API-Abfrage im Format `hh:mm`. Kachel und Altersanzeige werden einmal pro Minute aktualisiert, auch wenn das API-Abrufintervall länger ist.
+Die Batterie besitzt vier Segmente. Der SOC-Farbverlauf orientiert sich an:
 
-## 7. PHP-Befehlsreferenz
+- bis 10 % rot
+- 25 % orange
+- 80 % hellgrün
+- darüber zunehmend dunkelgrün
 
-Das Modul verwendet den Prefix `MSKODA`.
+Weitere Details: [../docs/VISUALIZATION.md](../docs/VISUALIZATION.md)
 
-### Fahrzeugdaten aktualisieren
+## 7. PHP-Befehle
 
 ```php
 MSKODA_Update(12345);
+MSKODA_TestConnection(12345);
+MSKODA_TestNotification(12345);
+MSKODA_RefreshVisuals(12345);
+MSKODA_RefreshApiDefinition(12345);
 ```
 
-### Vollständige API-Rohdaten auslesen
+Daten auslesen:
 
 ```php
 $json = MSKODA_GetRawData(12345);
+$profiles = MSKODA_GetChargingProfiles(12345);
+$operations = MSKODA_GetRemoteOperations(12345);
 ```
 
-### Ladeprofile auslesen
+Laden:
 
 ```php
-$json = MSKODA_GetChargingProfiles(12345);
+MSKODA_SetChargingLimit(12345, 80);
+MSKODA_SetChargeMode(12345, 'MANUAL');
+MSKODA_UpdateChargingProfile(12345, 1, $profileJson);
 ```
 
-### Vom Fahrzeug gemeldete Remote-Funktionen auslesen
+Standheizung / Lüftung:
 
 ```php
-$json = MSKODA_GetRemoteOperations(12345);
-```
-
-### Ladelimit setzen
-
-```php
-$ok = MSKODA_SetChargingLimit(12345, 80);
-```
-
-### Lademodus setzen
-
-```php
-$ok = MSKODA_SetChargeMode(12345, 'MANUAL');
-```
-
-Die tatsächlich verfügbaren Modi sind fahrzeugabhängig.
-
-### Ladeprofil aktualisieren
-
-```php
-$ok = MSKODA_UpdateChargingProfile(12345, 1, $profileJson);
-```
-
-### Standheizung starten
-
-```php
-$ok = MSKODA_StartAuxiliaryHeating(12345, 22.0, 30, 'HEATING');
-```
-
-Parameter: Zieltemperatur in °C, Dauer in Minuten und Modus (`HEATING` oder `VENTILATION`). Die konfigurierte S-PIN wird automatisch verwendet.
-
-### Standheizung stoppen
-
-```php
-$ok = MSKODA_StopAuxiliaryHeating(12345);
-```
-
-### Aktive Lüftung starten/stoppen
-
-```php
+MSKODA_StartAuxiliaryHeating(12345, 22.0, 30, 'HEATING');
+MSKODA_StopAuxiliaryHeating(12345);
 MSKODA_StartVentilation(12345);
 MSKODA_StopVentilation(12345);
 ```
 
-### OpenAPI-Definition neu laden
-
-```php
-$ok = MSKODA_RefreshApiDefinition(12345);
-```
-
-Die OpenAPI-Definition wird für neuere Ladeoperationen wie Ladelimit, Lademodus und Ladeprofil verwendet.
-
-### Visualisierung und Zeitangaben sofort aktualisieren
-
-```php
-MSKODA_RefreshVisuals(12345);
-```
-
-Normalerweise ist dieser Aufruf nicht nötig, da das Modul die Anzeigen minütlich selbst aktualisiert. Er ist aber praktisch nach manuellen Änderungen oder zum Testen.
-
-### API-Key Ablaufwarnung
-
-Die API liefert das Ablaufdatum des Keys über den Header `X-API-Key-Expires-At`. Sobald die Restlaufzeit **30 Tage oder weniger** beträgt, setzt das Modul `ApiKeyWarning` auf `true`.
-
-Optional kann zusätzlich eine Push-Mitteilung versendet werden. Dazu in der Instanz eine **Kachel-Visualisierung** oder ein **WebFront** als Instanz-ID eintragen und die Benachrichtigung aktivieren. Das Modul versucht automatisch `VISU_PostNotification` und anschließend `WFC_PushNotification`. Für einen Funktionstest steht im Instanzformular die Schaltfläche **Mitteilung testen** bereit.
-
 ## 8. Rate-Limit und Diagnose
 
-Das Modul wertet, sofern von der API geliefert, folgende Header aus:
+Das Modul wertet die von der API gelieferten Rate-Limit-Header und `Retry-After` aus. Das empfohlene Abrufintervall beträgt **300 Sekunden**. Visualisierungs-Refreshes nach Scrollen/Wiederanzeigen arbeiten aus bereits gespeicherten Daten und verbrauchen keine zusätzliche Fahrzeugabfrage.
 
-- `RateLimit-Limit`
-- `RateLimit-Remaining`
-- `RateLimit-Reset`
-- `Retry-After`
-- `X-API-Key-Expires-At`
-
-Automatische Abfragen halten eine kleine Reserve für manuell ausgelöste Remote-Befehle frei. Fordert die API eine Wartezeit, unterdrückt das Modul vorübergehend weitere Abfragen und setzt den Instanzstatus `203`.
-
-Die komplette letzte API-Antwort bleibt als Instanzattribut gespeichert, statt für jedes API-Feld eine eigene Variable zu erzeugen.
+Mit aktivierten Detail-/Diagnosevariablen stehen unter anderem API-Key-Ablauf, verbleibende Requests, Teilfehler und weitere Fahrzeugdaten zur Verfügung.
 
 ## 9. Bekannte Einschränkungen
 
-- Die Public API liefert je nach Fahrzeug, Ausstattung, Lizenz und aktivierten Škoda-Connect-Diensten nur die jeweils verfügbaren Daten.
-- Nicht unterstützte Bereiche können in der API-Antwort fehlen oder als Teilfehler gemeldet werden.
-- Remote-Befehle können vom Fahrzeug abgelehnt werden, etwa bei fehlender Berechtigung, deaktivierter Funktion oder temporärer Fahrzeugsperre.
-- Das Modul kann den von Škoda vorgegebenen API-Request-Rahmen nicht erhöhen und hält deshalb bewusst Reserve für manuelle Befehle.
-- Die native Kachel wird in Version 1.6 erstmals produktiv genutzt; Unterschiede zwischen Symcon-Versionen oder Visualisierungsgrößen können weitere Layoutanpassungen erforderlich machen.
+- unterstützte Remote-Funktionen sind fahrzeug- und API-abhängig
+- einige Statusfelder, z. B. Schiebedach, können bei einzelnen Modellen fehlen
+- Standort ist profilabhängig freizugeben
+- automatisches Ausblenden des äußeren Symcon-Kacheltitels benötigt Symcon 9.1+
+- das Modul ist eine unabhängige Community-Integration und kein offizielles Škoda-Produkt
 
 ## 10. Versionshistorie
 
-Siehe [CHANGELOG.md](../CHANGELOG.md) der Bibliothek.
+Siehe [../CHANGELOG.md](../CHANGELOG.md).
 
 ## 11. Lizenz
 
-MIT-Lizenz, siehe [LICENSE](../LICENSE).
+MIT-Lizenz, siehe [../LICENSE](../LICENSE).
