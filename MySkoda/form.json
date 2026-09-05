@@ -2,16 +2,16 @@
   "elements": [
     {
       "type": "ExpansionPanel",
-      "caption": "Connection and vehicle",
+      "caption": "Connection",
       "expanded": true,
       "items": [
         {
           "type": "Label",
-          "caption": "MySkoda vehicle data is read directly from the official MySkoda Public API."
+          "caption": "Vehicle data is read directly from the official MySkoda Public API."
         },
         {
           "type": "Label",
-          "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key -> enter any name -> copy VIN and API token into this module."
+          "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key. Then copy VIN and API token into this instance."
         },
         {
           "type": "ValidationTextBox",
@@ -29,39 +29,6 @@
           "name": "ConnectionFeedback",
           "caption": "Connection has not been tested yet.",
           "bold": true
-        }
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Visualization settings",
-      "expanded": true,
-      "items": [
-        {
-          "type": "Select",
-          "name": "VehicleDesign",
-          "caption": "Vehicle design",
-          "options": [
-            {"caption": "Automatic", "value": "auto"},
-            {"caption": "Enyaq", "value": "enyaq"},
-            {"caption": "Elroq", "value": "elroq"},
-            {"caption": "Epiq", "value": "epiq"},
-            {"caption": "Generic", "value": "generic"}
-          ]
-        },
-        {
-          "type": "Label",
-          "caption": "Automatic selection uses model information returned by MySkoda. If the model cannot be determined reliably, choose it manually."
-        },
-        {
-          "type": "CheckBox",
-          "name": "HideVisualizationTitle",
-          "caption": "Hide Symcon tile title"
-        },
-        {
-          "type": "Label",
-          "name": "TileTitleSupportFeedback",
-          "caption": "The Symcon tile title can be hidden while the instance name remains unchanged in the object tree."
         }
       ]
     },
@@ -141,8 +108,7 @@
       "items": [
         {
           "type": "Label",
-          "caption": "Module and documentation: https://github.com/taloriko/IPSymconMySkoda",
-          "link": true
+          "caption": "Documentation and source code: github.com/taloriko/IPSymconMySkoda"
         }
       ]
     }
