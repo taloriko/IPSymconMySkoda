@@ -6,6 +6,7 @@ trait MySkodaVariablesTrait
 {
     private function registerCoreVariables(): void
     {
+        $this->registerBooleanProfiles();
         $this->RegisterVariableInteger('StateOfCharge', $this->Translate('State of charge'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_BATTERY
@@ -25,12 +26,14 @@ trait MySkodaVariablesTrait
         ], 30);
 
         $this->RegisterVariableBoolean('Locked', $this->Translate('Locked'), [], 40);
+        $this->applyBooleanProfile('Locked', 'MySkoda.YesNo.GoodTrue');
         $this->RegisterVariableBoolean('DoorsOpen', $this->Translate('Doors open'), [], 50);
+        $this->applyBooleanProfile('DoorsOpen', 'MySkoda.YesNo.GoodFalse');
         $this->RegisterVariableBoolean('WindowsOpen', $this->Translate('Windows open'), [], 60);
+        $this->applyBooleanProfile('WindowsOpen', 'MySkoda.YesNo.GoodFalse');
 
-        $this->RegisterVariableBoolean('Charging', $this->Translate('Charging'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH
-        ], 70);
+        $this->RegisterVariableBoolean('Charging', $this->Translate('Charging'), [], 70);
+        $this->applyBooleanProfile('Charging', 'MySkoda.YesNo.ActiveTrue');
 
         $this->RegisterVariableFloat('ChargePower', $this->Translate('Charging power'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -49,9 +52,8 @@ trait MySkodaVariablesTrait
 
         $this->RegisterVariableInteger('ChargeMode', $this->Translate('Charging mode'), $this->chargeModePresentation([]), 100);
 
-        $this->RegisterVariableBoolean('Climate', $this->Translate('Air conditioning'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH
-        ], 110);
+        $this->RegisterVariableBoolean('Climate', $this->Translate('Air conditioning'), [], 110);
+        $this->applyBooleanProfile('Climate', 'MySkoda.YesNo.ActiveTrue');
 
         $this->RegisterVariableFloat('TargetTemperature', $this->Translate('Target temperature'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
@@ -69,6 +71,7 @@ trait MySkodaVariablesTrait
         $this->applyHtmlBoxProfile('VehicleTile');
 
         $this->RegisterVariableBoolean('ApiKeyWarning', $this->Translate('API key warning'), [], 140);
+        $this->applyBooleanProfile('ApiKeyWarning', 'MySkoda.YesNo.GoodFalse');
 
         if ((float) $this->GetValue('TargetTemperature') === 0.0) {
             $this->SetValue('TargetTemperature', 22.0);
@@ -104,8 +107,11 @@ trait MySkodaVariablesTrait
             'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
         ], 240);
         $this->RegisterVariableBoolean('TrunkOpen', $this->Translate('Trunk open'), [], 250);
+        $this->applyBooleanProfile('TrunkOpen', 'MySkoda.YesNo.GoodFalse');
         $this->RegisterVariableBoolean('BonnetOpen', $this->Translate('Bonnet open'), [], 260);
+        $this->applyBooleanProfile('BonnetOpen', 'MySkoda.YesNo.GoodFalse');
         $this->RegisterVariableBoolean('LightsOn', $this->Translate('Lights on'), [], 270);
+        $this->applyBooleanProfile('LightsOn', 'MySkoda.YesNo.GoodFalse');
         $this->RegisterVariableString('ParkingState', $this->Translate('Parking state'), [], 280);
         $this->RegisterVariableFloat('Latitude', $this->Translate('Latitude'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -212,12 +218,11 @@ trait MySkodaVariablesTrait
 
         $lat = $this->firstPath($vehicle, ['parkingPosition.latitude', 'parkingPosition.gpsCoordinates.latitude', 'parkingPosition.gpsCoordinates.lat']);
         $lon = $this->firstPath($vehicle, ['parkingPosition.longitude', 'parkingPosition.gpsCoordinates.longitude', 'parkingPosition.gpsCoordinates.lon', 'parkingPosition.gpsCoordinates.lng']);
-        if ($lat !== null) {
-            $this->setIfExists('Latitude', (float) $lat);
-        }
-        if ($lon !== null) {
-            $this->setIfExists('Longitude', (float) $lon);
-        }
+        // Standortdaten werden von MySkoda nur geliefert, wenn die Standortfreigabe
+        // fuer das Profil erteilt wurde. Fehlt die Freigabe, bewusst 0/0 schreiben,
+        // damit keine alten Koordinaten aus einem vorherigen Abruf stehen bleiben.
+        $this->setIfExists('Latitude', $lat !== null ? (float) $lat : 0.0);
+        $this->setIfExists('Longitude', $lon !== null ? (float) $lon : 0.0);
 
         $expiry = $this->ReadAttributeInteger('ApiKeyExpiresAt');
         if ($expiry > 0) {
@@ -230,6 +235,45 @@ trait MySkodaVariablesTrait
 
         $errors = isset($envelope['errors']) && is_array($envelope['errors']) ? $envelope['errors'] : [];
         $this->setIfExists('PartialErrors', $errors === [] ? '' : json_encode($errors, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    private function registerBooleanProfiles(): void
+    {
+        $yes = $this->Translate('Yes');
+        $no = $this->Translate('No');
+
+        // Gruen = erwarteter/guter Zustand, Orange = Aufmerksamkeit.
+        // Rot bleibt bewusst echten Stoerungen/Fehlern vorbehalten.
+        $this->ensureBooleanProfile('MySkoda.YesNo.GoodTrue', $no, 0xF59E0B, $yes, 0x22C55E);
+        $this->ensureBooleanProfile('MySkoda.YesNo.GoodFalse', $no, 0x22C55E, $yes, 0xF59E0B);
+        $this->ensureBooleanProfile('MySkoda.YesNo.ActiveTrue', $no, -1, $yes, 0x22C55E);
+    }
+
+    private function ensureBooleanProfile(string $name, string $falseText, int $falseColor, string $trueText, int $trueColor): void
+    {
+        if (!IPS_VariableProfileExists($name)) {
+            IPS_CreateVariableProfile($name, 0);
+        }
+
+        $profile = IPS_GetVariableProfile($name);
+        if ((int) ($profile['ProfileType'] ?? -1) !== 0) {
+            $this->SendDebug('Variablenprofil', $name . ' hat nicht den Typ Boolean und wird nicht veraendert.', 0);
+            return;
+        }
+
+        IPS_SetVariableProfileAssociation($name, 0, $falseText, '', $falseColor);
+        IPS_SetVariableProfileAssociation($name, 1, $trueText, '', $trueColor);
+    }
+
+    private function applyBooleanProfile(string $ident, string $profile): void
+    {
+        if (!IPS_VariableProfileExists($profile)) {
+            return;
+        }
+        $id = @$this->GetIDForIdent($ident);
+        if ($id !== false) {
+            IPS_SetVariableCustomProfile($id, $profile);
+        }
     }
 
     private function updateChargeModePresentation(array $vehicle): void
