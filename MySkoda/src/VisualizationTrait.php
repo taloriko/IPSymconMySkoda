@@ -156,9 +156,9 @@ HTML;
 
     private function buildVehicleSvg(bool $locked, bool $doorsOpen, bool $windowsOpen, bool $lightsOn, string $socText, string $targetSocText): string
     {
-        $outline = $locked ? '#27a35b' : '#d94b4b';
+        $outline = $locked ? '#27a35b' : '#d58a00';
         $door = $doorsOpen ? '#d58a00' : 'rgba(127,127,127,.20)';
-        $window = $windowsOpen ? '#2f9acb' : 'rgba(127,127,127,.15)';
+        $window = $windowsOpen ? '#d58a00' : 'rgba(127,127,127,.15)';
         $light = $lightsOn ? '#d9ab00' : 'rgba(127,127,127,.18)';
         $limitLabel = htmlspecialchars($this->Translate('Charging limit'), ENT_QUOTES, 'UTF-8');
 
