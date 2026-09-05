@@ -6,7 +6,6 @@ trait MySkodaVariablesTrait
 {
     private function registerCoreVariables(): void
     {
-        $this->cleanupLegacyModuleProfiles();
         $this->RegisterVariableInteger('StateOfCharge', $this->Translate('State of charge'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_BATTERY
@@ -28,7 +27,6 @@ trait MySkodaVariablesTrait
         $this->RegisterVariableBoolean('Locked', $this->Translate('Locked'), $this->booleanYesNoPresentation(true), 40);
         $this->RegisterVariableBoolean('DoorsOpen', $this->Translate('Doors open'), $this->booleanYesNoPresentation(false), 50);
         $this->RegisterVariableBoolean('WindowsOpen', $this->Translate('Windows open'), $this->booleanYesNoPresentation(false), 60);
-
         $this->RegisterVariableBoolean('Charging', $this->Translate('Charging'), $this->booleanActivePresentation(), 70);
 
         $this->RegisterVariableFloat('ChargePower', $this->Translate('Charging power'), [
@@ -47,7 +45,6 @@ trait MySkodaVariablesTrait
         ], 90);
 
         $this->RegisterVariableInteger('ChargeMode', $this->Translate('Charging mode'), $this->chargeModePresentation([]), 100);
-
         $this->RegisterVariableBoolean('Climate', $this->Translate('Air conditioning'), $this->booleanActivePresentation(), 110);
 
         $this->RegisterVariableFloat('TargetTemperature', $this->Translate('Target temperature'), [
@@ -62,34 +59,27 @@ trait MySkodaVariablesTrait
             'DIGITS' => 1
         ], 120);
 
-        $this->RegisterVariableString('VehicleTile', $this->Translate('Vehicle overview'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_WEB_CONTENT,
-            'HTML_TYPE' => 0,
-            'PADDING' => true
-        ], 130);
-
-        $this->RegisterVariableBoolean('ApiKeyWarning', $this->Translate('API key warning'), $this->booleanYesNoPresentation(false), 140);
-
-        if ((float) $this->GetValue('TargetTemperature') === 0.0) {
-            $this->SetValue('TargetTemperature', 22.0);
-        }
-
-        $this->RegisterVariableString('LastUpdateAge', $this->Translate('Last update age'), [], 890);
-
+        $this->RegisterVariableBoolean('ApiKeyWarning', $this->Translate('API key warning'), $this->booleanYesNoPresentation(false), 130);
         $this->RegisterVariableInteger('LastUpdate', $this->Translate('Last update'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
             'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
         ], 900);
+
+        if ((float) $this->GetValue('TargetTemperature') === 0.0) {
+            $this->SetValue('TargetTemperature', 22.0);
+        }
     }
 
     private function registerOptionalVariables(bool $show): void
     {
+        $idents = [
+            'VehicleName', 'LicensePlate', 'ChargingState', 'ChargeType', 'FullyChargedAt',
+            'TrunkOpen', 'BonnetOpen', 'SunroofOpen', 'LightsOn', 'ParkingState', 'Latitude', 'Longitude',
+            'ApiKeyExpiresAtVar', 'RequestsRemaining', 'PartialErrors'
+        ];
+
         if (!$show) {
-            foreach ([
-                'VehicleName', 'LicensePlate', 'ChargingState', 'ChargeType', 'FullyChargedAt',
-                'TrunkOpen', 'BonnetOpen', 'LightsOn', 'ParkingState', 'Latitude', 'Longitude',
-                'ApiKeyExpiresAtVar', 'RequestsRemaining', 'PartialErrors'
-            ] as $ident) {
+            foreach ($idents as $ident) {
                 $this->dropVariable($ident);
             }
             return;
@@ -105,24 +95,25 @@ trait MySkodaVariablesTrait
         ], 240);
         $this->RegisterVariableBoolean('TrunkOpen', $this->Translate('Trunk open'), $this->booleanYesNoPresentation(false), 250);
         $this->RegisterVariableBoolean('BonnetOpen', $this->Translate('Bonnet open'), $this->booleanYesNoPresentation(false), 260);
-        $this->RegisterVariableBoolean('LightsOn', $this->Translate('Lights on'), $this->booleanYesNoPresentation(false), 270);
-        $this->RegisterVariableString('ParkingState', $this->Translate('Parking state'), [], 280);
+        $this->RegisterVariableBoolean('SunroofOpen', $this->Translate('Sunroof open'), $this->booleanYesNoPresentation(false), 270);
+        $this->RegisterVariableBoolean('LightsOn', $this->Translate('Lights on'), $this->booleanYesNoPresentation(false), 280);
+        $this->RegisterVariableString('ParkingState', $this->Translate('Parking state'), [], 290);
         $this->RegisterVariableFloat('Latitude', $this->Translate('Latitude'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'DIGITS' => 6
-        ], 290);
+        ], 300);
         $this->RegisterVariableFloat('Longitude', $this->Translate('Longitude'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'DIGITS' => 6
-        ], 300);
+        ], 310);
         $this->RegisterVariableInteger('ApiKeyExpiresAtVar', $this->Translate('API key valid until'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
             'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
-        ], 310);
+        ], 320);
         $this->RegisterVariableInteger('RequestsRemaining', $this->Translate('API requests remaining'), [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION
-        ], 320);
-        $this->RegisterVariableString('PartialErrors', $this->Translate('API partial errors'), [], 330);
+        ], 330);
+        $this->RegisterVariableString('PartialErrors', $this->Translate('API partial errors'), [], 340);
     }
 
     private function applyActions(): void
@@ -160,7 +151,6 @@ trait MySkodaVariablesTrait
 
         $chargePowerKw = $this->path($vehicle, 'charging.status.chargePowerInKw', null);
         if ($chargePowerKw !== null) {
-            // Symcon Standardvorlage Leistung arbeitet mit Watt.
             $this->SetValue('ChargePower', ((float) $chargePowerKw) * 1000.0);
         }
 
@@ -199,33 +189,19 @@ trait MySkodaVariablesTrait
         $this->setIfExists('LicensePlate', (string) $this->path($vehicle, 'licensePlate', ''));
         $this->setIfExists('ChargingState', (string) $this->path($vehicle, 'charging.status.state', ''));
         $this->setIfExists('ChargeType', (string) $this->path($vehicle, 'charging.status.chargeType', ''));
-
-        $full = $this->toTimestamp($this->path($vehicle, 'charging.status.fullyChargedAt', null));
-        if ($full > 0) {
-            $this->setIfExists('FullyChargedAt', $full);
-        }
-
+        $this->setIfExists('FullyChargedAt', $this->toTimestamp($this->path($vehicle, 'charging.status.fullyChargedAt', null)));
         $this->setIfExists('TrunkOpen', strtoupper((string) $this->path($vehicle, 'status.detail.trunk', 'CLOSED')) === 'OPEN');
         $this->setIfExists('BonnetOpen', strtoupper((string) $this->path($vehicle, 'status.detail.bonnet', 'CLOSED')) === 'OPEN');
+        $this->setIfExists('SunroofOpen', strtoupper((string) $this->path($vehicle, 'status.detail.sunroof', 'CLOSED')) === 'OPEN');
         $this->setIfExists('LightsOn', strtoupper((string) $this->path($vehicle, 'status.overall.lights', 'OFF')) === 'ON');
         $this->setIfExists('ParkingState', (string) $this->path($vehicle, 'parkingPosition.state', ''));
 
         $lat = $this->firstPath($vehicle, ['parkingPosition.latitude', 'parkingPosition.gpsCoordinates.latitude', 'parkingPosition.gpsCoordinates.lat']);
         $lon = $this->firstPath($vehicle, ['parkingPosition.longitude', 'parkingPosition.gpsCoordinates.longitude', 'parkingPosition.gpsCoordinates.lon', 'parkingPosition.gpsCoordinates.lng']);
-        // Standortdaten werden von MySkoda nur geliefert, wenn die Standortfreigabe
-        // fuer das Profil erteilt wurde. Fehlt die Freigabe, bewusst 0/0 schreiben,
-        // damit keine alten Koordinaten aus einem vorherigen Abruf stehen bleiben.
         $this->setIfExists('Latitude', $lat !== null ? (float) $lat : 0.0);
         $this->setIfExists('Longitude', $lon !== null ? (float) $lon : 0.0);
-
-        $expiry = $this->ReadAttributeInteger('ApiKeyExpiresAt');
-        if ($expiry > 0) {
-            $this->setIfExists('ApiKeyExpiresAtVar', $expiry);
-        }
-        $remaining = $this->ReadAttributeInteger('RateLimitRemaining');
-        if ($remaining >= 0) {
-            $this->setIfExists('RequestsRemaining', $remaining);
-        }
+        $this->setIfExists('ApiKeyExpiresAtVar', $this->ReadAttributeInteger('ApiKeyExpiresAt'));
+        $this->setIfExists('RequestsRemaining', $this->ReadAttributeInteger('RateLimitRemaining'));
 
         $errors = isset($envelope['errors']) && is_array($envelope['errors']) ? $envelope['errors'] : [];
         $this->setIfExists('PartialErrors', $errors === [] ? '' : json_encode($errors, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
@@ -235,90 +211,53 @@ trait MySkodaVariablesTrait
     {
         $green = 0x22C55E;
         $orange = 0xF59E0B;
-
-        return $this->booleanEnumerationPresentation(
-            $goodValue === false ? $green : $orange,
-            $goodValue === true ? $green : $orange
+        return $this->booleanValuePresentation(
+            $goodValue ? $orange : $green,
+            $goodValue ? $green : $orange
         );
     }
 
     private function booleanActivePresentation(): array
     {
-        // Laden/Klima sind normale Betriebszustände. Beide Zustände sind grün;
-        // Orange wird nur verwendet, wenn ein Zustand Aufmerksamkeit benötigt.
-        return $this->booleanEnumerationPresentation(0x22C55E, 0x22C55E);
+        if ($this->ReadPropertyBoolean('EnableRemote')) {
+            return [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
+                'USE_ICON_FALSE' => false,
+                'ICON_TRUE' => '',
+                'ICON_FALSE' => '',
+                'GLOW_COLOR' => 0x22C55E,
+                'GLOW_INTENSITY' => 35,
+                'USAGE_TYPE' => 2
+            ];
+        }
+        return $this->booleanValuePresentation(0x22C55E, 0x22C55E);
     }
 
-    private function booleanEnumerationPresentation(int $falseColor, int $trueColor): array
+    private function booleanValuePresentation(int $falseColor, int $trueColor): array
     {
-        $options = [
-            [
-                'Value' => false,
-                'Caption' => $this->Translate('No'),
-                'IconActive' => false,
-                'IconValue' => '',
-                'Color' => $falseColor
-            ],
-            [
-                'Value' => true,
-                'Caption' => $this->Translate('Yes'),
-                'IconActive' => false,
-                'IconValue' => '',
-                'Color' => $trueColor
-            ]
-        ];
-
         return [
-            'PRESENTATION' => VARIABLE_PRESENTATION_ENUMERATION,
-            'LAYOUT' => 0,
-            'DISPLAY' => 0,
-            'OPTIONS' => json_encode($options, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => '',
+            'COLOR' => -1,
+            'OPTIONS' => json_encode([
+                [
+                    'Value' => false,
+                    'Caption' => $this->Translate('No'),
+                    'IconActive' => false,
+                    'IconValue' => '',
+                    'ColorActive' => true,
+                    'ColorValue' => $falseColor
+                ],
+                [
+                    'Value' => true,
+                    'Caption' => $this->Translate('Yes'),
+                    'IconActive' => false,
+                    'IconValue' => '',
+                    'ColorActive' => true,
+                    'ColorValue' => $trueColor
+                ]
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ];
-    }
-
-    private function cleanupLegacyModuleProfiles(): void
-    {
-        // Migration von Version 1.3: Die damals vom Modul erzeugten Legacy-Profile
-        // werden von den Modulvariablen entfernt. Ab 1.4 kommen ausschließlich
-        // die neuen Darstellungen (Symcon >= 8.0) zum Einsatz.
-        $legacyProfiles = [
-            'MySkoda.YesNo.GoodTrue',
-            'MySkoda.YesNo.GoodFalse',
-            'MySkoda.YesNo.ActiveTrue'
-        ];
-        $idents = [
-            'Locked', 'DoorsOpen', 'WindowsOpen', 'Charging', 'Climate',
-            'ApiKeyWarning', 'TrunkOpen', 'BonnetOpen', 'LightsOn', 'VehicleTile'
-        ];
-
-        foreach ($idents as $ident) {
-            $id = @$this->GetIDForIdent($ident);
-            if ($id === false) {
-                continue;
-            }
-            $variable = IPS_GetVariable($id);
-            $customProfile = (string) ($variable['VariableCustomProfile'] ?? '');
-            if (in_array($customProfile, $legacyProfiles, true) || ($ident === 'VehicleTile' && $customProfile === '~HTMLBox')) {
-                IPS_SetVariableCustomProfile($id, '');
-            }
-        }
-
-        foreach ($legacyProfiles as $profileName) {
-            if (!IPS_VariableProfileExists($profileName)) {
-                continue;
-            }
-            $inUse = false;
-            foreach (IPS_GetVariableList() as $variableId) {
-                $variable = IPS_GetVariable($variableId);
-                if (($variable['VariableCustomProfile'] ?? '') === $profileName || ($variable['VariableProfile'] ?? '') === $profileName) {
-                    $inUse = true;
-                    break;
-                }
-            }
-            if (!$inUse) {
-                IPS_DeleteVariableProfile($profileName);
-            }
-        }
     }
 
     private function updateChargeModePresentation(array $vehicle): void
@@ -343,6 +282,7 @@ trait MySkodaVariablesTrait
         foreach (array_values($clean) as $index => $mode) {
             $map[(string) $index] = $mode;
         }
+
         $this->WriteAttributeString('ChargeModeMap', json_encode($map, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         $this->RegisterVariableInteger('ChargeMode', $this->Translate('Charging mode'), $this->chargeModePresentation($map), 100);
         $this->MaintainAction('ChargeMode', $this->ReadPropertyBoolean('EnableRemote') && $map !== []);
@@ -387,5 +327,4 @@ trait MySkodaVariablesTrait
         ];
         return $known[$mode] ?? ucwords(strtolower(str_replace('_', ' ', $mode)));
     }
-
 }
