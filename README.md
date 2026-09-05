@@ -10,18 +10,20 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 - Konfigurationsmaske für FIN, API-Token, Abrufintervall und optionale S-PIN
 - Bewusst kleiner Standard-Objektbaum
 - **Native Symcon-Fahrzeugkachel direkt an der MySkoda-Instanz**
-- Smartphone-optimierte Elektroauto-Darstellung mit SOC-Batterie, Laden, Klima und Fahrzeugstatus
+- Smartphone-optimierte Darstellung nach dem kompakten TileVisu-Prinzip
+- Wählbare Fahrzeugoptik: **Automatisch, Enyaq, Elroq, Epiq oder Allgemein**
+- Automatische Modellauswahl über die von MySkoda gelieferten Modell-/Spezifikationsdaten, mit manueller Übersteuerung
+- Fahrzeugstatus für Verriegelung, Türen, Fenster, Schiebedach, Licht, Kofferraum und Motorhaube, soweit von der API geliefert
 - 4-Balken-Batterie mit SOC-Farbverlauf von Rot über Orange und Hellgrün bis Dunkelgrün
+- Laden, Ladelimit, Lademodus, Klima und Kilometerstand kompakt in der Kachel
 - Warnung 30 Tage vor Ablauf des API-Keys, optional mit Symcon-Mitteilung
 - Verbindungstest mit direkter Rückmeldung in der Konfiguration
 - Optionale Detail- und Diagnosevariablen
 - Laden und Klimatisierung über Symcon-Variablen steuerbar
-- Ladelimit und Lademodus steuerbar
 - Standheizung und aktive Lüftung über Modulbefehle
 - Berücksichtigung von Rate-Limit und `Retry-After`
-- Neue Variablendarstellungen ab Symcon 8.x und Symcon-Standardvorlagen
-- Boolean-Zustände nutzen ausschließlich die neuen Symcon-Darstellungen ab 8.x; es werden keine eigenen Legacy-Profile angelegt.
-- Eigene neue Darstellungs-Vorlagen sind eindeutig mit `MySkoda.*` benannt.
+- Neue Variablendarstellungen ab Symcon 8.x; **keine eigenen Legacy-Variablenprofile**
+- Eigene neue Darstellungs-Vorlagen sind eindeutig mit `MySkoda.*` benannt
 - Deutsch über `locale.json`, Englisch als Quellsprache des Moduls
 
 ## Voraussetzungen
@@ -33,7 +35,7 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 
 ## Version
 
-Aktueller Stand dieser Bibliothek: **1.6**
+Aktueller Stand dieser Bibliothek: **1.7**
 
 ## API-Key in der MySkoda App erstellen
 
@@ -50,6 +52,20 @@ Nach dem Übernehmen prüft das Modul die Verbindung und zeigt direkt an, ob Fah
 
 Die MySkoda API liefert die Fahrzeugposition nur, wenn die Standortfreigabe im jeweiligen MySkoda-Profil aktiviert ist. Die Freigabe muss bei mehreren Profilen für dasselbe Fahrzeug je Profil separat erfolgen. Ohne Standortfreigabe schreibt das Modul `0.0 / 0.0` in die Koordinaten.
 
+### Fahrzeugdarstellung
+
+Unter **Fahrzeugdarstellung** stehen folgende Optionen zur Verfügung:
+
+- Automatisch
+- Enyaq
+- Elroq
+- Epiq
+- Allgemein
+
+Bei **Automatisch** wertet das Modul zuerst Modell-/Spezifikationsinformationen der MySkoda-Antwort aus. Die FIN allein wird nicht zur erzwungenen Unterscheidung zwischen Enyaq und Elroq verwendet, da beide Modellfamilien denselben Škoda-Fahrzeugtyp `NY` verwenden können. Wenn keine zuverlässige Zuordnung möglich ist, wird die allgemeine Darstellung verwendet und das Modell kann jederzeit manuell ausgewählt werden.
+
+Details dazu stehen in [docs/VISUALIZATION.md](docs/VISUALIZATION.md).
+
 ## Installation
 
 Repository im **Module Control** hinzufügen:
@@ -60,7 +76,7 @@ https://github.com/taloriko/IPSymconMySkoda
 
 Danach eine Instanz **MySkoda** anlegen und FIN, API-Token sowie das gewünschte Abrufintervall konfigurieren.
 
-Ab Version 1.6 stellt die **Instanz selbst** eine native Kachel-Visualisierung bereit. Beim Hinzufügen der MySkoda-Instanz zur Kachel-Visualisierung ist damit kein manuelles Umschalten einer `VehicleTile`-Stringvariable auf Webinhalt mehr erforderlich. Eine bereits vorhandene `VehicleTile`-Variable aus Version 1.1-1.5 bleibt versteckt als Abwärtskompatibilität bestehen.
+Seit Version 1.6 stellt die **Instanz selbst** eine native Kachel-Visualisierung bereit. Beim Hinzufügen der MySkoda-Instanz zur Kachel-Visualisierung ist kein manuelles Umschalten einer Stringvariable auf Webinhalt nötig. Eine alte `VehicleTile`-Variable aus Version 1.1-1.5 bleibt lediglich versteckt zur Abwärtskompatibilität bestehen.
 
 Die vollständige Modul-Dokumentation befindet sich unter [MySkoda/README.md](MySkoda/README.md).
 
@@ -97,9 +113,9 @@ Offizielle Symcon-SDK-Referenzen:
 
 ## Design-Inspiration
 
-Die native Fahrzeugkachel orientiert sich stärker an den Layout- und Modulprinzipien der [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung): `SetVisualizationType(1)`, eine eigene `module.html`, `GetVisualizationTile()` und laufende Updates über `UpdateVisualizationValue()`. Auch die kompakte Aufteilung mit Bild-/Fahrzeugbereich, schmalem Trenner und wenigen Hauptwerten diente als Orientierung.
+Die native Fahrzeugkachel orientiert sich an den Layout- und Modulprinzipien der [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung): native Instanzkachel, eine eigene `module.html`, klare Informationshierarchie, kompakte Statuszeilen und laufende Updates ohne zusätzliche Visualisierungsvariable.
 
-**Es wurden keine Quelltexte oder Grafikdateien aus dem Projekt übernommen.** Die MySkoda-Datenlogik, das Fahrzeug-SVG, die Batterieanzeige und die HTML-/JavaScript-Umsetzung sind eigenständig.
+**Es wurden keine Quelltexte oder Grafikdateien aus dem Projekt übernommen.** Die MySkoda-Datenlogik, die modellabhängigen Fahrzeug-SVGs, Batterieanzeige und HTML-/JavaScript-Umsetzung sind eigenständig.
 
 ## API-Dokumentation
 
