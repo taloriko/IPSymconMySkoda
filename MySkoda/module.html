@@ -5,210 +5,152 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
 :root{
-    --ok:#22a35a;
-    --warn:#d58a00;
-    --error:#dc4040;
+    --ok:#18a34a;
+    --warn:#d88608;
+    --error:#d64242;
+    --text:inherit;
     --line:rgba(127,127,127,.22);
-    --muted:rgba(127,127,127,.14);
-    --accent:rgba(40,205,171,.78);
+    --soft:rgba(127,127,127,.075);
+    --soft2:rgba(127,127,127,.11);
+    --glass:#17212a;
 }
-html,body{margin:0;padding:0;width:100%;height:100%;background:transparent;color:inherit;overflow:hidden}
-body{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif}
+html,body{margin:0;padding:0;width:100%;height:100%;background:transparent;color:inherit}
+body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overflow:auto}
 *{box-sizing:border-box}
-.tile{width:100%;height:100%;min-height:220px;padding:8px 10px;display:flex;flex-direction:column;gap:5px;color:inherit;background:transparent;line-height:1.15}
-.head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;padding-bottom:5px;border-bottom:1px solid var(--line)}
-.title{font-size:1.08rem;font-weight:780;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.range{font-size:.68rem;opacity:.72;margin-top:2px}.range strong{font-size:.82rem;opacity:1}.headright{text-align:right}.lockhead{font-size:1rem;line-height:1}.age{font-size:.61rem;opacity:.62;margin-top:2px;white-space:nowrap}
-.keywarn{display:none;padding:4px 7px;border-left:3px solid var(--warn);background:rgba(213,138,0,.09);font-size:.63rem;font-weight:650}
-.main{display:grid;grid-template-columns:minmax(125px,43%) 1fr;gap:9px;align-items:center;min-height:0;flex:1}
-.carwrap{min-width:0;min-height:0;height:100%;display:flex;align-items:center;justify-content:center}.car-svg{width:100%;height:100%;max-height:205px;min-height:145px}
-.charge{min-width:0;padding-left:9px;border-left:1px dotted var(--accent)}.chargehead{display:flex;gap:7px;align-items:center;margin-bottom:7px}.plugicon{width:27px;text-align:center;font-size:1.45rem;line-height:1}.chargecopy{min-width:0}.chargetitle{font-size:.82rem;font-weight:780;white-space:normal}.chargetype{font-size:.58rem;opacity:.64;margin-top:2px}.charge.ok .chargetitle,.charge.done .chargetitle{color:var(--ok)}.charge.warn .chargetitle{color:var(--warn)}.charge.error .chargetitle{color:var(--error)}.charge.idle .chargetitle{opacity:.72}
-.metrics{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}.metric-label{font-size:.5rem;text-transform:uppercase;letter-spacing:.025em;opacity:.56}.metric-value{font-size:.8rem;font-weight:730;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.statusbar{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;padding:5px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.statusitem{min-width:0;text-align:center;font-size:.56rem;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:3px;vertical-align:1px}.good .dot{background:var(--ok)}.attention .dot{background:var(--warn)}
-.bottom{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding-top:1px}.climate{min-width:0;display:flex;align-items:center;gap:7px}.climateicon{width:26px;height:26px;flex:0 0 26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(127,127,127,.11);font-size:.85rem}.climate.active .climateicon{color:var(--ok);background:rgba(34,163,90,.12)}.climatecopy{min-width:0}.climateline{font-size:.7rem;font-weight:760;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.climatesub{font-size:.57rem;opacity:.62;margin-top:1px}.km{text-align:right;font-size:.56rem;opacity:.64;white-space:nowrap}.km strong{display:block;font-size:.7rem;opacity:1;margin-top:1px}
-.car-body{fill:url(#bodyGradient);stroke-width:2.4}.normal-outline{stroke:var(--ok)}.attention-outline{stroke:var(--warn)}.glass{fill:url(#glassGradient);stroke:rgba(127,127,127,.30);stroke-width:1}.door-mark{fill:none;stroke:rgba(127,127,127,.20);stroke-width:4.5;stroke-linecap:round}.door-mark.attention{stroke:var(--warn)}.window-mark{fill:none;stroke:rgba(127,127,127,.18);stroke-width:2}.window-mark.attention{stroke:var(--warn);stroke-width:3}.lamp{fill:rgba(127,127,127,.18)}.lamp.attention{fill:#f2b400}.wheel{fill:rgba(75,75,75,.80);stroke:rgba(127,127,127,.42);stroke-width:1}.wheel-core{fill:rgba(180,180,180,.28)}.mirror{fill:rgba(127,127,127,.22);stroke:rgba(127,127,127,.34)}
-.battery-shell{fill:rgba(127,127,127,.08);stroke:rgba(127,127,127,.58);stroke-width:1.4}.battery-tip{fill:rgba(127,127,127,.58)}.battery-segment{fill:rgba(127,127,127,.14);transition:fill .25s ease,opacity .25s ease}.battery-text{fill:currentColor;font:780 18px system-ui}.limit-text{fill:currentColor;font:600 7.2px system-ui;opacity:.67}.car-shadow{fill:rgba(0,0,0,.12)}
-@media(max-width:390px){.tile{padding:6px 7px}.main{grid-template-columns:119px 1fr;gap:6px}.charge{padding-left:6px}.metrics{gap:5px 6px}.metric-value{font-size:.73rem}.statusitem{font-size:.5rem}.car-svg{min-height:138px}.climateline{font-size:.66rem}}
-@media(max-height:260px){.tile{gap:3px}.main{min-height:132px}.car-svg{max-height:160px}.statusbar{padding:3px 0}.bottom{padding-top:0}}
+.tile{width:100%;min-height:100%;padding:9px 11px;color:inherit;background:transparent;line-height:1.12}
+.head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:start;padding:1px 1px 7px;border-bottom:1px solid var(--line)}
+.title{font-size:1.12rem;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.range{font-size:.69rem;opacity:.70;margin-top:3px}.range strong{font-size:.85rem;opacity:1}.headright{text-align:right}.lockhead{font-size:1rem;line-height:1}.age{font-size:.62rem;opacity:.60;margin-top:3px;white-space:nowrap}
+.keywarn{display:none;margin-top:6px;padding:5px 8px;border-left:3px solid var(--warn);background:rgba(216,134,8,.09);font-size:.63rem;font-weight:650}
+.hero{display:grid;grid-template-columns:minmax(155px,45%) minmax(0,1fr);gap:11px;align-items:stretch;padding:9px 0 7px}
+.car-panel{min-width:0;display:flex;align-items:center;justify-content:center;padding:0 2px}.car-svg{width:100%;height:292px;max-height:42vh;min-height:225px;filter:drop-shadow(0 6px 7px rgba(0,0,0,.13))}
+.rightcol{min-width:0;display:flex;flex-direction:column;gap:7px}
+.chargebox{padding:10px 11px;background:var(--soft);border-radius:13px;min-height:0;flex:1}.chargehead{display:flex;align-items:center;gap:9px;padding-bottom:8px}.plugcircle{width:38px;height:38px;flex:0 0 38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(127,127,127,.095)}.plugicon{font-size:1.38rem;line-height:1}.chargecopy{min-width:0}.chargetitle{font-size:.82rem;font-weight:790;line-height:1.15}.chargehint{font-size:.58rem;opacity:.60;margin-top:3px}.chargebox.ok .chargetitle,.chargebox.done .chargetitle{color:var(--ok)}.chargebox.warn .chargetitle{color:var(--warn)}.chargebox.error .chargetitle{color:var(--error)}
+.metrics{border-top:1px solid var(--line)}.metric{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line)}.metric:last-child{border-bottom:0}.metric-label{font-size:.62rem;opacity:.58}.metric-value{font-size:.82rem;font-weight:760;text-align:right;white-space:nowrap}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:7px}.quickbox{background:var(--soft);border-radius:12px;padding:9px 10px;min-width:0;display:flex;align-items:center;gap:8px}.quickicon{width:33px;height:33px;flex:0 0 33px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--soft2);font-size:1rem}.climate.active .quickicon{color:var(--ok);background:rgba(24,163,74,.12)}.quicktitle{font-size:.70rem;font-weight:780;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.quicksub{font-size:.58rem;opacity:.60;margin-top:2px;white-space:nowrap}.kmvalue{font-size:.74rem;font-weight:790;margin-top:2px;white-space:nowrap}
+.status-list{border-top:1px solid var(--line);margin-top:1px;padding-top:2px}.status-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;min-height:34px;padding:5px 5px;border-bottom:1px solid var(--line)}.status-row:last-child{border-bottom:0}.status-left{display:flex;align-items:center;gap:8px;min-width:0}.state-dot{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--ok)}.status-row.attention .state-dot{background:var(--warn)}.status-row.unavailable{display:none}.status-icon{width:18px;height:18px;flex:0 0 18px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;opacity:.90}.status-label{font-size:.69rem;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.status-value{font-size:.68rem;font-weight:720;color:var(--ok);text-align:right;white-space:nowrap}.status-row.attention .status-value{color:var(--warn)}
+.model-caption{text-align:center;font-size:.52rem;opacity:.45;margin-top:-3px}
+.car-body{fill:url(#bodyGradient);stroke:rgba(60,60,60,.60);stroke-width:1.8}.car-outline-good{stroke:var(--ok);stroke-width:2.3}.car-outline-attn{stroke:var(--warn);stroke-width:2.3}.glass{fill:url(#glassGradient);stroke:rgba(127,127,127,.35);stroke-width:1}.roof-glass{fill:rgba(18,27,34,.84);stroke:rgba(127,127,127,.40);stroke-width:1.1}.sunroof-attn{stroke:var(--warn);stroke-width:2.8}.wheel{fill:#2b2f33;stroke:rgba(127,127,127,.42);stroke-width:1}.wheelhub{fill:rgba(200,200,200,.20)}.mirror{fill:url(#bodyGradient);stroke:rgba(127,127,127,.48);stroke-width:1}.body-line{fill:none;stroke:rgba(127,127,127,.30);stroke-width:1.1}.door-line{fill:none;stroke:rgba(127,127,127,.28);stroke-width:1.4}.door-line.attention,.window-line.attention{stroke:var(--warn);stroke-width:3}.window-line{fill:none;stroke:rgba(127,127,127,.26);stroke-width:1.3}.lamp{fill:rgba(127,127,127,.18);stroke:rgba(127,127,127,.22);stroke-width:.6}.lamp.attention{fill:#f0aa16;stroke:#f0aa16;filter:drop-shadow(0 0 2px rgba(240,170,22,.55))}
+.battery-shell{fill:rgba(245,245,245,.88);stroke:rgba(70,70,70,.40);stroke-width:1.1}.battery-tip{fill:rgba(90,90,90,.65)}.battery-segment{fill:rgba(127,127,127,.14)}.battery-text{fill:#111827;font:800 20px system-ui}.limit-text{fill:#374151;font:600 7.6px system-ui;opacity:.78}
+@media(prefers-color-scheme:dark){.battery-shell{fill:rgba(25,30,35,.91);stroke:rgba(210,210,210,.38)}.battery-text{fill:#f4f4f5}.limit-text{fill:#d1d5db}.chargebox,.quickbox{background:rgba(255,255,255,.055)}}
+@media(max-width:430px){.tile{padding:7px 8px}.hero{grid-template-columns:minmax(138px,44%) minmax(0,1fr);gap:7px}.car-svg{height:260px;min-height:215px}.chargebox{padding:8px 9px}.plugcircle{width:32px;height:32px;flex-basis:32px}.metric{padding:6px 0}.quickbox{padding:7px 8px;gap:6px}.quickicon{width:28px;height:28px;flex-basis:28px}.status-row{min-height:31px;padding:4px 4px}.status-icon{width:16px;height:16px;flex-basis:16px}.status-label,.status-value{font-size:.63rem}}
+@media(max-width:340px){.hero{grid-template-columns:122px minmax(0,1fr)}.car-svg{height:230px}.chargetitle{font-size:.72rem}.chargehint{font-size:.52rem}.metric-label{font-size:.55rem}.metric-value{font-size:.72rem}.quick{grid-template-columns:1fr}.status-label,.status-value{font-size:.59rem}}
 </style>
 </head>
 <body>
 <div class="tile">
-    <div class="head">
-        <div style="min-width:0">
-            <div id="title" class="title">MySkoda</div>
-            <div class="range"><span id="rangeLabel">Reichweite</span> <strong id="range">—</strong></div>
-        </div>
-        <div class="headright">
-            <div id="lockHead" class="lockhead">🔒</div>
-            <div class="age"><span id="updatedLabel">Alter</span> <span id="age">--:--</span></div>
-        </div>
-    </div>
+    <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+        <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+        <symbol id="i-door" viewBox="0 0 24 24"><path d="M7 3h9l2 3v15H6V7l1-4Z"/><path d="M9 8h6M15 14h.01"/></symbol>
+        <symbol id="i-window" viewBox="0 0 24 24"><path d="M5 5h11l3 5v9H5V5Z"/><path d="M6 10h12"/></symbol>
+        <symbol id="i-roof" viewBox="0 0 24 24"><rect x="6" y="3" width="12" height="18" rx="4"/><rect x="8" y="6" width="8" height="7" rx="1"/><path d="M8 16h8"/></symbol>
+        <symbol id="i-light" viewBox="0 0 24 24"><path d="M14 7c3 0 5 2 5 5s-2 5-5 5H9V7h5Z"/><path d="M5 8H2M5 12H1M5 16H2"/></symbol>
+        <symbol id="i-trunk" viewBox="0 0 24 24"><path d="M4 8h11l4 4v6H7l-3-3V8Z"/><path d="M4 8 2 5h4l2 3"/></symbol>
+        <symbol id="i-bonnet" viewBox="0 0 24 24"><path d="M4 9h12l4 4-4 4H7l-3-3V9Z"/><path d="m4 9-2-3h4l3 3"/></symbol>
+        <symbol id="i-fan" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="M12 10c-1-5 5-7 6-3 1 3-3 5-6 5M14 12c5-1 7 5 3 6-3 1-5-3-5-6M12 14c1 5-5 7-6 3-1-3 3-5 6-5M10 12c-5 1-7-5-3-6 3-1 5 3 5 6"/></symbol>
+    </svg>
 
+    <div class="head">
+        <div style="min-width:0"><div id="title" class="title">MySkoda</div><div class="range"><span id="rangeLabel">Reichweite</span> <strong id="range">—</strong></div></div>
+        <div class="headright"><div id="lockHead" class="lockhead">🔒</div><div class="age"><span id="updatedLabel">Letzte Abfrage</span> <span id="age">--:--</span></div></div>
+    </div>
     <div id="keyWarning" class="keywarn"></div>
 
-    <div class="main">
-        <div class="carwrap">
-            <svg class="car-svg" viewBox="0 0 190 260" role="img" aria-label="Vehicle">
-                <defs>
-                    <linearGradient id="bodyGradient" x1="0" y1="0" x2="1" y2="1">
-                        <stop offset="0" stop-color="currentColor" stop-opacity=".22"/>
-                        <stop offset=".28" stop-color="currentColor" stop-opacity=".08"/>
-                        <stop offset=".60" stop-color="currentColor" stop-opacity=".035"/>
-                        <stop offset="1" stop-color="currentColor" stop-opacity=".18"/>
-                    </linearGradient>
-                    <linearGradient id="glassGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0" stop-color="#9bb7c7" stop-opacity=".48"/>
-                        <stop offset="1" stop-color="#324c5b" stop-opacity=".22"/>
-                    </linearGradient>
-                </defs>
-
-                <ellipse class="car-shadow" cx="95" cy="137" rx="60" ry="111"/>
-
-                <ellipse class="wheel" cx="43" cy="70" rx="8" ry="22"/><ellipse class="wheel-core" cx="43" cy="70" rx="3" ry="12"/>
-                <ellipse class="wheel" cx="147" cy="70" rx="8" ry="22"/><ellipse class="wheel-core" cx="147" cy="70" rx="3" ry="12"/>
-                <ellipse class="wheel" cx="43" cy="190" rx="8" ry="22"/><ellipse class="wheel-core" cx="43" cy="190" rx="3" ry="12"/>
-                <ellipse class="wheel" cx="147" cy="190" rx="8" ry="22"/><ellipse class="wheel-core" cx="147" cy="190" rx="3" ry="12"/>
-
-                <path id="carBody" class="car-body normal-outline" d="M66 13 Q95 3 124 13 Q140 21 146 42 L151 83 L155 177 Q153 219 128 243 Q95 254 62 243 Q37 219 35 177 L39 83 L44 42 Q50 21 66 13Z"/>
-                <path class="mirror" d="M42 61 Q28 55 26 68 Q29 79 40 76Z"/><path class="mirror" d="M148 61 Q162 55 164 68 Q161 79 150 76Z"/>
-
-                <path id="frontGlass" class="glass" d="M64 38 Q95 28 126 38 L134 85 Q95 73 56 85Z"/>
-                <path id="rearGlass" class="glass" d="M56 174 Q95 187 134 174 L126 222 Q95 232 64 222Z"/>
-                <path class="window-mark" id="windowMarkL" d="M55 92 L48 112 L48 163 L57 170"/>
-                <path class="window-mark" id="windowMarkR" d="M135 92 L142 112 L142 163 L133 170"/>
-
-                <path id="doorMarkL" class="door-mark" d="M48 91 L39 100 L38 160 L49 169"/>
-                <path id="doorMarkR" class="door-mark" d="M142 91 L151 100 L152 160 L141 169"/>
-                <path d="M58 88 C78 80 112 80 132 88 L137 169 C115 178 75 178 53 169Z" fill="rgba(127,127,127,.045)" stroke="rgba(127,127,127,.18)" stroke-width="1.1"/>
-
-                <path id="frontLamp" class="lamp" d="M61 22 Q95 13 129 22 L125 28 Q95 21 65 28Z"/>
-                <path id="rearLamp" class="lamp" d="M65 235 Q95 244 125 235 L120 241 Q95 248 70 241Z"/>
-
-                <g transform="translate(56 108)">
-                    <rect class="battery-shell" x="0" y="0" width="78" height="37" rx="6"/>
-                    <rect class="battery-tip" x="78" y="12" width="4" height="13" rx="1.5"/>
-                    <rect id="bat1" class="battery-segment" x="7" y="7" width="13" height="13" rx="2"/>
-                    <rect id="bat2" class="battery-segment" x="24" y="7" width="13" height="13" rx="2"/>
-                    <rect id="bat3" class="battery-segment" x="41" y="7" width="13" height="13" rx="2"/>
-                    <rect id="bat4" class="battery-segment" x="58" y="7" width="13" height="13" rx="2"/>
-                    <text id="socText" class="battery-text" x="39" y="34" text-anchor="middle">--%</text>
-                    <text id="limitText" class="limit-text" x="39" y="47" text-anchor="middle">Limit —</text>
-                </g>
-            </svg>
+    <div class="hero">
+        <div class="car-panel">
+            <div style="width:100%">
+                <svg class="car-svg" viewBox="0 0 220 360" role="img" aria-label="Vehicle">
+                    <defs>
+                        <linearGradient id="bodyGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#eef1f4"/><stop offset=".42" stop-color="#aeb7c2"/><stop offset=".68" stop-color="#f4f6f8"/><stop offset="1" stop-color="#88939e"/></linearGradient>
+                        <linearGradient id="glassGradient" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#111820"/><stop offset="1" stop-color="#33434f"/></linearGradient>
+                    </defs>
+                    <ellipse cx="110" cy="185" rx="70" ry="155" fill="rgba(0,0,0,.08)"/>
+                    <g id="wheels">
+                        <ellipse class="wheel" cx="49" cy="93" rx="10" ry="29"/><ellipse class="wheelhub" cx="49" cy="93" rx="4" ry="17"/>
+                        <ellipse class="wheel" cx="171" cy="93" rx="10" ry="29"/><ellipse class="wheelhub" cx="171" cy="93" rx="4" ry="17"/>
+                        <ellipse class="wheel" cx="49" cy="270" rx="10" ry="29"/><ellipse class="wheelhub" cx="49" cy="270" rx="4" ry="17"/>
+                        <ellipse class="wheel" cx="171" cy="270" rx="10" ry="29"/><ellipse class="wheelhub" cx="171" cy="270" rx="4" ry="17"/>
+                    </g>
+                    <path id="carBody" class="car-body car-outline-good" d=""/>
+                    <path id="mirrorL" class="mirror" d=""/><path id="mirrorR" class="mirror" d=""/>
+                    <path id="frontGlass" class="glass" d=""/><path id="rearGlass" class="glass" d=""/>
+                    <path id="sunroofPanel" class="roof-glass" d=""/>
+                    <path id="windowMarkL" class="window-line" d=""/><path id="windowMarkR" class="window-line" d=""/>
+                    <path id="doorMarkL" class="door-line" d=""/><path id="doorMarkR" class="door-line" d=""/>
+                    <path id="hoodLine" class="body-line" d=""/><path id="trunkLine" class="body-line" d=""/>
+                    <path id="frontLamp" class="lamp" d=""/><path id="rearLamp" class="lamp" d=""/>
+                    <g id="batteryGroup" transform="translate(68 183)">
+                        <rect class="battery-shell" x="0" y="0" width="84" height="52" rx="8"/>
+                        <rect class="battery-tip" x="84" y="17" width="5" height="16" rx="1.5"/>
+                        <rect id="bat1" class="battery-segment" x="8" y="8" width="14" height="15" rx="2.5"/><rect id="bat2" class="battery-segment" x="27" y="8" width="14" height="15" rx="2.5"/><rect id="bat3" class="battery-segment" x="46" y="8" width="14" height="15" rx="2.5"/><rect id="bat4" class="battery-segment" x="65" y="8" width="14" height="15" rx="2.5"/>
+                        <text id="socText" class="battery-text" x="42" y="43" text-anchor="middle">--%</text><text id="limitText" class="limit-text" x="42" y="61" text-anchor="middle">Limit —</text>
+                    </g>
+                </svg>
+                <div id="modelCaption" class="model-caption"></div>
+            </div>
         </div>
 
-        <div id="charge" class="charge idle">
-            <div class="chargehead">
-                <div id="plugIcon" class="plugicon">○</div>
-                <div class="chargecopy">
-                    <div id="chargeLabel" class="chargetitle">Nicht verbunden</div>
-                    <div id="chargeType" class="chargetype"></div>
+        <div class="rightcol">
+            <div id="charge" class="chargebox idle">
+                <div class="chargehead"><div class="plugcircle"><span id="plugIcon" class="plugicon">○</span></div><div class="chargecopy"><div id="chargeLabel" class="chargetitle">Nicht verbunden</div><div id="chargeHint" class="chargehint"></div></div></div>
+                <div class="metrics">
+                    <div class="metric"><div id="powerLabel" class="metric-label">Ladeleistung</div><div id="power" class="metric-value">—</div></div>
+                    <div class="metric"><div id="timeLabel" class="metric-label">Zeit bis voll</div><div id="time" class="metric-value">—</div></div>
+                    <div class="metric"><div id="limitLabel" class="metric-label">Ladelimit</div><div id="chargeLimit" class="metric-value">—</div></div>
+                    <div class="metric"><div id="modeLabel" class="metric-label">Lademodus</div><div id="chargeMode" class="metric-value">—</div></div>
                 </div>
             </div>
-            <div class="metrics">
-                <div><div id="powerLabel" class="metric-label">Leistung</div><div id="power" class="metric-value">—</div></div>
-                <div><div id="timeLabel" class="metric-label">Zeit bis voll</div><div id="time" class="metric-value">—</div></div>
-                <div><div id="limitLabel" class="metric-label">Ladelimit</div><div id="chargeLimit" class="metric-value">—</div></div>
-                <div><div id="modeLabel" class="metric-label">Modus</div><div id="chargeMode" class="metric-value">—</div></div>
+            <div class="quick">
+                <div id="climate" class="quickbox climate"><div class="quickicon"><svg class="status-icon"><use href="#i-fan"/></svg></div><div style="min-width:0"><div class="quicktitle"><span id="climateLabel">Klima</span>: <span id="climateMode">Aus</span></div><div class="quicksub"><span id="targetTempLabel">Soll</span> <span id="targetTemperature">—</span></div></div></div>
+                <div class="quickbox"><div class="quickicon">▰</div><div style="min-width:0"><div id="mileageLabel" class="quicksub">Kilometerstand</div><div id="mileage" class="kmvalue">—</div></div></div>
             </div>
         </div>
     </div>
 
-    <div class="statusbar">
-        <div id="lockStatus" class="statusitem good"><span class="dot"></span><span class="txt">Verriegelt</span></div>
-        <div id="doorStatus" class="statusitem good"><span class="dot"></span><span class="txt">Türen zu</span></div>
-        <div id="windowStatus" class="statusitem good"><span class="dot"></span><span class="txt">Fenster zu</span></div>
-        <div id="lightStatus" class="statusitem good"><span class="dot"></span><span class="txt">Licht aus</span></div>
-    </div>
-
-    <div class="bottom">
-        <div id="climate" class="climate">
-            <div id="climateIcon" class="climateicon">○</div>
-            <div class="climatecopy">
-                <div class="climateline"><span id="climateLabel">Klima</span>: <span id="climateMode">Aus</span></div>
-                <div class="climatesub"><span id="targetTempLabel">Solltemperatur</span> <span id="targetTemperature">—</span></div>
-            </div>
-        </div>
-        <div class="km"><span id="mileageLabel">Kilometerstand</span><strong id="mileage">—</strong></div>
+    <div class="status-list">
+        <div id="rowLocked" class="status-row"><div class="status-left"><span class="state-dot"></span><svg class="status-icon"><use href="#i-lock"/></svg><span id="labelLocked" class="status-label">Fahrzeug verriegelt</span></div><span id="valueLocked" class="status-value">—</span></div>
+        <div id="rowDoors" class="status-row"><div class="status-left"><span class="state-dot"></span><svg class="status-icon"><use href="#i-door"/></svg><span id="labelDoors" class="status-label">Türen</span></div><span id="valueDoors" class="status-value">—</span></div>
+        <div id="rowWindows" class="status-row"><div class="status-left"><span class="state-dot"></span><svg class="status-icon"><use href="#i-window"/></svg><span id="labelWindows" class="status-label">Fenster</span></div><span id="valueWindows" class="status-value">—</span></div>
+        <div id="rowSunroof" class="status-row unavailable"><div class="status-left"><span class="state-dot"></span><svg class="status-icon"><use href="#i-roof"/></svg><span id="labelSunroof" class="status-label">Schiebedach</span></div><span id="valueSunroof" class="status-value">—</span></div>
+        <div id="rowLights" class="status-row"><div class="status-left"><span class="state-dot"></span><svg class="status-icon"><use href="#i-light"/></svg><span id="labelLights" class="status-label">Licht</span></div><span id="valueLights" class="status-value">—</span></div>
+        <div id="rowTrunk" class="status-row unavailable"><div class="status-left"><span class="state-dot"></span><svg class="status-icon"><use href="#i-trunk"/></svg><span id="labelTrunk" class="status-label">Kofferraum</span></div><span id="valueTrunk" class="status-value">—</span></div>
+        <div id="rowBonnet" class="status-row unavailable"><div class="status-left"><span class="state-dot"></span><svg class="status-icon"><use href="#i-bonnet"/></svg><span id="labelBonnet" class="status-label">Motorhaube</span></div><span id="valueBonnet" class="status-value">—</span></div>
     </div>
 </div>
 
 <script>
+const CAR_DESIGNS={
+    enyaq:{body:'M76 18 Q110 6 144 18 Q161 30 168 58 L174 115 L178 264 Q175 311 146 340 Q110 353 74 340 Q45 311 42 264 L46 115 L52 58 Q59 30 76 18Z',mirrorL:'M50 73 Q32 65 30 81 Q33 94 48 90Z',mirrorR:'M170 73 Q188 65 190 81 Q187 94 172 90Z',frontGlass:'M72 53 Q110 39 148 53 L157 116 Q110 101 63 116Z',rearGlass:'M65 274 Q110 290 155 274 L145 323 Q110 336 75 323Z',sunroof:'M78 126 Q110 116 142 126 L145 177 Q110 188 75 177Z',winL:'M62 122 L53 145 L52 245 L65 268',winR:'M158 122 L167 145 L168 245 L155 268',doorL:'M54 122 L45 140 L45 251 L61 270',doorR:'M166 122 L175 140 L175 251 L159 270',hood:'M68 44 Q110 31 152 44',trunk:'M72 327 Q110 340 148 327',frontLamp:'M70 28 Q110 16 150 28 L145 35 Q110 25 75 35Z',rearLamp:'M74 332 Q110 343 146 332 L140 339 Q110 347 80 339Z',battery:[68,190]},
+    elroq:{body:'M71 31 Q110 18 149 31 Q165 43 171 69 L176 126 L178 258 Q174 299 149 326 Q110 342 71 326 Q46 299 42 258 L44 126 L49 69 Q55 43 71 31Z',mirrorL:'M48 86 Q31 78 29 94 Q32 106 46 102Z',mirrorR:'M172 86 Q189 78 191 94 Q188 106 174 102Z',frontGlass:'M68 65 Q110 51 152 65 L159 122 Q110 108 61 122Z',rearGlass:'M63 265 Q110 280 157 265 L147 309 Q110 323 73 309Z',sunroof:'M76 132 Q110 121 144 132 L146 177 Q110 188 74 177Z',winL:'M60 129 L51 149 L51 239 L64 259',winR:'M160 129 L169 149 L169 239 L156 259',doorL:'M52 129 L43 145 L44 245 L59 264',doorR:'M168 129 L177 145 L176 245 L161 264',hood:'M66 57 Q110 44 154 57',trunk:'M72 315 Q110 329 148 315',frontLamp:'M66 42 Q110 30 154 42 L148 50 Q110 40 72 50Z',rearLamp:'M72 318 Q110 333 148 318 L141 326 Q110 337 79 326Z',battery:[68,190]},
+    epiq:{body:'M67 43 Q110 28 153 43 Q168 56 174 80 L178 132 L178 253 Q174 289 153 314 Q110 332 67 314 Q46 289 42 253 L42 132 L46 80 Q52 56 67 43Z',mirrorL:'M46 98 Q29 90 28 105 Q31 117 44 113Z',mirrorR:'M174 98 Q191 90 192 105 Q189 117 176 113Z',frontGlass:'M64 78 Q110 61 156 78 L161 126 Q110 114 59 126Z',rearGlass:'M60 255 Q110 270 160 255 L149 298 Q110 314 71 298Z',sunroof:'M74 135 Q110 123 146 135 L147 176 Q110 187 73 176Z',winL:'M57 133 L49 150 L49 231 L62 251',winR:'M163 133 L171 150 L171 231 L158 251',doorL:'M49 132 L41 148 L42 238 L57 255',doorR:'M171 132 L179 148 L178 238 L163 255',hood:'M62 70 Q110 54 158 70',trunk:'M69 304 Q110 319 151 304',frontLamp:'M62 55 Q110 42 158 55 L151 63 Q110 52 69 63Z',rearLamp:'M69 307 Q110 322 151 307 L143 315 Q110 326 77 315Z',battery:[68,188]},
+    generic:{body:'M72 25 Q110 12 148 25 Q164 39 170 65 L176 120 L178 260 Q175 303 148 332 Q110 347 72 332 Q45 303 42 260 L44 120 L50 65 Q56 39 72 25Z',mirrorL:'M49 81 Q31 73 30 89 Q33 101 47 97Z',mirrorR:'M171 81 Q189 73 190 89 Q187 101 173 97Z',frontGlass:'M68 59 Q110 45 152 59 L159 119 Q110 105 61 119Z',rearGlass:'M63 269 Q110 284 157 269 L147 315 Q110 329 73 315Z',sunroof:'M76 129 Q110 118 144 129 L146 177 Q110 188 74 177Z',winL:'M60 125 L51 146 L51 243 L64 264',winR:'M160 125 L169 146 L169 243 L156 264',doorL:'M52 125 L43 143 L44 249 L59 268',doorR:'M168 125 L177 143 L176 249 L161 268',hood:'M66 51 Q110 38 154 51',trunk:'M71 321 Q110 335 149 321',frontLamp:'M66 36 Q110 24 154 36 L148 44 Q110 34 72 44Z',rearLamp:'M71 324 Q110 338 149 324 L142 332 Q110 342 78 332Z',battery:[68,190]}
+};
 function byId(id){return document.getElementById(id)}
-function text(id,value){const el=byId(id);if(el)el.textContent=value ?? ''}
+function text(id,value){const el=byId(id);if(el)el.textContent=value??''}
 function toggleClass(el,name,on){if(el)el.classList.toggle(name,!!on)}
 function lerp(a,b,t){return Math.round(a+(b-a)*t)}
 function hexToRgb(hex){hex=hex.replace('#','');return [parseInt(hex.slice(0,2),16),parseInt(hex.slice(2,4),16),parseInt(hex.slice(4,6),16)]}
 function rgbToHex(rgb){return '#'+rgb.map(v=>v.toString(16).padStart(2,'0')).join('')}
 function mixColor(a,b,t){const ar=hexToRgb(a),br=hexToRgb(b);return rgbToHex([lerp(ar[0],br[0],t),lerp(ar[1],br[1],t),lerp(ar[2],br[2],t)])}
-function batteryColor(soc){
-    const stops=[[0,'#d93f43'],[10,'#d93f43'],[25,'#f59e0b'],[80,'#79c267'],[100,'#138a4b']];
-    const v=Math.max(0,Math.min(100,Number(soc)||0));
-    for(let i=1;i<stops.length;i++){
-        if(v<=stops[i][0]){
-            const p=(v-stops[i-1][0])/(stops[i][0]-stops[i-1][0]||1);
-            return mixColor(stops[i-1][1],stops[i][1],p);
-        }
-    }
-    return stops[stops.length-1][1];
-}
-function updateBattery(soc,target){
-    const valid=Number.isFinite(Number(soc));
-    const value=valid?Math.max(0,Math.min(100,Number(soc))):0;
-    const filled=valid&&value>0?Math.max(1,Math.min(4,Math.ceil(value/25))):0;
-    const color=batteryColor(value);
-    for(let i=1;i<=4;i++){
-        const el=byId('bat'+i);
-        if(!el)continue;
-        el.style.fill=i<=filled?color:'rgba(127,127,127,.14)';
-        el.style.opacity=i<=filled?'1':'.62';
-    }
-    text('socText',valid?Math.round(value)+'%':'--%');
-    text('limitText','Limit '+(target===null||target===undefined?'—':target+'%'));
-}
-function updateStatus(id,label,good){
-    const el=byId(id); if(!el)return;
-    el.classList.toggle('good',!!good);el.classList.toggle('attention',!good);
-    const txt=el.querySelector('.txt'); if(txt)txt.textContent=label||'';
-}
-function handleMessage(message){
-    let data=message;
-    if(typeof data==='string'){
-        try{data=JSON.parse(data)}catch(e){return}
-    }
-    if(!data||typeof data!=='object')return;
-
-    const labels=data.labels||{};
-    text('title',data.title||'MySkoda');text('range',data.range||'—');text('age',data.age||'--:--');text('mileage',data.mileage||'—');
-    text('rangeLabel',labels.range||'Range');text('updatedLabel',labels.updated||'Updated');text('mileageLabel',labels.mileage||'Mileage');
-    text('powerLabel',labels.power||'Power');text('timeLabel',labels.time||'Time');text('limitLabel',labels.limit||'Limit');text('modeLabel',labels.mode||'Mode');text('climateLabel',labels.climate||'Climate');text('targetTempLabel',labels.targetTemperature||'Target');
-
-    text('lockHead',data.locked?'🔒':'🔓');
-    updateBattery(data.soc,data.targetSoc);
-
-    const body=byId('carBody');
-    if(body){body.classList.toggle('normal-outline',!!data.locked);body.classList.toggle('attention-outline',!data.locked)}
-    toggleClass(byId('doorMarkL'),'attention',!!data.doorsOpen);toggleClass(byId('doorMarkR'),'attention',!!data.doorsOpen);
-    toggleClass(byId('windowMarkL'),'attention',!!data.windowsOpen);toggleClass(byId('windowMarkR'),'attention',!!data.windowsOpen);
-    toggleClass(byId('frontLamp'),'attention',!!data.lightsOn);toggleClass(byId('rearLamp'),'attention',!!data.lightsOn);
-
-    updateStatus('lockStatus',data.lockText,!!data.locked);
-    updateStatus('doorStatus',data.doorsText,!data.doorsOpen);
-    updateStatus('windowStatus',data.windowsText,!data.windowsOpen);
-    updateStatus('lightStatus',data.lightsText,!data.lightsOn);
-
-    const charge=data.charge||{};
-    const chargeEl=byId('charge');
-    if(chargeEl){chargeEl.className='charge '+(charge.stateClass||'idle')}
-    text('plugIcon',charge.icon||'○');text('chargeLabel',charge.label||'');text('chargeType',charge.type||'');
-    text('power',charge.power||'—');text('time',charge.time||'—');text('chargeLimit',charge.limit||'—');text('chargeMode',charge.mode||'—');
-
-    const climate=data.climate||{};
-    const climateEl=byId('climate');toggleClass(climateEl,'active',!!climate.active);
-    text('climateIcon',climate.symbol||'○');text('climateMode',climate.mode||'—');text('targetTemperature',climate.temperature||'—');
-
-    const keyWarn=byId('keyWarning');
-    if(keyWarn){keyWarn.style.display=data.keyWarning?'block':'none';keyWarn.textContent=data.keyWarning?'⚠ '+(data.keyWarningText||''):''}
+function batteryColor(soc){const stops=[[0,'#d93f43'],[10,'#d93f43'],[25,'#f59e0b'],[80,'#79c267'],[100,'#0b7d3b']];const v=Math.max(0,Math.min(100,Number(soc)||0));for(let i=1;i<stops.length;i++){if(v<=stops[i][0]){const p=(v-stops[i-1][0])/(stops[i][0]-stops[i-1][0]||1);return mixColor(stops[i-1][1],stops[i][1],p)}}return stops[stops.length-1][1]}
+function updateBattery(soc,target){const valid=Number.isFinite(Number(soc));const value=valid?Math.max(0,Math.min(100,Number(soc))):0;const filled=valid&&value>0?Math.max(1,Math.min(4,Math.ceil(value/25))):0;const color=batteryColor(value);for(let i=1;i<=4;i++){const el=byId('bat'+i);if(!el)continue;el.style.fill=i<=filled?color:'rgba(127,127,127,.14)';el.style.opacity=i<=filled?'1':'.60'}text('socText',valid?Math.round(value)+'%':'--%');text('limitText','Limit '+(target===null||target===undefined?'—':target+'%'))}
+function setPath(id,d){const el=byId(id);if(el)el.setAttribute('d',d||'')}
+function applyCarDesign(name){const key=CAR_DESIGNS[name]?name:'generic',d=CAR_DESIGNS[key];setPath('carBody',d.body);setPath('mirrorL',d.mirrorL);setPath('mirrorR',d.mirrorR);setPath('frontGlass',d.frontGlass);setPath('rearGlass',d.rearGlass);setPath('sunroofPanel',d.sunroof);setPath('windowMarkL',d.winL);setPath('windowMarkR',d.winR);setPath('doorMarkL',d.doorL);setPath('doorMarkR',d.doorR);setPath('hoodLine',d.hood);setPath('trunkLine',d.trunk);setPath('frontLamp',d.frontLamp);setPath('rearLamp',d.rearLamp);byId('batteryGroup')?.setAttribute('transform','translate('+d.battery[0]+' '+d.battery[1]+')')}
+function setRow(id,labelId,valueId,label,value,good,available=true){const row=byId(id);if(!row)return;row.classList.toggle('unavailable',!available);row.classList.toggle('attention',available&&!good);text(labelId,label);text(valueId,value)}
+function handleMessage(message){let data=message;if(typeof data==='string'){try{data=JSON.parse(data)}catch(e){return}}if(!data||typeof data!=='object')return;const labels=data.labels||{};
+    text('title',data.title||'MySkoda');text('range',data.range||'—');text('age',data.age||'--:--');text('mileage',data.mileage||'—');text('rangeLabel',labels.range||'Range');text('updatedLabel',labels.updated||'Updated');text('mileageLabel',labels.mileage||'Mileage');text('powerLabel',labels.power||'Power');text('timeLabel',labels.time||'Time');text('limitLabel',labels.limit||'Limit');text('modeLabel',labels.mode||'Mode');text('climateLabel',labels.climate||'Climate');text('targetTempLabel',labels.targetTemperature||'Target');
+    text('lockHead',data.locked?'🔒':'🔓');applyCarDesign(data.vehicleDesign||'generic');text('modelCaption',data.vehicleDesignLabel||'');updateBattery(data.soc,data.targetSoc);
+    const body=byId('carBody');if(body){body.classList.toggle('car-outline-good',!!data.locked);body.classList.toggle('car-outline-attn',!data.locked)}
+    toggleClass(byId('doorMarkL'),'attention',!!data.doorsOpen);toggleClass(byId('doorMarkR'),'attention',!!data.doorsOpen);toggleClass(byId('windowMarkL'),'attention',!!data.windowsOpen);toggleClass(byId('windowMarkR'),'attention',!!data.windowsOpen);toggleClass(byId('sunroofPanel'),'sunroof-attn',!!data.sunroofOpen);toggleClass(byId('frontLamp'),'attention',!!data.lightsOn);toggleClass(byId('rearLamp'),'attention',!!data.lightsOn);
+    setRow('rowLocked','labelLocked','valueLocked',labels.vehicleLocked||'Vehicle locked',data.lockText||(data.locked?(labels.yes||'Yes'):(labels.no||'No')),!!data.locked,true);
+    setRow('rowDoors','labelDoors','valueDoors',labels.doors||'Doors',data.doorsOpen?(labels.open||'Open'):(labels.closed||'Closed'),!data.doorsOpen,true);
+    setRow('rowWindows','labelWindows','valueWindows',labels.windows||'Windows',data.windowsOpen?(labels.open||'Open'):(labels.closed||'Closed'),!data.windowsOpen,true);
+    setRow('rowSunroof','labelSunroof','valueSunroof',labels.sunroof||'Sunroof',data.sunroofText||'—',!data.sunroofOpen,!!data.sunroofAvailable);
+    setRow('rowLights','labelLights','valueLights',labels.lights||'Lights',data.lightsOn?(labels.on||'On'):(labels.off||'Off'),!data.lightsOn,true);
+    setRow('rowTrunk','labelTrunk','valueTrunk',labels.trunk||'Trunk',data.trunkText||'—',!data.trunkOpen,!!data.trunkAvailable);
+    setRow('rowBonnet','labelBonnet','valueBonnet',labels.bonnet||'Bonnet',data.bonnetText||'—',!data.bonnetOpen,!!data.bonnetAvailable);
+    const charge=data.charge||{},chargeEl=byId('charge');if(chargeEl)chargeEl.className='chargebox '+(charge.stateClass||'idle');text('plugIcon',charge.icon||'○');text('chargeLabel',charge.label||'');text('chargeHint',charge.hint||charge.type||'');text('power',charge.power||'—');text('time',charge.time||'—');text('chargeLimit',charge.limit||'—');text('chargeMode',charge.mode||'—');
+    const climate=data.climate||{},climateEl=byId('climate');toggleClass(climateEl,'active',!!climate.active);text('climateMode',climate.mode||'—');text('targetTemperature',climate.temperature||'—');
+    const keyWarn=byId('keyWarning');if(keyWarn){keyWarn.style.display=data.keyWarning?'block':'none';keyWarn.textContent=data.keyWarning?'⚠ '+(data.keyWarningText||''):''}
 }
 </script>
 </body>
