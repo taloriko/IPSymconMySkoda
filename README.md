@@ -60,4 +60,6 @@ Dieses Projekt ist eine unabhängige Community-Integration und weder ein offizie
 
 ## Lizenz
 
-MIT-Lizenz, siehe [LICENSE](LICENSE).
+Copyright © 2026 **taloriko**.
+
+Dieses Projekt wird unter der **MIT-Lizenz** veröffentlicht. Der vollständige Lizenztext befindet sich in [LICENSE](LICENSE).
