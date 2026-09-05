@@ -1,0 +1,90 @@
+{
+  "elements": [
+    {
+      "type": "Label",
+      "caption": "Official MySkoda Public API. The API key and VIN are managed in the MySkoda app."
+    },
+    {
+      "type": "ValidationTextBox",
+      "name": "VIN",
+      "caption": "VIN",
+      "validate": "^[A-HJ-NPR-Z0-9]{17}$"
+    },
+    {
+      "type": "PasswordTextBox",
+      "name": "APIToken",
+      "caption": "API token"
+    },
+    {
+      "type": "NumberSpinner",
+      "name": "Interval",
+      "caption": "Polling interval",
+      "suffix": " seconds",
+      "minimum": 180,
+      "maximum": 3600
+    },
+    {
+      "type": "Label",
+      "caption": "Recommended: 300 seconds. The module observes the rate-limit headers returned by the API."
+    },
+    {
+      "type": "CheckBox",
+      "name": "EnableRemote",
+      "caption": "Enable remote control"
+    },
+    {
+      "type": "CheckBox",
+      "name": "ClimateWithoutExternalPower",
+      "caption": "Allow air conditioning without external power"
+    },
+    {
+      "type": "PasswordTextBox",
+      "name": "SPIN",
+      "caption": "S-PIN (optional, auxiliary heating only)"
+    },
+    {
+      "type": "CheckBox",
+      "name": "ShowDetails",
+      "caption": "Show detail and diagnostic variables"
+    }
+  ],
+  "actions": [
+    {
+      "type": "Button",
+      "caption": "Update now",
+      "onClick": "MSKODA_Update($id); echo 'Update executed';"
+    },
+    {
+      "type": "Button",
+      "caption": "Reload API definition",
+      "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API definition updated' : 'API definition could not be loaded';"
+    }
+  ],
+  "status": [
+    {
+      "code": 102,
+      "icon": "active",
+      "caption": "Active"
+    },
+    {
+      "code": 104,
+      "icon": "inactive",
+      "caption": "Inactive"
+    },
+    {
+      "code": 201,
+      "icon": "error",
+      "caption": "VIN or API token is missing or invalid"
+    },
+    {
+      "code": 202,
+      "icon": "error",
+      "caption": "API error"
+    },
+    {
+      "code": 203,
+      "icon": "warning",
+      "caption": "Rate limit / waiting period active"
+    }
+  ]
+}
