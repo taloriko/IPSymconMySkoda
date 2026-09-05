@@ -1,0 +1,21 @@
+name: lint
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: PHP syntax
+        run: php -l MySkoda/module.php
+      - name: Validate JSON
+        run: |
+          python3 -m json.tool library.json > /dev/null
+          python3 -m json.tool MySkoda/module.json > /dev/null
+          python3 -m json.tool MySkoda/form.json > /dev/null
+          python3 -m json.tool MySkoda/locale.json > /dev/null
+      - name: Validate Symcon repository structure
+        run: python3 tests/validate_structure.py
