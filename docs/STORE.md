@@ -24,10 +24,10 @@ MySkoda
 Bindet Fahrzeuge über die offizielle MySkoda Public API an IP-Symcon an. Das Modul stellt einen kompakten Fahrzeugstatus bereit und unterstützt – sofern vom Fahrzeug angeboten – Laden, Ladelimit, Lademodus, Klimatisierung, Standheizung und aktive Lüftung.
 ```
 
-**Versionsinformation 0.1**
+**Versionsinformation 1.2**
 
 ```text
-Erste öffentliche Version mit FIN-/API-Key-Konfiguration, einstellbarem Abrufintervall, kompakten Statusvariablen, optionaler Diagnose, Remote-Steuerung und Rate-Limit-Behandlung.
+Kompakte Smartphone-Fahrzeugkachel, direkte Verbindungsrückmeldung bei der Einrichtung sowie API-Key-Ablaufwarnung mit optionaler Symcon-Push-Mitteilung.
 ```
 
 **Link zur Dokumentation**
@@ -50,10 +50,10 @@ MySkoda
 Connects vehicles to IP-Symcon through the official MySkoda Public API. The module exposes a compact vehicle status and, where supported by the vehicle, controls charging, charge limit, charging mode, air conditioning, auxiliary heating and active ventilation.
 ```
 
-**Version information 0.1**
+**Version information 1.2**
 
 ```text
-Initial public version with VIN/API-key configuration, configurable polling interval, compact status variables, optional diagnostics, remote control and rate-limit handling.
+Compact smartphone vehicle tile, direct connection feedback during setup, and API-key expiry warning with optional Symcon push notification.
 ```
 
 **Documentation link**
