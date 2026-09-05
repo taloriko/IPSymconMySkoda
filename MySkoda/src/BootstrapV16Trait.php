@@ -19,6 +19,10 @@ trait MySkodaBootstrapV16Trait
 
     public function ApplyChanges(): void
     {
+        // Existing instances do not run Create() again during a module update.
+        // Set the visualization type here as well so upgrades from <= 1.5 get
+        // the native instance tile automatically.
+        $this->SetVisualizationType(1);
         $this->applyChangesCoreV15();
 
         // VehicleTile was the compatibility path used up to 1.5. Keep an
