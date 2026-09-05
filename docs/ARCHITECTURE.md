@@ -14,7 +14,15 @@ Der komplette Fahrzeug-Response wird intern als Instanzattribut gespeichert. Der
 
 ## Darstellungen
 
-Das Modul setzt Symcon 8.1+ voraus und nutzt `IPSModuleStrict` sowie die neuen Variablendarstellungen. Vorhandene Symcon-Standardvorlagen werden bevorzugt. Legacy-Profile werden nicht angelegt. Sollten zukünftig persistente eigene Profile notwendig sein, werden diese minimiert und mit `MySkoda.*` benannt.
+Das Modul setzt Symcon 8.1+ voraus und nutzt `IPSModuleStrict` sowie die neuen Variablendarstellungen. Vorhandene Symcon-Standardvorlagen werden bevorzugt. Für Boolean-Zustände werden gezielt wenige eigene Profile angelegt, weil die Standardanzeige `An/Aus` für Fahrzeugzustände zu unklar ist. Alle modul-eigenen Profile liegen deshalb eindeutig im Namensraum `MySkoda.*`.
+
+Die drei Boolean-Profile bilden unterschiedliche Bedeutungen ab:
+
+- `MySkoda.YesNo.GoodTrue`: Ja = grün, Nein = orange
+- `MySkoda.YesNo.GoodFalse`: Nein = grün, Ja = orange
+- `MySkoda.YesNo.ActiveTrue`: Ja = grün, Nein = neutral
+
+Rot bleibt bewusst echten Störungen/Fehlerzuständen vorbehalten.
 
 ## Rate-Limit
 
@@ -33,7 +41,7 @@ Englisch ist die Quellsprache der Modultexte. `MySkoda/locale.json` enthält die
 Ab Version 1.1 bleibt `MySkoda/module.php` bewusst klein und lädt thematisch getrennte Traits aus `MySkoda/src/`:
 
 - `CoreTrait.php` – Lebenszyklus, Aktionen und öffentliche Modulmethoden
-- `VariablesTrait.php` – Variablen, Darstellungen und Datenübernahme
+- `VariablesTrait.php` – Variablen, Darstellungen, Boolean-Profile und Datenübernahme
 - `ApiTrait.php` – HTTP, Rate-Limit und Fehlerbehandlung
 - `OpenApiTrait.php` – dynamische OpenAPI-Auswertung
 - `VisualizationTrait.php` – kompakte Elektroauto-Kachel und Anzeigeaufbereitung
@@ -49,3 +57,7 @@ Die Konfiguration wird über `GetConfigurationForm()` dynamisch aus der `form.js
 ## API-Key Ablauf
 
 Das Ablaufdatum wird aus `X-API-Key-Expires-At` übernommen. `ApiKeyWarning` wird bei höchstens 30 Tagen Restlaufzeit aktiv. Eine optionale Push-Mitteilung kann über eine konfigurierte Kachel-Visualisierungs- oder WebFront-Instanz gesendet werden. Fehlgeschlagene Sendeversuche werden höchstens einmal täglich wiederholt.
+
+## Standortdaten
+
+Die Fahrzeugposition wird nur verarbeitet, wenn die MySkoda API sie für das verwendete Profil liefert. Die Standortfreigabe ist profilbezogen und muss bei mehreren Profilen für dasselbe Fahrzeug je Profil separat aktiviert werden. Fehlen Koordinaten, schreibt das Modul `0.0 / 0.0`, damit keine alten Standortdaten bestehen bleiben.
