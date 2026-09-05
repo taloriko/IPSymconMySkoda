@@ -97,11 +97,11 @@ Der Standard-Objektbaum ist absichtlich kompakt.
 | `Locked` | Verriegelt | Boolean | Nein | Ja/Nein-Aufzählung: **Ja grün**, Nein orange |
 | `DoorsOpen` | Türen offen | Boolean | Nein | Ja/Nein-Aufzählung: **Nein grün**, Ja orange |
 | `WindowsOpen` | Fenster offen | Boolean | Nein | Ja/Nein-Aufzählung: **Nein grün**, Ja orange |
-| `Charging` | Laden | Boolean | Ja | Ja/Nein-Aufzählung: Nein neutral, **Ja grün** |
+| `Charging` | Laden | Boolean | Ja | Ja/Nein-Aufzählung: **Nein grün**, **Ja grün** |
 | `ChargePower` | Ladeleistung | Float | Nein | Symcon-Standardvorlage Leistung |
 | `TargetSOC` | Ladelimit | Integer | Ja | Schieberegler 50-100 % |
 | `ChargeMode` | Lademodus | Integer | Ja | Aufzählung aus den Fahrzeugmodi |
-| `Climate` | Klimatisierung | Boolean | Ja | Ja/Nein-Aufzählung: Nein neutral, **Ja grün** |
+| `Climate` | Klimatisierung | Boolean | Ja | Ja/Nein-Aufzählung: **Nein grün**, **Ja grün** |
 | `TargetTemperature` | Klima Solltemperatur | Float | Ja | Temperatur-Schieberegler |
 | `VehicleTile` | Fahrzeugübersicht | String | Nein | neue Symcon-Darstellung **Webinhalt** |
 | `ApiKeyWarning` | API-Key Warnung | Boolean | Nein | **Nein grün**, Ja orange; wird 30 Tage vor Ablauf aktiv |
@@ -125,10 +125,10 @@ Die Farblogik bewertet den **Zustand**, nicht den reinen Boolean-Wert:
 | Motorhaube offen | **Nein** | Ja |
 | Licht an | **Nein** | Ja |
 | API-Key Warnung | **Nein** | Ja |
-| Laden | **Ja** | kein Warnzustand; Nein ist neutral |
-| Klima | **Ja** | kein Warnzustand; Nein ist neutral |
+| Laden | **Ja und Nein** | – |
+| Klima | **Ja und Nein** | – |
 
-Damit erscheint ein korrekt abgestelltes und verriegeltes Fahrzeug bei allen sicherheitsrelevanten Zuständen **grün**, obwohl die zugrunde liegenden Werte teils `Ja` und teils `Nein` sind. **Rot wird für diese Hinweise nicht verwendet**; Rot bleibt echten Fehlern und Störungen vorbehalten.
+Damit erscheint ein korrekt abgestelltes und verriegeltes Fahrzeug bei allen normalen Boolean-Zuständen **grün**, obwohl die zugrunde liegenden Werte teils `Ja` und teils `Nein` sind. **Orange** bedeutet lediglich Aufmerksamkeit. **Rot wird für diese Hinweise nicht verwendet**; Rot bleibt echten Fehlern und Störungen vorbehalten.
 
 Beim Update von Version 1.3 entfernt das Modul die damals erzeugten `MySkoda.YesNo.*`-Legacy-Profile von seinen Variablen und löscht sie, sofern sie nicht anderweitig verwendet werden.
 
@@ -136,7 +136,7 @@ Beim Update von Version 1.3 entfernt das Modul die damals erzeugten `MySkoda.Yes
 
 Es wird keine eigene HTML-/WebFront-Oberfläche benötigt. Die Statusvariablen können direkt in der aktuellen Symcon-Visualisierung verwendet werden. Bedienbare Variablen erhalten nur dann eine Aktion, wenn **Remote-Steuerung aktivieren** gesetzt ist.
 
-Zusätzlich legt das Modul die Variable **`VehicleTile`** an. Die Kachel ist in Version 1.2 bewusst **smartphone-orientiert und kompakt** aufgebaut. Statt vieler einzelner Rahmen werden zusammengehörige Informationen in einer flachen Ansicht gebündelt:
+Zusätzlich legt das Modul die Variable **`VehicleTile`** an. Die Kachel ist bewusst **smartphone-orientiert und kompakt** aufgebaut. Statt vieler einzelner Rahmen werden zusammengehörige Informationen in einer flachen Ansicht gebündelt:
 
 - Überschrift aus Fahrzeugname, alternativ Kennzeichen
 - kompakte Autoansicht von oben mit SOC und Ladelimit im Fahrzeug
