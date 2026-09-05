@@ -7,15 +7,17 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 ## Funktionsumfang
 
 - Offizielle MySkoda Public API mit `X-API-Key`
-- Konfigurationsmaske für FIN, API-Token, Abrufintervall und optionale S-PIN
+- übersichtliche Konfigurationsmaske mit klappbaren Bereichen für Verbindung, Steuerung, Mitteilungen und erweiterte Optionen
+- Konfiguration für FIN, API-Token, Abrufintervall und optionale S-PIN
 - Bewusst kleiner Standard-Objektbaum
 - **Native Symcon-Fahrzeugkachel direkt an der MySkoda-Instanz**
 - Smartphone-optimierte Darstellung nach dem kompakten TileVisu-Prinzip
 - Wählbare Fahrzeugoptik: **Automatisch, Enyaq, Elroq, Epiq oder Allgemein**
 - Automatische Modellauswahl über die von MySkoda gelieferten Modell-/Spezifikationsdaten, mit manueller Übersteuerung
-- Fahrzeugstatus für Verriegelung, Türen, Fenster, Schiebedach, Licht, Kofferraum und Motorhaube, soweit von der API geliefert
+- Fahrzeugzustände für Türen, Fenster, Schiebedach, Licht, Kofferraum und Motorhaube werden direkt am Fahrzeug visualisiert; als Textstatus bleibt nur die Verriegelung
 - 4-Balken-Batterie mit SOC-Farbverlauf von Rot über Orange und Hellgrün bis Dunkelgrün
 - Laden, Ladelimit, Lademodus, Klima und Kilometerstand kompakt in der Kachel
+- Visu-Zustand wird lokal zwischengespeichert und bei Wiederanzeige/Resize erneut gerendert
 - Warnung 30 Tage vor Ablauf des API-Keys, optional mit Symcon-Mitteilung
 - Verbindungstest mit direkter Rückmeldung in der Konfiguration
 - Optionale Detail- und Diagnosevariablen
@@ -35,7 +37,7 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 
 ## Version
 
-Aktueller Stand dieser Bibliothek: **1.7**
+Aktueller Stand dieser Bibliothek: **1.8**
 
 ## API-Key in der MySkoda App erstellen
 
@@ -113,7 +115,7 @@ Offizielle Symcon-SDK-Referenzen:
 
 ## Design-Inspiration
 
-Die native Fahrzeugkachel orientiert sich an den Layout- und Modulprinzipien der [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung): native Instanzkachel, eine eigene `module.html`, klare Informationshierarchie, kompakte Statuszeilen und laufende Updates ohne zusätzliche Visualisierungsvariable.
+Die native Fahrzeugkachel orientiert sich an den Layout- und Modulprinzipien der [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung): native Instanzkachel, eine eigene `module.html`, klare Informationshierarchie, kompakte Statusdarstellung und laufende Updates ohne zusätzliche Visualisierungsvariable.
 
 **Es wurden keine Quelltexte oder Grafikdateien aus dem Projekt übernommen.** Die MySkoda-Datenlogik, die modellabhängigen Fahrzeug-SVGs, Batterieanzeige und HTML-/JavaScript-Umsetzung sind eigenständig.
 
