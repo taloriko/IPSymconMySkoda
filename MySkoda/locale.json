@@ -114,7 +114,9 @@
       "Cooling": "Kühlen",
       "Heating": "Heizen",
       "Auxiliary heating": "Standheizung",
-      "Ventilation": "Lüften"
+      "Ventilation": "Lüften",
+      "Yes": "Ja",
+      "No": "Nein"
     }
   }
 }

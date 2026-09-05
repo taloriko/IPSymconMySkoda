@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here.
 
+## 1.3 - 2026-09-05
+
+- Added module-owned Boolean profiles under `MySkoda.*` with clear `Ja` / `Nein` labels.
+- Vehicle security/status values use green for the expected state and orange for attention; red remains reserved for actual faults.
+- `Locked` is green for `Ja`; doors, windows, trunk, bonnet, lights and API-key warning are green for `Nein`.
+- Charging and climate use a neutral `Nein` and green `Ja`, because an inactive function is not a fault.
+- Location values are explicitly reset to `0.0 / 0.0` when the MySkoda API does not return a position, preventing stale coordinates.
+- Documentation explains that location sharing must be enabled separately for every MySkoda profile, even for the same vehicle.
+
 ## 1.2 - 2026-09-05
 
 - Improved first-time setup with direct connection feedback after applying VIN and API token.

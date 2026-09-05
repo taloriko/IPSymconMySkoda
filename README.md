@@ -18,7 +18,7 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 - Standheizung und aktive Lüftung über Modulbefehle
 - Berücksichtigung von Rate-Limit und `Retry-After`
 - Neue Variablendarstellungen ab Symcon 8.x und Symcon-Standardvorlagen
-- **Keine Legacy-Variablenprofile** im normalen Statusbaum
+- Eigene Boolean-Profile nur dort, wo sie die Lesbarkeit verbessern; alle Modulprofile heißen eindeutig `MySkoda.*`
 - Deutsch über `locale.json`, Englisch als Quellsprache des Moduls
 
 ## Voraussetzungen
@@ -30,7 +30,7 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 
 ## Version
 
-Aktueller Stand dieser Bibliothek: **1.2**
+Aktueller Stand dieser Bibliothek: **1.3**
 
 ## API-Key in der MySkoda App erstellen
 
@@ -42,6 +42,10 @@ Aktueller Stand dieser Bibliothek: **1.2**
 6. Die angezeigte **FIN/VIN** und den **API-Token** in die MySkoda-Instanz in Symcon eintragen.
 
 Nach dem Übernehmen prüft das Modul die Verbindung und zeigt direkt an, ob Fahrzeugdaten erfolgreich empfangen wurden.
+
+### Hinweis zu Standortdaten
+
+Die MySkoda API liefert die Fahrzeugposition nur, wenn die Standortfreigabe im jeweiligen MySkoda-Profil aktiviert ist. Die Freigabe muss bei mehreren Profilen für dasselbe Fahrzeug je Profil separat erfolgen. Ohne Standortfreigabe schreibt das Modul `0.0 / 0.0` in die Koordinaten.
 
 ## Installation
 
@@ -65,6 +69,7 @@ IPSymconMySkoda/
 │   ├── module.json
 │   ├── form.json
 │   ├── locale.json
+│   ├── src/
 │   └── README.md
 ├── docs/
 ├── tests/

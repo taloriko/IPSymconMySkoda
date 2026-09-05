@@ -79,6 +79,12 @@ Die Konfigurationsseite enthält folgende Einstellungen:
 
 Die Instanz kann auch ohne FIN oder Token fehlerfrei angelegt werden. Solange Pflichtangaben fehlen, wird der Timer deaktiviert und der Instanzstatus `201` gesetzt.
 
+### Standortfreigabe in MySkoda
+
+Standortdaten werden von der MySkoda API nur geliefert, wenn im verwendeten **MySkoda-Profil die Standortfreigabe erteilt** wurde. Diese Freigabe gilt profilbezogen: Wird dasselbe Fahrzeug mit mehreren MySkoda-Profilen verwendet, muss die Standortfreigabe **in jedem Profil separat** aktiviert werden.
+
+Ist für das Profil keine Standortfreigabe vorhanden oder liefert die API keine Position, schreibt das Modul bewusst **`0.0` für Breitengrad und `0.0` für Längengrad**. Dadurch bleiben keine veralteten Koordinaten aus einem früheren Abruf stehen.
+
 ## 5. Statusvariablen und Profile
 
 Der Standard-Objektbaum ist absichtlich kompakt.
@@ -88,33 +94,41 @@ Der Standard-Objektbaum ist absichtlich kompakt.
 | `StateOfCharge` | Ladezustand | Integer | Nein | Symcon-Standardvorlage Batterie |
 | `Range` | Reichweite | Integer | Nein | Wertanzeige, km |
 | `Mileage` | Kilometerstand | Integer | Nein | Wertanzeige, km |
-| `Locked` | Verriegelt | Boolean | Nein | Standard Boolean |
-| `DoorsOpen` | Türen offen | Boolean | Nein | Standard Boolean |
-| `WindowsOpen` | Fenster offen | Boolean | Nein | Standard Boolean |
-| `Charging` | Laden | Boolean | Ja | Schalter |
+| `Locked` | Verriegelt | Boolean | Nein | `MySkoda.YesNo.GoodTrue` |
+| `DoorsOpen` | Türen offen | Boolean | Nein | `MySkoda.YesNo.GoodFalse` |
+| `WindowsOpen` | Fenster offen | Boolean | Nein | `MySkoda.YesNo.GoodFalse` |
+| `Charging` | Laden | Boolean | Ja | `MySkoda.YesNo.ActiveTrue` |
 | `ChargePower` | Ladeleistung | Float | Nein | Symcon-Standardvorlage Leistung |
 | `TargetSOC` | Ladelimit | Integer | Ja | Schieberegler 50-100 % |
 | `ChargeMode` | Lademodus | Integer | Ja | Aufzählung aus den Fahrzeugmodi |
-| `Climate` | Klimatisierung | Boolean | Ja | Schalter |
+| `Climate` | Klimatisierung | Boolean | Ja | `MySkoda.YesNo.ActiveTrue` |
 | `TargetTemperature` | Klima Solltemperatur | Float | Ja | Temperatur-Schieberegler |
 | `VehicleTile` | Fahrzeugübersicht | String | Nein | kompakte Visualisierungskachel (`~HTMLBox`) |
-| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein | Wird 30 Tage vor Ablauf aktiv |
+| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein | `MySkoda.YesNo.GoodFalse` |
 | `LastUpdateAge` | Alter letzte Abfrage | String | Nein | Format `hh:mm` |
 | `LastUpdate` | Letzte Aktualisierung | Integer | Nein | Symcon-Standardvorlage Datum/Uhrzeit |
 
-Bei aktivierter Option **Detail- und Diagnosevariablen anzeigen** werden zusätzlich unter anderem Fahrzeugname, Kennzeichen, Ladestatus/-art, erwartete Voll-Ladezeit, Kofferraum, Motorhaube, Licht, Parkstatus, Koordinaten, API-Key-Ablaufdatum, verbleibende API-Abfragen und Teilfehler bereitgestellt.
+Bei aktivierter Option **Detail- und Diagnosevariablen anzeigen** werden zusätzlich unter anderem Fahrzeugname, Kennzeichen, Ladestatus/-art, erwartete Voll-Ladezeit, Kofferraum, Motorhaube, Licht, Parkstatus, Koordinaten, API-Key-Ablaufdatum, verbleibende API-Abfragen und Teilfehler bereitgestellt. Die zusätzlichen Boolean-Zustände `Kofferraum offen`, `Motorhaube offen` und `Licht an` verwenden ebenfalls `MySkoda.YesNo.GoodFalse`.
 
 ### Variablenprofile
 
-Das Modul erzeugt **keine Legacy-Variablenprofile**. Es verwendet die Darstellungen ab Symcon 8.x sowie vorhandene Symcon-Standardvorlagen. Eigene Darstellungsparameter werden nur verwendet, wenn keine passende Standardvorlage existiert.
+Wo Symcon passende Standarddarstellungen besitzt, verwendet das Modul diese weiterhin. Für Boolean-Zustände reichen die Symcon-Standardprofile jedoch nicht aus, weil `An/Aus` bei Fahrzeugzuständen schlecht lesbar ist. Deshalb legt MySkoda bewusst wenige, eindeutig gekennzeichnete Profile im Namensraum **`MySkoda.*`** an:
 
-Derzeit ist deshalb kein persistentes eigenes Profil notwendig. Eine Ausnahme ist lediglich die Visualisierungskachel `VehicleTile`, die das vorhandene Symcon-Standardprofil `~HTMLBox` verwendet, damit die HTML-Kachel direkt in der Visualisierung dargestellt werden kann. Sollte zukünftig tatsächlich ein eigenes Profil benötigt werden, wird es auf das Minimum reduziert und im Namensraum `MySkoda.*` angelegt.
+| Profil | Verwendung | Farblogik |
+|---|---|---|
+| `MySkoda.YesNo.GoodTrue` | z. B. `Verriegelt` | **Ja = grün**, Nein = orange |
+| `MySkoda.YesNo.GoodFalse` | z. B. Türen/Fenster/Kofferraum offen, Licht an, API-Key-Warnung | **Nein = grün**, Ja = orange |
+| `MySkoda.YesNo.ActiveTrue` | Laden und Klima | Nein = neutral, **Ja = grün** |
+
+Damit lässt sich der Fahrzeugzustand schnell erfassen: Ist das Fahrzeug korrekt abgestellt und verriegelt, sind die sicherheitsrelevanten Boolean-Anzeigen grün. **Rot wird vom Modul bewusst nicht für normale Zustände oder Hinweise verwendet, sondern bleibt echten Störungen/Fehlern vorbehalten.**
+
+Die Visualisierungskachel `VehicleTile` verwendet zusätzlich das vorhandene Symcon-Standardprofil `~HTMLBox`.
 
 ## 6. Visualisierung
 
 Es wird keine eigene HTML-/WebFront-Oberfläche benötigt. Die Statusvariablen können direkt in der aktuellen Symcon-Visualisierung verwendet werden. Bedienbare Variablen erhalten nur dann eine Aktion, wenn **Remote-Steuerung aktivieren** gesetzt ist.
 
-Zusätzlich legt das Modul die Variable **`VehicleTile`** an. Die Kachel ist in Version 1.2 bewusst **smartphone-orientiert und kompakt** aufgebaut. Statt vieler einzelner Rahmen werden zusammengehörige Informationen in einer flachen Ansicht gebündelt:
+Zusätzlich legt das Modul die Variable **`VehicleTile`** an. Die Kachel ist seit Version 1.2 bewusst **smartphone-orientiert und kompakt** aufgebaut. Statt vieler einzelner Rahmen werden zusammengehörige Informationen in einer flachen Ansicht gebündelt:
 
 - Überschrift aus Fahrzeugname, alternativ Kennzeichen
 - kompakte Autoansicht von oben mit SOC und Ladelimit im Fahrzeug
@@ -238,6 +252,7 @@ Die komplette letzte API-Antwort bleibt als Instanzattribut gespeichert, statt f
 
 - Die Public API liefert je nach Fahrzeug, Ausstattung, Lizenz und aktivierten Škoda-Connect-Diensten nur die jeweils verfügbaren Daten.
 - Nicht unterstützte Bereiche können in der API-Antwort fehlen oder als Teilfehler gemeldet werden.
+- Standortdaten werden nur geliefert, wenn die Standortfreigabe im jeweiligen MySkoda-Profil aktiv ist; die Freigabe ist bei mehreren Profilen für dasselbe Fahrzeug je Profil separat erforderlich.
 - Remote-Befehle können vom Fahrzeug abgelehnt werden, etwa bei fehlender Berechtigung, deaktivierter Funktion oder temporärer Fahrzeugsperre.
 - Das Modul kann den von Škoda vorgegebenen API-Request-Rahmen nicht erhöhen und hält deshalb bewusst Reserve für manuelle Befehle.
 

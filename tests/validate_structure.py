@@ -36,7 +36,9 @@ def main() -> None:
         for source in (ROOT / "MySkoda").rglob("*.php")
     )
     assert "VARIABLE_PRESENTATION_LEGACY" not in php_sources
-    assert "IPS_CreateVariableProfile" not in php_sources
+    assert "MySkoda.YesNo.GoodTrue" in php_sources
+    assert "MySkoda.YesNo.GoodFalse" in php_sources
+    assert "MySkoda.YesNo.ActiveTrue" in php_sources
     assert "MSKODA_RefreshVisuals" in php_sources
     assert "VehicleTile" in php_sources
     assert "LastUpdateAge" in php_sources

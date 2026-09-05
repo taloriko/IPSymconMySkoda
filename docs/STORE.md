@@ -24,10 +24,10 @@ MySkoda
 Bindet Fahrzeuge über die offizielle MySkoda Public API an IP-Symcon an. Das Modul stellt einen kompakten Fahrzeugstatus bereit und unterstützt – sofern vom Fahrzeug angeboten – Laden, Ladelimit, Lademodus, Klimatisierung, Standheizung und aktive Lüftung.
 ```
 
-**Versionsinformation 1.2**
+**Versionsinformation 1.3**
 
 ```text
-Kompakte Smartphone-Fahrzeugkachel, direkte Verbindungsrückmeldung bei der Einrichtung sowie API-Key-Ablaufwarnung mit optionaler Symcon-Push-Mitteilung.
+Klarere Ja/Nein-Statusanzeigen mit MySkoda-eigenen Profilen, grün/orange Farblogik für Fahrzeugzustände sowie dokumentiertes Standortverhalten mit 0/0 bei fehlender Profilfreigabe.
 ```
 
 **Link zur Dokumentation**
@@ -50,10 +50,10 @@ MySkoda
 Connects vehicles to IP-Symcon through the official MySkoda Public API. The module exposes a compact vehicle status and, where supported by the vehicle, controls charging, charge limit, charging mode, air conditioning, auxiliary heating and active ventilation.
 ```
 
-**Version information 1.2**
+**Version information 1.3**
 
 ```text
-Compact smartphone vehicle tile, direct connection feedback during setup, and API-key expiry warning with optional Symcon push notification.
+Clear Yes/No vehicle-state profiles with green/orange semantics and documented location behavior, including 0/0 coordinates when location sharing is unavailable for the profile.
 ```
 
 **Documentation link**
@@ -69,6 +69,10 @@ https://github.com/taloriko/IPSymconMySkoda/blob/main/MySkoda/README.md
 - Der periodische Abruf nutzt `RegisterTimer`; es werden keine externen Ereignisse erzeugt.
 - Konfigurierbare Eigenschaften werden über `form.json` bereitgestellt.
 - Das Modul verwendet ab Symcon 8.1 `IPSModuleStrict`.
-- Es werden keine Legacy-Variablenprofile erzeugt.
+- Eigene Variablenprofile werden nur für Boolean-Zustände angelegt und eindeutig mit `MySkoda.*` benannt; andere Werte nutzen weiterhin Symcon-Standarddarstellungen bzw. neue Präsentationen.
 - Deutsch wird über `locale.json` lokalisiert; englische Texte dienen als Quellsprache.
 - Die Modul-Dokumentation erklärt Installation, Konfiguration, Statusvariablen, Bedienung, PHP-Befehle, Rate-Limit und Einschränkungen.
+
+### Standortdaten
+
+Standortdaten sind profilabhängig. Ohne Standortfreigabe im verwendeten MySkoda-Profil liefert die API keine Koordinaten; das Modul setzt Breitengrad und Längengrad dann auf `0.0`. Bei mehreren Profilen für dasselbe Fahrzeug muss die Freigabe je Profil separat aktiviert werden.
