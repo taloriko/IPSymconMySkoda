@@ -125,4 +125,8 @@ Instanzstatus:
 
 ## 9. Lizenz und Markenhinweis
 
-MIT-Lizenz. Dieses Projekt ist eine unabhängige Community-Integration und nicht mit Škoda Auto a.s. verbunden oder von Škoda Auto a.s. unterstützt.
+Copyright © 2026 **taloriko**.
+
+Dieses Projekt wird unter der **MIT-Lizenz** veröffentlicht. Der vollständige Lizenztext befindet sich in [../LICENSE](../LICENSE).
+
+Dieses Projekt ist eine unabhängige Community-Integration und nicht mit Škoda Auto a.s. verbunden oder von Škoda Auto a.s. unterstützt.
