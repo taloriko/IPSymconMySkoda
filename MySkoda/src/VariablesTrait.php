@@ -244,9 +244,9 @@ trait MySkodaVariablesTrait
 
     private function booleanActivePresentation(): array
     {
-        // Laden/Klima sind Betriebszustände: Aktiv = grün, Inaktiv = neutral.
-        // Orange wird nur für Zustände verwendet, die Aufmerksamkeit benötigen.
-        return $this->booleanEnumerationPresentation(-1, 0x22C55E);
+        // Laden/Klima sind normale Betriebszustände. Beide Zustände sind grün;
+        // Orange wird nur verwendet, wenn ein Zustand Aufmerksamkeit benötigt.
+        return $this->booleanEnumerationPresentation(0x22C55E, 0x22C55E);
     }
 
     private function booleanEnumerationPresentation(int $falseColor, int $trueColor): array
