@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented here.
 
+## 1.6 - 2026-09-05
+
+- The MySkoda **instance itself** now exposes a native Symcon Tile Visualization through `SetVisualizationType(1)`, `GetVisualizationTile()` and `UpdateVisualizationValue()`.
+- Added `MySkoda/module.html` and moved the active smartphone tile to the native instance-visualization pattern used by modern TileVisu modules.
+- Existing instances receive the visualization type during `ApplyChanges()`, so an update from 1.5 does not require recreating the module instance.
+- The former `VehicleTile` Web-Content variable remains hidden only for backward compatibility with existing visualizations from versions 1.1-1.5.
+- Added a 4-segment SOC battery in the centre of the vehicle.
+- Battery colour follows a continuous SOC gradient with reference points at 10% red, 25% orange, 80% light green and above 80% progressively darker green.
+- Reworked the vehicle top view with a more automotive silhouette, wheels, mirrors, glass and state highlights while remaining model-neutral.
+- Charging remains consolidated in one main area with connector state, AC/DC type, power, time to full, target SOC and charging mode.
+- Climate remains a single compact line with operating mode and target temperature.
+- The tile is responsive for narrow smartphone layouts and keeps transparent/theme-neutral surfaces for light, dark and custom Symcon themes.
+- Module architecture and visual layout are more closely inspired by [da8ter/TileVisu-Kachelsammlung](https://github.com/da8ter/TileVisu-Kachelsammlung); no source code or graphical assets are copied.
+
 ## 1.5 - 2026-09-05
 
 - Fixed passive Boolean status variables for the new Symcon presentation system: they now use **Value Presentation** instead of Enumeration, so no variable action is required.

@@ -6,7 +6,7 @@ Eine MySkoda-Instanz repräsentiert genau ein Fahrzeug bzw. eine FIN.
 
 ## Symcon-Struktur
 
-Das Repository folgt der Symcon-Bibliotheksstruktur: `library.json` liegt im Repository-Root. Der Modulordner `MySkoda` enthält `module.php`, `module.json`, `form.json` und `locale.json`.
+Das Repository folgt der Symcon-Bibliotheksstruktur: `library.json` liegt im Repository-Root. Der Modulordner `MySkoda` enthält `module.php`, `module.html`, `module.json`, `form.json` und `locale.json`.
 
 ## Datenmodell
 
@@ -14,9 +14,36 @@ Der komplette Fahrzeug-Response wird intern als Instanzattribut gespeichert. Der
 
 ## Darstellungen
 
-Das Modul setzt Symcon 8.1+ voraus und nutzt `IPSModuleStrict` sowie die neuen Variablendarstellungen. Vorhandene Symcon-Standardvorlagen werden bevorzugt. Boolean-Zustände verwenden direkt die neue Darstellung `Aufzählung` mit `Ja/Nein` und zustandsabhängigen Farben; eigene Legacy-Variablenprofile werden nicht angelegt. Die Fahrzeugkachel verwendet die native Darstellung `Webinhalt` statt `~HTMLBox`.
+Das Modul setzt Symcon 8.1+ voraus und nutzt `IPSModuleStrict` sowie die neuen Variablendarstellungen. Vorhandene Symcon-Standardvorlagen werden bevorzugt.
+
+Passive Boolean-Zustände verwenden die neue Darstellung **Wertanzeige** mit Modulvorlagen im Namensraum `MySkoda.*`. Bedienbare Boolean-Werte wie Laden und Klima verwenden bei aktiver Remote-Steuerung die Darstellung **Schalter**. Eigene Legacy-Variablenprofile werden nicht angelegt.
 
 Die Farblogik ist semantisch: Grün bedeutet erwarteter Zustand, Orange bedeutet Hinweis/Aufmerksamkeit. Rot ist nur echten Fehlern oder Störungen vorbehalten.
+
+## Native Tile-Visualisierung ab 1.6
+
+Ab Version 1.6 besitzt die MySkoda-Instanz selbst eine native Symcon-Kachel:
+
+- `SetVisualizationType(1)` aktiviert die HTML-Visualisierung an der Instanz.
+- `GetVisualizationTile()` liefert die statische `MySkoda/module.html` plus Initialzustand.
+- `UpdateVisualizationValue()` überträgt Statusänderungen laufend an `handleMessage()` im Browser.
+- Der Visual-Timer aktualisiert unter anderem das Alter der letzten Abfrage einmal pro Minute, ohne dafür eine zusätzliche Fahrzeug-API-Abfrage auszulösen.
+
+`SetVisualizationType(1)` wird sowohl in `Create()` als auch in `ApplyChanges()` gesetzt. Damit erhalten auch bestehende Instanzen nach einem Modulupdate die native Kachel, ohne neu angelegt werden zu müssen.
+
+Die bis Version 1.5 verwendete `VehicleTile`-Stringvariable bleibt nur für bestehende Visualisierungen als versteckte Kompatibilität bestehen. Neue Visualisierungen verwenden die Instanz direkt.
+
+### Kachel-Datenfluss
+
+`VisualizationV16Trait.php` erzeugt aus dem letzten Fahrzeug-Response einen kompakten JSON-Zustand. `module.html` enthält ausschließlich die Darstellung und setzt diesen Zustand per JavaScript um. Dadurch bleiben API-/Fahrzeuglogik und UI getrennt.
+
+Die SOC-Batterie wird als vier Segmente im Fahrzeug-SVG dargestellt. Die Farbe wird in JavaScript zwischen festgelegten Referenzpunkten interpoliert: Rot bis 10 %, Orange bei 25 %, Hellgrün bei 80 % und darüber bis Dunkelgrün.
+
+### Design-Inspiration
+
+Die Modulstruktur und die kompakte Kachelaufteilung orientieren sich an der öffentlichen [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung), insbesondere am Muster aus `module.html`, `GetVisualizationTile()` und `UpdateVisualizationValue()`.
+
+Es werden keine Quelltexte oder Grafikassets aus dem Projekt übernommen. Fahrzeug-SVG, Datenmodell und HTML-/JavaScript-Code sind eigenständig.
 
 ## Migration von 1.3
 
@@ -36,13 +63,17 @@ Englisch ist die Quellsprache der Modultexte. `MySkoda/locale.json` enthält die
 
 ## Source layout
 
-Ab Version 1.1 bleibt `MySkoda/module.php` bewusst klein und lädt thematisch getrennte Traits aus `MySkoda/src/`:
+`MySkoda/module.php` bleibt bewusst klein und lädt thematisch getrennte Traits aus `MySkoda/src/`:
 
 - `CoreTrait.php` – Lebenszyklus, Aktionen und öffentliche Modulmethoden
-- `VariablesTrait.php` – Variablen, Darstellungen und Datenübernahme
+- `BootstrapV16Trait.php` – native Visualisierung für neue und bestehende Instanzen
+- `VariablesTrait.php` – Variablen und Datenübernahme
+- `PresentationTrait.php` – neue Symcon-Darstellungsvorlagen
 - `ApiTrait.php` – HTTP, Rate-Limit und Fehlerbehandlung
 - `OpenApiTrait.php` – dynamische OpenAPI-Auswertung
-- `VisualizationTrait.php` – kompakte Elektroauto-Kachel und Anzeigeaufbereitung
+- `VisualizationTrait.php` – gemeinsame Visualisierungs-/Formatierhilfen
+- `VisualizationV15Trait.php` – Kompatibilitätsdarstellung für die frühere `VehicleTile`-Variable
+- `VisualizationV16Trait.php` – Datenmodell und Updates für die native Instanz-Kachel
 - `NotificationTrait.php` – API-Key-Ablaufwarnung und optionale Symcon-Push-Mitteilungen
 - `HelpersTrait.php` – allgemeine Hilfsfunktionen
 

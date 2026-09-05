@@ -22,6 +22,7 @@ def main() -> None:
     assert GUID.match(library["id"]), "Invalid library GUID"
     assert GUID.match(module["id"]), "Invalid module GUID"
     assert library["compatibility"]["version"] >= "8.1"
+    assert library["version"] == "1.6"
     assert module["name"] == "MySkoda"
     assert module["prefix"].isalnum()
     assert isinstance(form.get("elements"), list)
@@ -40,9 +41,18 @@ def main() -> None:
     assert "IPS_SetVariableProfileAssociation" not in php_sources
     assert "VARIABLE_PRESENTATION_ENUMERATION" in php_sources
     assert "VARIABLE_PRESENTATION_WEB_CONTENT" in php_sources
+    assert "SetVisualizationType(1)" in php_sources
+    assert "GetVisualizationTile" in php_sources
+    assert "UpdateVisualizationValue" in php_sources
     assert "MSKODA_RefreshVisuals" in php_sources
-    assert "VehicleTile" in php_sources
+    assert "VehicleTile" in php_sources  # hidden compatibility path for <= 1.5
     assert "LastUpdateAge" in php_sources
+
+    tile = (ROOT / "MySkoda" / "module.html").read_text(encoding="utf-8")
+    assert "handleMessage" in tile
+    assert "batteryColor" in tile
+    assert 'id="bat1"' in tile and 'id="bat4"' in tile
+    assert "TileVisu" not in tile  # no copied branding/source markup
 
 
 if __name__ == "__main__":
