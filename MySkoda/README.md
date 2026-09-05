@@ -8,14 +8,13 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 - kompakter Standard-Datenpunktbestand
 - optionale Detail- und Diagnosevariablen
 - Laden und Klimatisierung über Variablenaktionen
-- Ladelimit und Lademodus, sofern Fahrzeug/API dies unterstützen
+- Ladelimit und Lademodus, sofern Fahrzeug und API dies unterstützen
 - PHP-Befehle für Standheizung, aktive Lüftung und Ladeprofil-Updates
 - vollständige API-Antwort über `MSKODA_GetRawData()`
 - Rate-Limit- und `Retry-After`-Behandlung
 - Verbindungstest nach der Ersteinrichtung
 - API-Key-Ablaufwarnung 30 Tage vor Ablauf
-- optionale Push-Mitteilung über eine vom Benutzer ausgewählte Symcon-Visualisierungsinstanz
-- keine eigene Fahrzeugvisualisierung
+- optionale Push-Mitteilung über eine ausgewählte Symcon-Visualisierungsinstanz
 
 ## 2. Voraussetzungen
 
@@ -27,13 +26,15 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 
 ### API-Key erstellen
 
-In der **MySkoda App**: Profil → Smart Home → Create Key → beliebigen Namen vergeben → FIN/VIN und API-Token in die Symcon-Instanz übernehmen.
+In der **MySkoda App**:
+
+**Profil → Smart Home → Create Key → beliebigen Namen vergeben → FIN/VIN und API-Token in die Symcon-Instanz übernehmen.**
 
 Nach dem Übernehmen prüft das Modul die Verbindung und zeigt das Ergebnis im Instanzformular.
 
 ## 3. Installation
 
-Im **Module Control**:
+Im **Module Control** folgendes Repository hinzufügen:
 
 ```text
 https://github.com/taloriko/IPSymconMySkoda
@@ -48,18 +49,18 @@ Anschließend eine Instanz **MySkoda** anlegen.
 | FIN / VIN | 17-stellige Fahrzeug-Identifikationsnummer | leer |
 | API-Token | MySkoda Public API-Key | leer |
 | Abrufintervall | automatischer Abruf in Sekunden | 300 |
-| Remote-Steuerung | aktiviert Lade-/Klimafunktionen | an |
+| Remote-Steuerung | aktiviert Lade- und Klimafunktionen | an |
 | Klima ohne externe Stromversorgung | Übergabe an die MySkoda-Klimafunktion | an |
 | S-PIN | optional, für Standheizung | leer |
 | API-Key Ablaufwarnung | Push bei höchstens 30 Tagen Restlaufzeit | aus |
-| Visualisierung für Mitteilungen | explizit ausgewählte Symcon-Visualisierungsinstanz | keine |
+| Visualisierung für Mitteilungen | ausgewählte Symcon-Visualisierungsinstanz | keine |
 | Detail-/Diagnosevariablen | zusätzliche Fahrzeug- und API-Daten | aus |
 
 ### Standortfreigabe
 
-Standortdaten werden von der MySkoda API nur geliefert, wenn im verwendeten **MySkoda-Profil die Standortfreigabe** erteilt wurde. Diese Freigabe ist profilbezogen. Wird dasselbe Fahrzeug mit mehreren MySkoda-Profilen verwendet, muss die Freigabe in **jedem Profil separat** aktiviert werden.
+Standortdaten werden von der MySkoda API nur geliefert, wenn im verwendeten **MySkoda-Profil die Standortfreigabe** erteilt wurde. Die Freigabe ist profilbezogen. Wird dasselbe Fahrzeug mit mehreren MySkoda-Profilen verwendet, muss sie in **jedem Profil separat** aktiviert werden.
 
-Fehlen Standortdaten, schreibt das Modul `0.0` für Breitengrad und `0.0` für Längengrad, damit keine alten Koordinaten stehen bleiben.
+Fehlen Standortdaten, schreibt das Modul `0.0` für Breitengrad und `0.0` für Längengrad. Dadurch bleiben keine veralteten Koordinaten aus einem früheren Abruf stehen.
 
 ## 5. Standard-Datenpunkte
 
@@ -80,17 +81,17 @@ Fehlen Standortdaten, schreibt das Modul `0.0` für Breitengrad und `0.0` für L
 | `ApiKeyWarning` | API-Key läuft in höchstens 30 Tagen ab | Nein |
 | `LastUpdate` | Zeitpunkt der letzten erfolgreichen Abfrage | Nein |
 
-Bei aktivierten Detailvariablen kommen unter anderem Fahrzeugname, Kennzeichen, Ladezustandstext, Ladeart, erwarteter Voll-Ladezeitpunkt, Kofferraum, Motorhaube, Schiebedach, Licht, Parkstatus, Standort, API-Key-Ablauf und API-Diagnose hinzu.
+Bei aktivierten Detailvariablen werden zusätzlich unter anderem Fahrzeugname, Kennzeichen, Ladestatus, Ladeart, erwarteter Voll-Ladezeitpunkt, Kofferraum, Motorhaube, Schiebedach, Licht, Parkstatus, Standort, API-Key-Ablauf und API-Diagnose bereitgestellt.
 
 ### Darstellungen
 
-Das Modul legt **keine Legacy-Variablenprofile** und **keine globalen eigenen Darstellungs-Vorlagen** an. Die Darstellungen werden direkt als native Symcon-8.x-Standarddarstellung an den moduleigenen Variablen registriert.
+Das Modul legt keine Legacy-Variablenprofile und keine globalen eigenen Darstellungs-Vorlagen an. Die Darstellungen werden direkt über native Symcon-8.x-Darstellungen an den moduleigenen Variablen registriert.
 
-Für Hinweiszustände gilt: erwarteter Zustand grün, Hinweis/Aufmerksamkeit orange; rot wird nicht für normale Statushinweise verwendet.
+Für Hinweiszustände gilt: erwarteter Zustand grün, Hinweis/Aufmerksamkeit orange. Rot wird für normale Statushinweise nicht verwendet.
 
 ## 6. Mitteilungen
 
-Das Mitteilungsziel wird über einen Symcon-Instanzauswahldialog gewählt. Das Modul prüft, ob die gewählte Instanz ein Visualisierungsmodul ist, bevor eine Mitteilung gesendet wird. Das Modul erstellt oder verändert keine externe Visualisierung.
+Das Mitteilungsziel wird über einen Symcon-Instanzauswahldialog gewählt. Vor dem Versand prüft das Modul, ob die gewählte Instanz ein Visualisierungsmodul ist.
 
 ## 7. PHP-Befehle
 
@@ -113,16 +114,15 @@ $ok = MSKODA_TestNotification(12345);
 
 ## 8. Rate-Limit und Fehler
 
-Das Modul wertet die von MySkoda gelieferten Rate-Limit-Header und `Retry-After` aus. Für automatische Abfragen wird eine kleine Reserve für Bedienaktionen freigehalten.
+Das Modul wertet die von MySkoda gelieferten Rate-Limit-Header und `Retry-After` aus. Für automatische Abfragen wird eine Reserve für Bedienaktionen freigehalten.
 
-Instanzstatus: `102` verbunden/bereit, `201` FIN/API-Token ungültig, `202` API-/Verbindungsfehler, `203` Rate-Limit/Wartezeit.
+Instanzstatus:
 
-## 9. Version 2.0 / harter Schnitt
+- `102` verbunden / bereit
+- `201` FIN oder API-Token ungültig
+- `202` API- oder Verbindungsfehler
+- `203` Rate-Limit / Wartezeit
 
-2.0 entfernt die frühere integrierte Fahrzeugkachel vollständig. Es gibt keinen Visualisierungsmodus, keine Modellgrafiken und keine Rückwärtskompatibilität zur alten Kachel. Moduleigene Altobjekte der Kachel werden beim Anwenden entfernt.
-
-Eine allgemeine Elektroauto-Visualisierung gehört bewusst in ein separates, herstellerunabhängiges Modul.
-
-## 10. Lizenz und Markenhinweis
+## 9. Lizenz und Markenhinweis
 
 MIT-Lizenz. Dieses Projekt ist eine unabhängige Community-Integration und nicht mit Škoda Auto a.s. verbunden oder von Škoda Auto a.s. unterstützt.
