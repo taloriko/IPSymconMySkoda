@@ -9,7 +9,9 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 - Offizielle MySkoda Public API mit `X-API-Key`
 - Konfigurationsmaske für FIN, API-Token, Abrufintervall und optionale S-PIN
 - Bewusst kleiner Standard-Objektbaum
-- Fahrzeugkachel für die Symcon-Visualisierung mit generischer Elektroauto-Darstellung
+- **Native Symcon-Fahrzeugkachel direkt an der MySkoda-Instanz**
+- Smartphone-optimierte Elektroauto-Darstellung mit SOC-Batterie, Laden, Klima und Fahrzeugstatus
+- 4-Balken-Batterie mit SOC-Farbverlauf von Rot über Orange und Hellgrün bis Dunkelgrün
 - Warnung 30 Tage vor Ablauf des API-Keys, optional mit Symcon-Mitteilung
 - Verbindungstest mit direkter Rückmeldung in der Konfiguration
 - Optionale Detail- und Diagnosevariablen
@@ -31,7 +33,7 @@ Die Bibliothek enthält das Gerätemodul [MySkoda](MySkoda/README.md). Eine Inst
 
 ## Version
 
-Aktueller Stand dieser Bibliothek: **1.5**
+Aktueller Stand dieser Bibliothek: **1.6**
 
 ## API-Key in der MySkoda App erstellen
 
@@ -58,6 +60,8 @@ https://github.com/taloriko/IPSymconMySkoda
 
 Danach eine Instanz **MySkoda** anlegen und FIN, API-Token sowie das gewünschte Abrufintervall konfigurieren.
 
+Ab Version 1.6 stellt die **Instanz selbst** eine native Kachel-Visualisierung bereit. Beim Hinzufügen der MySkoda-Instanz zur Kachel-Visualisierung ist damit kein manuelles Umschalten einer `VehicleTile`-Stringvariable auf Webinhalt mehr erforderlich. Eine bereits vorhandene `VehicleTile`-Variable aus Version 1.1-1.5 bleibt versteckt als Abwärtskompatibilität bestehen.
+
 Die vollständige Modul-Dokumentation befindet sich unter [MySkoda/README.md](MySkoda/README.md).
 
 ## Struktur
@@ -67,6 +71,7 @@ IPSymconMySkoda/
 ├── library.json
 ├── MySkoda/
 │   ├── module.php
+│   ├── module.html
 │   ├── module.json
 │   ├── form.json
 │   ├── locale.json
@@ -92,7 +97,9 @@ Offizielle Symcon-SDK-Referenzen:
 
 ## Design-Inspiration
 
-Die kompakte Gestaltung der Fahrzeugkachel orientiert sich an den Layout-Prinzipien der [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung). Insbesondere die klare Aufteilung, schmale Trenner und die Konzentration auf wenige wichtige Werte dienten als Orientierung. Der MySkoda-Code und die Fahrzeug-SVG sind eigenständig umgesetzt; es werden keine Quelltexte oder Grafikdateien aus dem Projekt übernommen.
+Die native Fahrzeugkachel orientiert sich stärker an den Layout- und Modulprinzipien der [TileVisu-Kachelsammlung von da8ter](https://github.com/da8ter/TileVisu-Kachelsammlung): `SetVisualizationType(1)`, eine eigene `module.html`, `GetVisualizationTile()` und laufende Updates über `UpdateVisualizationValue()`. Auch die kompakte Aufteilung mit Bild-/Fahrzeugbereich, schmalem Trenner und wenigen Hauptwerten diente als Orientierung.
+
+**Es wurden keine Quelltexte oder Grafikdateien aus dem Projekt übernommen.** Die MySkoda-Datenlogik, das Fahrzeug-SVG, die Batterieanzeige und die HTML-/JavaScript-Umsetzung sind eigenständig.
 
 ## API-Dokumentation
 
