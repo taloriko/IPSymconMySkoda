@@ -1,0 +1,15 @@
+# Changelog
+
+## 1.0 - 2026-09-06
+
+- Initiale Veröffentlichung des MySkoda-Moduls für IP-Symcon
+- Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten über stabile Variablen-Idents
+- bewusst einfacher Objektbaum ausschließlich mit Modulvariablen, ohne Dummy-Instanzen, Kategorien oder Links
+- deutsche Lokalisierung für Konfiguration, Variablennamen und Statusdarstellungen
+- deutsche Darstellung für Lade- und Parkstatus bei unveränderten API-Rohwerten
+- Remote-Steuerung für unterstützte Lade- und Klimafunktionen
+- automatische Erkennung zusätzlicher, noch nicht integrierter OpenAPI-Funktionen über die Variable `NewApiFeatures`; neue Datenpunkte werden ausschließlich über Modulupdates ergänzt
+- Rate-Limit-Behandlung, API-Key-Warnung und optionale Symcon-Mitteilungen
+- Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nur nach ausdrücklicher Benutzeraktivierung; spätere Archiveinstellungen bleiben unberührt
+- Kilometerstand als Archiv-Zähler; ungültige Werte kleiner oder gleich 0 werden verworfen
+- native IP-Symcon-Darstellungen
