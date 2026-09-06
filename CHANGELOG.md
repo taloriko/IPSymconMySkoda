@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.2 - 2026-09-06
+
+- Statusvariablen unter thematischen Dummy-Instanzen gruppiert
+- stabile Variablen-Idents und Objekt-IDs für Skripte und externe Visualisierungen beibehalten
+- separate Dummy-Instanz `Diagramme` ergänzt
+- kombinierten Ladeverlauf aus Ladezustand, Ladelimit und Ladeleistung bereitgestellt
+- Ladezustand und Ladelimit auf linker Prozent-Achse, Ladeleistung auf rechter Leistungs-Achse
+- Logging für `StateOfCharge`, `TargetSOC` und `ChargePower` wird nur aktiviert, wenn es noch nicht aktiv ist
+- bestehende Archiveinstellungen und Archivdaten werden nicht verändert oder gelöscht
+- bestehende Lade-Diagrammkonfiguration wird bei Updates nicht überschrieben
+
 ## 2.1 - 2026-09-06
 
 - Statusvariablen funktional nach Fahrzeug, Fahrzeugstatus, Laden, Klimatisierung, Standort sowie API/Diagnose sortiert
