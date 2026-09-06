@@ -1,15 +1,16 @@
 # MySkoda
 
-Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySkoda Public API. Eine Instanz repräsentiert genau eine FIN/VIN.
+Gerätemodul für IP-Symcon zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**. Eine Instanz repräsentiert genau eine FIN/VIN.
 
 ## Funktionsumfang
 
-- Fahrzeugstatus und Fahrzeugdaten über die MySkoda Public API
+- Fahrzeugstatus und Fahrzeugdaten über die MyŠkoda Public API
 - stabile Variablen-Idents für Skripte und weitere Module
 - Laden und Klimatisierung über Variablenaktionen
 - Ladelimit und Lademodus, sofern vom Fahrzeug unterstützt
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
+- deutsche Darstellung von Lade- und Parkstatus bei unveränderten API-Rohwerten
 - Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
 - API-Key-Ablaufwarnung 30 Tage vor Ablauf
 - optionale Symcon-Mitteilung über eine ausgewählte Visualisierungsinstanz
@@ -19,8 +20,23 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 - IP-Symcon **8.1 oder neuer**
 - 17-stellige FIN/VIN
 - MySkoda API-Key
+- aktive MySkoda/Škoda-Connect-Dienste für die verwendeten Fahrzeugfunktionen
 - optional S-PIN für Standheizung
 - Archive Control für die optionale Archivierung
+
+Offizielle API-Dokumentation: <https://public.api.connect.skoda-auto.cz/docs>
+
+## Installation und erste Einrichtung
+
+Nach der Installation eine Instanz **MySkoda** anlegen.
+
+1. In der MySkoda App unter **Profil → Smart Home → Schlüssel erstellen** einen API-Key erzeugen.
+2. FIN/VIN und API-Token in der Instanz eintragen.
+3. Konfiguration übernehmen.
+4. Über **Verbindung testen** den Datenabruf prüfen.
+5. Optional Detailvariablen, Mitteilungen und Archivierung aktivieren.
+
+Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul berücksichtigt die von der API gelieferten Rate-Limit-Informationen und `Retry-After`. Dadurch wird ein aktives API-Limit nicht durch weitere unnötige Anfragen belastet.
 
 ## Konfiguration
 
@@ -41,13 +57,13 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 
 Das Modul legt **keine Dummy-Instanzen, Kategorien oder Links** an. Unter der MySkoda-Instanz befinden sich ausschließlich die echten Modulvariablen.
 
-Die fachliche Gruppierung erfolgt in einem separaten Visualisierungsmodul. Dadurch bleibt das Datenmodul klein und die Visualisierung kann die Darstellung unabhängig aufbauen.
+Die fachliche Gruppierung erfolgt in der Visualisierung. Dadurch bleibt das Datenmodul klein und andere Module oder Skripte können direkt über stabile Idents auf die Werte zugreifen.
 
-Die sichtbaren Namen der Variablen sind deutsch. Die technischen Idents bleiben stabil, damit Skripte und Visualisierungsmodule zuverlässig darauf zugreifen können.
+Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut registriert. Vom Benutzer geänderte Namen, Positionen und Darstellungen werden daher nicht bei jedem `ApplyChanges()` überschrieben.
 
 ### Standard-Datenpunkte
 
-| Ident | Sichtbarer Name | Datentyp | Bedienbar |
+| Ident | Deutsche Anzeige | Datentyp | Bedienbar |
 |---|---|---|---:|
 | `StateOfCharge` | Ladezustand | Integer | Nein |
 | `Range` | Reichweite | Integer | Nein |
@@ -68,7 +84,7 @@ Die sichtbaren Namen der Variablen sind deutsch. Die technischen Idents bleiben 
 
 Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden fehlende zusätzliche Variablen erstellt:
 
-| Ident | Sichtbarer Name |
+| Ident | Deutsche Anzeige |
 |---|---|
 | `VehicleName` | Fahrzeugname |
 | `LicensePlate` | Kennzeichen |
@@ -86,13 +102,41 @@ Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden fehlende
 | `RequestsRemaining` | Verbleibende API-Anfragen |
 | `PartialErrors` | API-Teilfehler |
 
-Einmal angelegte Detailvariablen bleiben bestehen und werden weiter mit aktuellen Werten versorgt. Das Deaktivieren der Option löscht keine Variablen.
+Einmal angelegte Detailvariablen bleiben bestehen. Das Deaktivieren der Option löscht keine Variablen.
+
+## Statusdarstellungen
+
+Die API-Werte werden in den Variablen unverändert gespeichert. Nur die Darstellung wird lokalisiert. Dadurch können Skripte weiterhin mit den originalen API-Werten arbeiten.
+
+### Parkstatus
+
+| API-Wert | Deutsche Anzeige |
+|---|---|
+| `PARKED` | Geparkt |
+| `MOVING` | In Bewegung |
+| `DRIVING` | In Fahrt |
+| `UNKNOWN` | Unbekannt |
+
+Nicht bekannte zukünftige API-Werte bleiben als Rohwert erhalten.
+
+### Ladestatus
+
+| API-Wert | Deutsche Anzeige |
+|---|---|
+| `CONNECT_CABLE` | Ladekabel anschließen |
+| `CHARGING` | Laden aktiv |
+| `CONSERVING` | Ladeerhaltung |
+| `READY_FOR_CHARGING` | Ladebereit |
+| `DISCHARGING` | Entladen |
+| `CHARGING_INTERRUPTED` | Laden unterbrochen |
+| `OFF` | Aus |
+| `UNKNOWN` | Unbekannt |
 
 ## Lademodus
 
 `ChargeMode` verwendet feste Integerwerte:
 
-| Wert | Modus | Anzeige |
+| Wert | API-Modus | Deutsche Anzeige |
 |---:|---|---|
 | 0 | `MANUAL` | Manuell |
 | 1 | `TIMER` | Timer |
@@ -113,15 +157,15 @@ Bei aktivierter Archivierung werden folgende Variablen im Archive Control gelogg
 - `ChargePower` – Ladeleistung
 - `Mileage` – Kilometerstand
 
-Der Kilometerstand wird mit Aggregationstyp **Zähler** eingerichtet. Werte `<= 0` werden bereits beim Einlesen verworfen und deshalb nicht in die Kilometerstandsvariable geschrieben. Zusätzlich wird für den Zähler das Ignorieren von Null- und negativen Werten im Archive Control aktiviert.
+Der Kilometerstand wird mit Aggregationstyp **Zähler** eingerichtet. Werte `<= 0` werden bereits beim Einlesen verworfen und nicht in die Kilometerstandsvariable geschrieben. Zusätzlich wird für den Zähler das Ignorieren von Null- und negativen Werten im Archive Control aktiviert.
 
 Es wird kein eigenes Diagramm und kein zusätzliches Medienobjekt angelegt. Die Darstellung der Archivdaten ist Aufgabe der Visualisierung.
 
 ## Standortdaten
 
-Standortdaten werden nur bereitgestellt, wenn die MySkoda API sie für das verwendete Profil liefert. Fehlen Koordinaten in einer Antwort, werden vorhandene optionale Standortvariablen auf `0.0` gesetzt.
+Standortdaten werden nur bereitgestellt, wenn die MySkoda API sie für das Fahrzeug liefert. Fehlen Koordinaten in einer Antwort, werden vorhandene optionale Standortvariablen auf `0.0` gesetzt.
 
-## PHP-Befehle
+## Öffentliche PHP-Befehle
 
 ```php
 MSKODA_Update(12345);
@@ -145,9 +189,23 @@ $ok = MSKODA_TestNotification(12345);
 | Code | Bedeutung |
 |---:|---|
 | `102` | verbunden / bereit |
+| `104` | inaktiv |
 | `201` | FIN oder API-Token fehlt oder ist ungültig |
 | `202` | API- oder Verbindungsfehler |
 | `203` | Rate-Limit / Wartezeit aktiv |
+
+## Fehlersuche
+
+- **Keine Verbindung:** FIN/VIN und API-Token prüfen und anschließend **Verbindung testen** ausführen.
+- **Status 203:** Das API-Rate-Limit oder eine von der API vorgegebene Wartezeit ist aktiv. Das Modul wartet automatisch.
+- **Einzelne Werte fehlen:** Nicht jedes Fahrzeug bzw. jeder MySkoda-Dienst liefert alle API-Funktionen. Optionale Werte werden nur dargestellt, wenn die API sie bereitstellt.
+- **Remote-Befehl nicht verfügbar:** Fahrzeugfähigkeiten, MySkoda-Dienste und ggf. S-PIN prüfen.
+
+Bei Fehlermeldungen niemals API-Key, S-PIN oder vollständige FIN öffentlich posten.
+
+## Datenschutz und externe Dienste
+
+Das Modul kommuniziert direkt mit der offiziellen MyŠkoda Public API. Dafür werden die in der Instanz hinterlegte FIN/VIN und der API-Token für die notwendigen API-Anfragen verwendet. Remote-Befehle werden nur bei Benutzeraktion oder über die dokumentierten Modulmethoden ausgelöst.
 
 ## Lizenz und Markenhinweis
 
