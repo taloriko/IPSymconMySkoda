@@ -10,7 +10,7 @@
 
 **Beschreibung:** Bindet Fahrzeuge über die offizielle MySkoda Public API an IP-Symcon an. Das Modul stellt Fahrzeug-, Lade- und Klimadaten als native Statusvariablen bereit und unterstützt – sofern vom Fahrzeug angeboten – Remote-Funktionen wie Laden, Ladelimit, Lademodus, Klimatisierung, Standheizung und aktive Lüftung.
 
-**Versionsinformation 2.0:** Fahrzeugdaten über die offizielle MySkoda Public API, native Symcon-Datenpunkte und Darstellungen, Remote-Steuerung für unterstützte Lade- und Klimafunktionen, Rate-Limit-Behandlung, API-Key-Ablaufwarnung und optionale Symcon-Mitteilungen.
+**Versionsinformation 2.1:** Funktional gruppierte Statusvariablen, native Symcon-Icons für passende Datenpunkte und lokalisierte, lesbare Ladezustände bei unverändert erhaltenem API-Rohwert.
 
 **Dokumentation:** https://github.com/taloriko/IPSymconMySkoda/blob/main/MySkoda/README.md
 
@@ -20,7 +20,7 @@
 
 **Description:** Connects vehicles to IP-Symcon through the official MySkoda Public API. The module exposes vehicle, charging and climate data as native status variables and supports remote functions such as charging, charging limit, charging mode, air conditioning, auxiliary heating and active ventilation where offered by the vehicle.
 
-**Version information 2.0:** Vehicle data through the official MySkoda Public API, native IP-Symcon datapoints and presentations, remote control for supported charging and climate functions, rate-limit handling, API-key expiry warning and optional IP-Symcon notifications.
+**Version information 2.1:** Functionally grouped status variables, native Symcon icons for suitable datapoints and localized, readable charging states while preserving the original API value.
 
 **Documentation:** https://github.com/taloriko/IPSymconMySkoda/blob/main/MySkoda/README.md
 
