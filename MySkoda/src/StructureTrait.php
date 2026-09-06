@@ -5,7 +5,6 @@ declare(strict_types=1);
 trait MySkodaStructureTrait
 {
     private const DUMMY_MODULE_ID = '{485D0419-BE97-4548-AA9C-C083EB82E61E}';
-    private const ARCHIVE_CONTROL_MODULE_ID = '{43192F0B-135B-4CE7-A0A7-1475603F3060}';
 
     private const GROUPS = [
         'vehicle' => ['ident' => 'MSKODA_GroupVehicle', 'name' => 'Vehicle', 'icon' => 'Car', 'position' => 100],
@@ -56,128 +55,136 @@ trait MySkodaStructureTrait
         'LastUpdate' => 'lastUpdate'
     ];
 
-    public function Create(): void
+    private function ensureObjectGroups(): void
     {
-        $this->createCoreV22();
-        $this->RegisterPropertyBoolean('EnableChargingHistory', true);
-    }
-
-    public function ApplyChanges(): void
-    {
-        // RegisterVariable* and MaintainAction expect module variables directly
-        // below the instance. Existing variables are therefore moved to the
-        // registration root only for ApplyChanges and then restored to their
-        // thematic dummy instances. Object IDs and variable idents stay stable.
-        $this->prepareManagedVariablesForRegistration();
-        $this->applyChangesCoreV22();
-        $this->organizeManagedObjects();
-    }
-
-    private function prepareManagedVariablesForRegistration(): void
-    {
-        foreach (array_keys(self::VARIABLE_GROUPS) as $ident) {
-            $this->moveManagedVariableToRegistrationRoot($ident);
+        foreach (array_keys(self::GROUPS) as $groupKey) {
+            $this->getGroupId($groupKey);
         }
     }
 
-    private function organizeManagedObjects(): void
+    private function organizeModuleObjects(): void
     {
-        $groups = [];
-        foreach (self::GROUPS as $key => $spec) {
-            $groups[$key] = $this->ensureDummy(
-                $this->InstanceID,
-                (string) $spec['ident'],
-                $this->Translate((string) $spec['name']),
-                (string) $spec['icon'],
-                (int) $spec['position']
-            );
-        }
-
         foreach (self::VARIABLE_GROUPS as $ident => $groupKey) {
-            $variableId = $this->findVariableByIdent($ident);
-            $groupId = (int) ($groups[$groupKey] ?? 0);
-            if ($variableId <= 0 || $groupId <= 0) {
-                continue;
-            }
-            if (IPS_GetParent($variableId) !== $groupId) {
-                IPS_SetParent($variableId, $groupId);
-            }
+            $this->placeVariableInGroup($ident);
         }
 
-        if ($this->ReadPropertyBoolean('EnableChargingHistory')) {
-            $chartsGroup = (int) ($groups['charts'] ?? 0);
-            if ($chartsGroup > 0) {
-                $this->ensureChargingHistory($chartsGroup);
+        $chartId = @IPS_GetObjectIDByIdent('MSKODA_ChargingHistory', $this->InstanceID);
+        if ($chartId !== false && IPS_MediaExists((int) $chartId)) {
+            $chartsGroupId = $this->getGroupId('charts');
+            if ($chartsGroupId > 0) {
+                IPS_SetParent((int) $chartId, $chartsGroupId);
             }
         }
     }
 
-    private function moveManagedVariableToRegistrationRoot(string $ident): void
+    private function placeVariableInGroup(string $ident): void
+    {
+        $groupKey = self::VARIABLE_GROUPS[$ident] ?? null;
+        if (!is_string($groupKey)) {
+            return;
+        }
+
+        $variableId = $this->findVariableByIdent($ident);
+        $groupId = $this->getGroupId($groupKey);
+        if ($variableId <= 0 || $groupId <= 0) {
+            return;
+        }
+
+        if (IPS_GetParent($variableId) !== $groupId) {
+            IPS_SetParent($variableId, $groupId);
+        }
+    }
+
+    private function maintainGroupedAction(string $ident, bool $enabled): void
     {
         $variableId = $this->findVariableByIdent($ident);
         if ($variableId <= 0) {
             return;
         }
-        if (IPS_GetParent($variableId) !== $this->InstanceID) {
-            IPS_SetParent($variableId, $this->InstanceID);
-        }
-    }
 
-    private function placeManagedVariable(string $ident): void
-    {
-        $groupKey = self::VARIABLE_GROUPS[$ident] ?? null;
-        if (!is_string($groupKey) || !isset(self::GROUPS[$groupKey])) {
+        $variable = IPS_GetVariable($variableId);
+        $actionEnabled = (int) ($variable['VariableAction'] ?? 0) === $this->InstanceID;
+        if ($actionEnabled === $enabled) {
             return;
         }
 
-        $spec = self::GROUPS[$groupKey];
-        $groupId = $this->ensureDummy(
-            $this->InstanceID,
-            (string) $spec['ident'],
-            $this->Translate((string) $spec['name']),
-            (string) $spec['icon'],
-            (int) $spec['position']
-        );
-        $variableId = $this->findVariableByIdent($ident);
-        if ($groupId > 0 && $variableId > 0 && IPS_GetParent($variableId) !== $groupId) {
-            IPS_SetParent($variableId, $groupId);
+        $originalParent = IPS_GetParent($variableId);
+        if ($originalParent !== $this->InstanceID) {
+            IPS_SetParent($variableId, $this->InstanceID);
+        }
+
+        try {
+            $this->MaintainAction($ident, $enabled);
+        } finally {
+            if ($originalParent !== $this->InstanceID && IPS_ObjectExists($originalParent)) {
+                IPS_SetParent($variableId, $originalParent);
+            }
         }
     }
 
-    protected function GetIDForIdent(string $Ident): int|false
+    protected function GetIDForIdent($Ident)
     {
-        $direct = @parent::GetIDForIdent($Ident);
-        if ($direct !== false) {
-            return $direct;
+        $directId = @parent::GetIDForIdent($Ident);
+        if ($directId !== false) {
+            return $directId;
         }
 
-        $found = $this->findObjectByIdentRecursive($this->InstanceID, $Ident, 0);
-        return $found > 0 ? $found : false;
+        $foundId = $this->findObjectByIdentRecursive($this->InstanceID, (string) $Ident, 0);
+        return $foundId > 0 ? $foundId : false;
     }
 
-    protected function SetValue(string $Ident, mixed $Value): bool
+    protected function SetValue($Ident, $Value)
     {
-        $id = $this->GetIDForIdent($Ident);
-        if ($id === false || !IPS_VariableExists($id)) {
+        $variableId = $this->GetIDForIdent($Ident);
+        if ($variableId === false || !IPS_VariableExists((int) $variableId)) {
             return false;
         }
-        SetValue($id, $Value);
+
+        SetValue((int) $variableId, $Value);
         return true;
     }
 
-    protected function GetValue(string $Ident): mixed
+    protected function GetValue($Ident)
     {
-        $id = $this->GetIDForIdent($Ident);
-        if ($id === false || !IPS_VariableExists($id)) {
+        $variableId = $this->GetIDForIdent($Ident);
+        if ($variableId === false || !IPS_VariableExists((int) $variableId)) {
             return null;
         }
-        return GetValue($id);
+
+        return GetValue((int) $variableId);
     }
 
     private function findVariableByIdent(string $ident): int
     {
-        $id = $this->GetIDForIdent($ident);
-        return $id !== false && IPS_VariableExists($id) ? $id : 0;
+        $objectId = $this->GetIDForIdent($ident);
+        return $objectId !== false && IPS_VariableExists((int) $objectId) ? (int) $objectId : 0;
+    }
+
+    private function getGroupId(string $groupKey): int
+    {
+        $definition = self::GROUPS[$groupKey] ?? null;
+        if (!is_array($definition)) {
+            return 0;
+        }
+
+        $ident = (string) $definition['ident'];
+        $existingId = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
+        if ($existingId !== false) {
+            if ($this->isDummyInstance((int) $existingId)) {
+                return (int) $existingId;
+            }
+
+            $this->SendDebug('Structure', 'Ident ' . $ident . ' is already used by another object.', 0);
+            return 0;
+        }
+
+        $groupId = IPS_CreateInstance(self::DUMMY_MODULE_ID);
+        IPS_SetParent($groupId, $this->InstanceID);
+        IPS_SetIdent($groupId, $ident);
+        IPS_SetName($groupId, $this->Translate((string) $definition['name']));
+        IPS_SetIcon($groupId, (string) $definition['icon']);
+        IPS_SetPosition($groupId, (int) $definition['position']);
+        return $groupId;
     }
 
     private function findObjectByIdentRecursive(int $parentId, string $ident, int $depth): int
@@ -186,182 +193,36 @@ trait MySkodaStructureTrait
             return 0;
         }
 
-        foreach (IPS_GetChildrenIDs($parentId) as $childId) {
+        $children = IPS_GetChildrenIDs($parentId);
+        foreach ($children as $childId) {
             $object = IPS_GetObject($childId);
             if ((string) ($object['ObjectIdent'] ?? '') === $ident) {
                 return (int) $childId;
             }
         }
 
-        foreach (IPS_GetChildrenIDs($parentId) as $childId) {
+        foreach ($children as $childId) {
             $object = IPS_GetObject($childId);
-            $type = (int) ($object['ObjectType'] ?? -1);
-            if (!in_array($type, [0, 1, 3], true)) {
+            if (!in_array((int) ($object['ObjectType'] ?? -1), [0, 1], true)) {
                 continue;
             }
-            $found = $this->findObjectByIdentRecursive((int) $childId, $ident, $depth + 1);
-            if ($found > 0) {
-                return $found;
+
+            $foundId = $this->findObjectByIdentRecursive((int) $childId, $ident, $depth + 1);
+            if ($foundId > 0) {
+                return $foundId;
             }
         }
 
         return 0;
     }
 
-    private function ensureDummy(int $parentId, string $ident, string $name, string $icon, int $position): int
+    private function isDummyInstance(int $instanceId): bool
     {
-        $existing = @IPS_GetObjectIDByIdent($ident, $parentId);
-        if ($existing !== false && $this->isDummyInstance((int) $existing)) {
-            IPS_SetName((int) $existing, $name);
-            IPS_SetIcon((int) $existing, $icon);
-            IPS_SetPosition((int) $existing, $position);
-            return (int) $existing;
-        }
-
-        $recursive = $this->findObjectByIdentRecursive($this->InstanceID, $ident, 0);
-        if ($recursive > 0 && $this->isDummyInstance($recursive)) {
-            if (IPS_GetParent($recursive) !== $parentId) {
-                IPS_SetParent($recursive, $parentId);
-            }
-            IPS_SetName($recursive, $name);
-            IPS_SetIcon($recursive, $icon);
-            IPS_SetPosition($recursive, $position);
-            return $recursive;
-        }
-
-        if ($existing !== false) {
-            $this->SendDebug('Structure', 'Ident ' . $ident . ' is already used by a non-dummy object.', 0);
-            return 0;
-        }
-
-        $id = IPS_CreateInstance(self::DUMMY_MODULE_ID);
-        IPS_SetParent($id, $parentId);
-        IPS_SetIdent($id, $ident);
-        IPS_SetName($id, $name);
-        IPS_SetIcon($id, $icon);
-        IPS_SetPosition($id, $position);
-        return $id;
-    }
-
-    private function isDummyInstance(int $id): bool
-    {
-        if (!IPS_InstanceExists($id)) {
+        if (!IPS_InstanceExists($instanceId)) {
             return false;
         }
-        $instance = IPS_GetInstance($id);
+
+        $instance = IPS_GetInstance($instanceId);
         return (string) ($instance['ModuleInfo']['ModuleID'] ?? '') === self::DUMMY_MODULE_ID;
-    }
-
-    private function ensureChargingHistory(int $chartsGroup): void
-    {
-        $archiveId = $this->getArchiveControlId();
-        if ($archiveId <= 0) {
-            $this->SendDebug('Charging history', 'Archive Control not found.', 0);
-            return;
-        }
-
-        $variableIds = [];
-        foreach (['StateOfCharge', 'TargetSOC', 'ChargePower'] as $ident) {
-            $variableId = $this->findVariableByIdent($ident);
-            if ($variableId <= 0) {
-                continue;
-            }
-            $variableIds[$ident] = $variableId;
-            $this->enableLoggingIfMissing($archiveId, $variableId);
-        }
-
-        if (count($variableIds) !== 3) {
-            return;
-        }
-
-        $this->ensureChargingChart($chartsGroup, $variableIds);
-    }
-
-    private function getArchiveControlId(): int
-    {
-        $instances = IPS_GetInstanceListByModuleID(self::ARCHIVE_CONTROL_MODULE_ID);
-        return isset($instances[0]) ? (int) $instances[0] : 0;
-    }
-
-    private function enableLoggingIfMissing(int $archiveId, int $variableId): void
-    {
-        try {
-            // Existing logging is user configuration. If it is already active,
-            // do not change aggregation, graph, compaction or any other setting.
-            if (AC_GetLoggingStatus($archiveId, $variableId)) {
-                return;
-            }
-
-            // Only the one missing setting is enabled. Logging is never disabled
-            // and archived values are never removed by this module.
-            AC_SetLoggingStatus($archiveId, $variableId, true);
-        } catch (Throwable $e) {
-            $this->SendDebug('Archive logging', $e->getMessage(), 0);
-        }
-    }
-
-    private function ensureChargingChart(int $chartsGroup, array $variableIds): void
-    {
-        $existing = @IPS_GetObjectIDByIdent('MSKODA_ChargingHistory', $chartsGroup);
-        if ($existing !== false) {
-            // Existing chart configuration belongs to the user. Never overwrite it.
-            return;
-        }
-
-        $chartId = IPS_CreateMedia(4);
-        IPS_SetParent($chartId, $chartsGroup);
-        IPS_SetIdent($chartId, 'MSKODA_ChargingHistory');
-        IPS_SetName($chartId, $this->Translate('Charging history'));
-        IPS_SetIcon($chartId, 'Graph');
-        IPS_SetPosition($chartId, 10);
-        IPS_SetMediaFile($chartId, 'media/' . $chartId . '.chart', false);
-
-        // Axis 0: SOC and charging limit in percent.
-        // Axis 1: charging power in W/kW. The chart itself is only created once;
-        // subsequent user changes to its appearance are deliberately preserved.
-        $chart = [
-            'datasets' => [
-                [
-                    'variableID' => (int) $variableIds['StateOfCharge'],
-                    'fillColor' => 'clear',
-                    'strokeColor' => '#22c55e',
-                    'timeOffset' => 0,
-                    'title' => $this->Translate('State of charge'),
-                    'axis' => 0
-                ],
-                [
-                    'variableID' => (int) $variableIds['TargetSOC'],
-                    'fillColor' => 'clear',
-                    'strokeColor' => '#94a3b8',
-                    'timeOffset' => 0,
-                    'title' => $this->Translate('Charging limit'),
-                    'axis' => 0
-                ],
-                [
-                    'variableID' => (int) $variableIds['ChargePower'],
-                    'fillColor' => 'clear',
-                    'strokeColor' => '#f59e0b',
-                    'timeOffset' => 0,
-                    'title' => $this->Translate('Charging power'),
-                    'axis' => 1
-                ]
-            ],
-            'type' => 'line',
-            'axes' => [
-                [
-                    'profile' => '~Intensity.100',
-                    'side' => 'left'
-                ],
-                [
-                    'profile' => '~Power',
-                    'side' => 'right'
-                ]
-            ]
-        ];
-
-        IPS_SetMediaContent(
-            $chartId,
-            base64_encode(json_encode($chart, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
-        );
     }
 }
