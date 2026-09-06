@@ -21,134 +21,292 @@ def walk(items):
             yield from walk(nested)
 
 
+def captions(items):
+    return {
+        item["caption"]
+        for item in walk(items)
+        if isinstance(item, dict) and isinstance(item.get("caption"), str)
+    }
+
+
 def main() -> None:
     library = load(ROOT / "library.json")
     module = load(ROOT / "MySkoda" / "module.json")
     form = load(ROOT / "MySkoda" / "form.json")
     locale = load(ROOT / "MySkoda" / "locale.json")
+    translations = locale.get("translations", {}).get("de", {})
 
+    # Store/library metadata.
+    assert set(library) == {
+        "id",
+        "author",
+        "name",
+        "url",
+        "compatibility",
+        "version",
+        "build",
+        "date",
+    }
     assert GUID.match(library["id"])
-    assert GUID.match(module["id"])
+    assert library["author"] == "taloriko"
+    assert library["name"] == "MySkoda"
+    assert library["url"] == "https://github.com/taloriko/IPSymconMySkoda"
     assert library["compatibility"]["version"] >= "8.1"
-    assert library["version"] == "2.2"
+    assert library["version"] == "1.0"
+    assert library["build"] == 0
+    assert isinstance(library["date"], int) and library["date"] > 0
+
+    # Module metadata and documented repository layout.
+    assert set(module) == {
+        "id",
+        "name",
+        "type",
+        "vendor",
+        "aliases",
+        "parentRequirements",
+        "childRequirements",
+        "implemented",
+        "prefix",
+        "url",
+    }
+    assert GUID.match(module["id"])
     assert module["name"] == "MySkoda"
-    assert module["vendor"] == "taloriko"
-    assert module["prefix"].isalnum()
-    assert isinstance(locale.get("translations", {}).get("de"), dict)
+    assert module["type"] == 3
+    assert module["vendor"] == "Škoda"
+    assert module["aliases"] == ["MySkoda Fahrzeug", "Škoda Fahrzeug"]
+    assert module["prefix"] == "MSKODA"
+    assert module["url"].startswith("https://github.com/taloriko/IPSymconMySkoda/")
+    assert (ROOT / module["name"]).is_dir()
+    assert (ROOT / "MySkoda" / "module.php").is_file()
+    assert (ROOT / "MySkoda" / "module.json").is_file()
+    assert (ROOT / "MySkoda" / "form.json").is_file()
+    assert (ROOT / "MySkoda" / "locale.json").is_file()
+    assert (ROOT / "README.md").is_file()
+    assert (ROOT / "MySkoda" / "README.md").is_file()
+    assert (ROOT / "LICENSE").is_file()
 
-    all_elements = list(walk(form["elements"]))
-    names = {element.get("name") for element in all_elements}
-    assert "VehicleDesign" not in names
-    assert "HideVisualizationTitle" not in names
-    assert "EnableChargingHistory" in names
-    target = next(element for element in all_elements if element.get("name") == "NotificationInstanceID")
-    assert target.get("type") == "SelectInstance"
+    # Configuration form: every static caption has a German localization.
+    assert isinstance(translations, dict) and translations
+    all_form_captions = set()
+    all_form_captions |= captions(form.get("elements", []))
+    all_form_captions |= captions(form.get("actions", []))
+    all_form_captions |= captions(form.get("status", []))
+    missing_translations = sorted(caption for caption in all_form_captions if caption not in translations)
+    assert not missing_translations, f"Missing German form translations: {missing_translations}"
 
-    panels = {element.get("caption") for element in form["elements"] if element.get("type") == "ExpansionPanel"}
-    assert {"Connection", "Polling and control", "Notifications", "Advanced", "Help and documentation"}.issubset(panels)
-    assert "Visualization settings" not in panels
+    elements = list(walk(form["elements"]))
+    names = {element.get("name") for element in elements}
+    for required in {
+        "VIN",
+        "APIToken",
+        "Interval",
+        "EnableRemote",
+        "ClimateWithoutExternalPower",
+        "SPIN",
+        "ShowDetails",
+        "EnableChargingHistory",
+        "NotifyKeyExpiry",
+        "NotificationInstanceID",
+    }:
+        assert required in names
 
-    php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
-    assert "class MySkoda extends IPSModuleStrict" in php
-    assert "IP-Symcon-MySkoda/2.2" in php
-    assert "StructureTrait.php" in php
-    for legacy in ["BootstrapV", "CoreV19Trait", "Visualization", "NotificationV19Trait", "PresentationTrait"]:
-        assert legacy not in php
+    for required_translation, expected in {
+        "Connection": "Verbindung",
+        "Polling and control": "Abfrage und Steuerung",
+        "Notifications": "Mitteilungen",
+        "Additional data": "Zusätzliche Daten",
+        "Set up archiving": "Archivierung einrichten",
+        "Test connection": "Verbindung testen",
+        "Update now": "Jetzt aktualisieren",
+    }.items():
+        assert translations.get(required_translation) == expected
 
-    php_sources = "\n".join(source.read_text(encoding="utf-8") for source in (ROOT / "MySkoda").rglob("*.php"))
+    module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
+    assert "final class MySkoda extends IPSModuleStrict" in module_php
+    assert "IP-Symcon-MySkoda/1.0" in module_php
+    assert "StructureTrait.php" not in module_php
+    assert "HistoryTrait.php" in module_php
+
+    php_sources = "\n".join(
+        source.read_text(encoding="utf-8")
+        for source in (ROOT / "MySkoda").rglob("*.php")
+    )
     variables = (ROOT / "MySkoda" / "src" / "VariablesTrait.php").read_text(encoding="utf-8")
-    structure = (ROOT / "MySkoda" / "src" / "StructureTrait.php").read_text(encoding="utf-8")
+    history = (ROOT / "MySkoda" / "src" / "HistoryTrait.php").read_text(encoding="utf-8")
+    core = (ROOT / "MySkoda" / "src" / "CoreTrait.php").read_text(encoding="utf-8")
 
-    assert "SetVisualizationType(1)" not in php_sources
-    assert "SetVisualizationType(0)" in php_sources
-    assert "GetVisualizationTile" not in php_sources
-    assert "UpdateVisualizationValue" not in php_sources
-    assert "RefreshVisuals" not in php_sources
-    assert "VehicleDesign" not in php_sources
-    assert "IPS_SetHiddenTitle" not in php_sources
-    assert "VARIABLE_PRESENTATION_WEB_CONTENT" not in php_sources
-    assert "VARIABLE_PRESENTATION_LEGACY" not in php_sources
-    assert "IPS_CreateVariableProfile" not in php_sources
-    assert "IPS_CreateTemplate" not in php_sources
-    assert "IPS_SetTemplate" not in php_sources
+    # Store review: no short PHP tags and instance-associated logging only.
+    assert re.search(r"<\?(?!php)", php_sources) is None
     assert "IPS_LogMessage" not in php_sources
+
+    # Clean data module: no grouping/helper objects or media are created.
+    for forbidden in [
+        "IPS_CreateInstance",
+        "IPS_CreateCategory",
+        "IPS_CreateLink",
+        "IPS_CreateMedia",
+        "IPS_SetName",
+        "IPS_SetHidden",
+        "IPS_SetIcon",
+        "IPS_SetPosition",
+        "MSKODA_Group",
+        "MSKODA_Link_",
+        "getGroupId(",
+        "placeVariableInGroup",
+        "maintainGroupedAction",
+    ]:
+        assert forbidden not in php_sources
+    assert not (ROOT / "MySkoda" / "src" / "StructureTrait.php").exists()
+
+    # Variables are registered only when missing and keep stable technical idents.
+    assert "registerVariableOnce" in variables
+    assert "$this->Translate((string) $definition['name'])" in variables
+    assert "UnregisterVariable" not in php_sources
+    assert "IPS_DeleteVariable" not in php_sources
+
+    for stable_ident in [
+        "StateOfCharge",
+        "Range",
+        "Mileage",
+        "Locked",
+        "DoorsOpen",
+        "WindowsOpen",
+        "Charging",
+        "ChargePower",
+        "TargetSOC",
+        "ChargeMode",
+        "Climate",
+        "TargetTemperature",
+        "ApiKeyWarning",
+        "LastUpdate",
+        "ParkingState",
+        "ChargingState",
+    ]:
+        assert f"'{stable_ident}'" in variables
+
+    # German presentation remains complete while API/raw values stay stable.
+    for source, german in {
+        "State of charge": "Ladezustand",
+        "Range": "Reichweite",
+        "Mileage": "Kilometerstand",
+        "Parking state": "Parkstatus",
+        "Charging state": "Ladestatus",
+        "Parked": "Geparkt",
+        "Moving": "In Bewegung",
+        "Driving": "In Fahrt",
+        "Connect charging cable": "Ladekabel anschließen",
+        "Charging active": "Laden aktiv",
+        "Ready for charging": "Ladebereit",
+        "Unknown": "Unbekannt",
+    }.items():
+        assert translations.get(source) == german
+
+    assert "parkingStatePresentation" in variables
+    for state in ["PARKED", "MOVING", "DRIVING", "UNKNOWN"]:
+        assert f"'{state}'" in variables
+    assert "$this->Translate($caption)" in variables
+
+    # Existing variable presentations are not dynamically overwritten.
+    assert "CHARGE_MODES" in variables
+    assert "AvailableChargeModes" in variables
+    assert "updateChargeModePresentation" not in php_sources
+    assert "ChargeModeMap" not in php_sources
+    for forbidden in [
+        "IPS_SetVariableCustomPresentation",
+        "IPS_SetVariableCustomProfile",
+        "IPS_SetVariableCustomAction",
+        "IPS_CreateVariableProfile",
+        "IPS_CreateTemplate",
+        "IPS_SetTemplate",
+    ]:
+        assert forbidden not in php_sources
+
+    # Archive logging requires explicit opt-in and is initialized only once.
+    assert "RegisterPropertyBoolean('EnableChargingHistory', false)" in core
+    assert "ReadPropertyBoolean('EnableChargingHistory')" in history
+    assert "ReadAttributeBoolean('ChargingHistoryInitialized')" in history
+    for ident in ["StateOfCharge", "TargetSOC", "ChargePower", "Mileage"]:
+        assert f"'{ident}'" in history
+    assert "AC_GetLoggingStatus" in history
+    assert "AC_SetLoggingStatus" in history
+    assert "AC_GetAggregationType" in history
+    assert "AC_SetAggregationType($archiveId, $mileageId, 1)" in history
+    assert "AC_GetCounterIgnoreZeros" in history
+    assert "AC_SetCounterIgnoreZeros($archiveId, $mileageId, true)" in history
+    assert "AC_ReAggregateVariable" in history
+    assert "WriteAttributeBoolean('ChargingHistoryInitialized', true)" in history
+    assert "MSKODA_ChargingHistory" not in php_sources
+
+    # Invalid mileage never reaches the variable/archive as a normal update.
+    assert "$mileage > 0" in variables
+    assert "$this->SetValue('Mileage', $mileage);" in variables
+    assert "setPathValue('Mileage'" not in variables
+
+    # User-owned instance properties are never written/applied behind the user's back.
     assert "IPS_SetProperty" not in php_sources
     assert "IPS_ApplyChanges" not in php_sources
-    assert "IPS_CreateCategory" not in php_sources
-    assert "SunroofOpen" in php_sources
-    assert "IPS_GetInstanceListByModuleType(6)" in php_sources
 
-    # Thematische Dummy-Instanzen; Statusvariablen behalten ihre stabilen Idents.
-    assert "{485D0419-BE97-4548-AA9C-C083EB82E61E}" in structure
-    assert "IPS_CreateInstance" in structure
-    for group_ident in [
-        "MSKODA_GroupVehicle",
-        "MSKODA_GroupStatus",
-        "MSKODA_GroupCharging",
-        "MSKODA_GroupClimate",
-        "MSKODA_GroupLocation",
-        "MSKODA_GroupDiagnostics",
-        "MSKODA_GroupCharts",
-        "MSKODA_GroupLastUpdate",
-    ]:
-        assert group_ident in structure
-    for stable_ident in ["StateOfCharge", "TargetSOC", "ChargePower", "LastUpdate"]:
-        assert stable_ident in structure
-    assert "protected function GetIDForIdent" in structure
-    assert "protected function SetValue" in structure
-    assert "protected function GetValue" in structure
-
-    # Ladeverlauf: SOC und Limit auf Achse 0 (%), Ladeleistung auf Achse 1 (W/kW).
-    assert "{43192F0B-135B-4CE7-A0A7-1475603F3060}" in structure
-    assert "IPS_CreateMedia(4)" in structure
-    assert "MSKODA_ChargingHistory" in structure
-    assert "'profile' => '~Intensity.100'" in structure
-    assert "'profile' => '~Power'" in structure
-    assert "'axis' => 0" in structure
-    assert "'axis' => 1" in structure
-    assert "'side' => 'left'" in structure
-    assert "'side' => 'right'" in structure
-
-    # Archivierung ist strikt nicht-destruktiv: nur fehlendes Logging aktivieren.
-    assert "AC_GetLoggingStatus" in structure
-    assert "if (AC_GetLoggingStatus($archiveId, $variableId))" in structure
-    assert "AC_SetLoggingStatus($archiveId, $variableId, true)" in structure
-    for destructive_call in [
-        "AC_SetAggregationType",
+    for forbidden in [
         "AC_DeleteVariableData",
-        "AC_ReAggregateVariable",
         "AC_SetCompaction",
         "AC_SetGraphStatus",
         "IPS_DeleteMedia",
     ]:
-        assert destructive_call not in php_sources
+        assert forbidden not in php_sources
 
-    # Bestehende Chart-Konfiguration wird nicht ueberschrieben.
-    assert "Existing chart configuration belongs to the user" in structure
-
-    # Native Icons und lokalisierter Ladestatus.
-    assert "chargingStatePresentation" in variables
-    assert "CONNECT_CABLE" in variables
-    assert "CHARGING_INTERRUPTED" in variables
-    assert "'ICON' => 'lightbulb'" not in variables
-    assert "booleanYesNoPresentation(false, 'lightbulb')" in variables
-    assert "'ICON' => 'location-dot'" in variables
-    assert "'ICON' => 'clock'" in variables
-    assert "RegisterVariableBoolean('Charging'" in variables
-
-    assert not (ROOT / "MySkoda" / "module.html").exists()
-    assert not (ROOT / "docs" / "VISUALIZATION.md").exists()
-
-    src_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
-    assert src_names == {
+    expected_sources = {
         "ApiTrait.php",
         "CoreTrait.php",
         "HelpersTrait.php",
+        "HistoryTrait.php",
         "NotificationTrait.php",
         "OpenApiTrait.php",
-        "StructureTrait.php",
         "VariablesTrait.php",
     }
+    source_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
+    assert source_names == expected_sources
+
+    # Documentation for Store review and safe setup.
+    root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    module_readme = (ROOT / "MySkoda" / "README.md").read_text(encoding="utf-8")
+    for text in [
+        "IP-Symcon **8.1 oder neuer**",
+        "https://public.api.connect.skoda-auto.cz/docs",
+        "Installation",
+        "Erste Einrichtung",
+        "keine Dummy-Instanzen",
+        "stabile Variablen-Idents",
+        "standardmäßig deaktiviert",
+        "ausdrücklicher Aktivierung",
+        "Kilometerstand",
+        "Zähler",
+        "Geparkt",
+        "Laden aktiv",
+        "MIT-Lizenz",
+    ]:
+        assert text in root_readme
+
+    for text in [
+        "Voraussetzungen",
+        "Installation und erste Einrichtung",
+        "Konfiguration",
+        "Statusdarstellungen",
+        "Parkstatus",
+        "Ladestatus",
+        "Archivierung",
+        "standardmäßig **aus**",
+        "Fehlersuche",
+        "Datenschutz und externe Dienste",
+        "Öffentliche PHP-Befehle",
+        "MIT-Lizenz",
+    ]:
+        assert text in module_readme
+
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert "## 1.0 - 2026-09-06" in changelog
+    assert "## 2." not in changelog
+    assert "Parkstatus" in changelog
+    assert not (ROOT / "docs").exists()
 
 
 if __name__ == "__main__":

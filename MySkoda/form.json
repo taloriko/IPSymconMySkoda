@@ -11,7 +11,7 @@
         },
         {
           "type": "Label",
-          "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key. Then copy VIN and API token into this instance."
+          "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key. Then enter VIN and API token here."
         },
         {
           "type": "ValidationTextBox",
@@ -41,13 +41,13 @@
           "type": "NumberSpinner",
           "name": "Interval",
           "caption": "Polling interval",
-          "suffix": " seconds",
+          "suffix": " s",
           "minimum": 180,
           "maximum": 3600
         },
         {
           "type": "Label",
-          "caption": "Recommended: 300 seconds. The module observes the rate-limit headers returned by the API."
+          "caption": "Recommended: 300 seconds. The module observes the rate-limit information returned by the API."
         },
         {
           "type": "CheckBox",
@@ -91,22 +91,26 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Advanced",
+      "caption": "Additional data",
       "expanded": false,
       "items": [
         {
           "type": "CheckBox",
           "name": "ShowDetails",
-          "caption": "Show detail and diagnostic variables"
+          "caption": "Create detail and diagnostic variables"
+        },
+        {
+          "type": "Label",
+          "caption": "Missing detail variables are created when enabled. Existing variables are kept when this option is disabled."
         },
         {
           "type": "CheckBox",
           "name": "EnableChargingHistory",
-          "caption": "Provide charging history chart and logging"
+          "caption": "Set up archiving"
         },
         {
           "type": "Label",
-          "caption": "State of charge, charging limit and charging power are enabled for logging only when they are not already logged. Existing Archive Control settings and recorded data are never changed or deleted."
+          "caption": "After explicit activation, archive logging is configured once for state of charge, charging limit, charging power and mileage. Later Archive Control changes remain untouched."
         }
       ]
     },
@@ -129,12 +133,12 @@
         {
           "type": "Button",
           "caption": "Test connection",
-          "onClick": "echo MSKODA_TestConnection($id) ? 'Connection successful - vehicle data received.' : 'Connection failed - check instance status and API data.';"
+          "onClick": "echo MSKODA_TestConnection($id) ? 'Verbindung erfolgreich - Fahrzeugdaten empfangen.' : 'Verbindung fehlgeschlagen - Instanzstatus und API-Daten prüfen.';"
         },
         {
           "type": "Button",
           "caption": "Update now",
-          "onClick": "MSKODA_Update($id); echo 'Update executed';"
+          "onClick": "MSKODA_Update($id); echo 'Aktualisierung ausgeführt';"
         }
       ]
     },
@@ -144,12 +148,12 @@
         {
           "type": "Button",
           "caption": "Test notification",
-          "onClick": "echo MSKODA_TestNotification($id) ? 'Notification sent.' : 'Notification could not be sent. Check the selected visualization and registered mobile devices.';"
+          "onClick": "echo MSKODA_TestNotification($id) ? 'Mitteilung gesendet.' : 'Mitteilung konnte nicht gesendet werden. Ausgewählte Visualisierung und registrierte Mobilgeräte prüfen.';"
         },
         {
           "type": "Button",
           "caption": "Reload API definition",
-          "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API definition updated' : 'API definition could not be loaded';"
+          "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API-Definition aktualisiert' : 'API-Definition konnte nicht geladen werden';"
         }
       ]
     }
