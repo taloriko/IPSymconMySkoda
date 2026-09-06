@@ -98,6 +98,15 @@
           "type": "CheckBox",
           "name": "ShowDetails",
           "caption": "Show detail and diagnostic variables"
+        },
+        {
+          "type": "CheckBox",
+          "name": "EnableChargingHistory",
+          "caption": "Provide charging history chart and logging"
+        },
+        {
+          "type": "Label",
+          "caption": "State of charge, charging limit and charging power are enabled for logging only when they are not already logged. Existing Archive Control settings and recorded data are never changed or deleted."
         }
       ]
     },
