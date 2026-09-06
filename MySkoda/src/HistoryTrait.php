@@ -59,7 +59,12 @@ trait MySkodaHistoryTrait
 
     private function ensureChargingChart(array $variables): bool
     {
-        $existing = @IPS_GetObjectIDByIdent(self::CHARGING_HISTORY_IDENT, $this->InstanceID);
+        $chartsGroupId = $this->getGroupId('charts');
+        if ($chartsGroupId <= 0) {
+            return false;
+        }
+
+        $existing = @IPS_GetObjectIDByIdent(self::CHARGING_HISTORY_IDENT, $chartsGroupId);
         if ($existing !== false) {
             if (!IPS_MediaExists($existing)) {
                 $this->LogMessage(
@@ -73,41 +78,14 @@ trait MySkodaHistoryTrait
 
         $chart = [
             'datasets' => [
-                [
-                    'variableID' => (int) $variables['StateOfCharge'],
-                    'fillColor' => 'clear',
-                    'strokeColor' => '#22c55e',
-                    'timeOffset' => 0,
-                    'title' => $this->Translate('State of charge'),
-                    'axis' => 0
-                ],
-                [
-                    'variableID' => (int) $variables['TargetSOC'],
-                    'fillColor' => 'clear',
-                    'strokeColor' => '#94a3b8',
-                    'timeOffset' => 0,
-                    'title' => $this->Translate('Charging limit'),
-                    'axis' => 0
-                ],
-                [
-                    'variableID' => (int) $variables['ChargePower'],
-                    'fillColor' => 'clear',
-                    'strokeColor' => '#f59e0b',
-                    'timeOffset' => 0,
-                    'title' => $this->Translate('Charging power'),
-                    'axis' => 1
-                ]
+                ['variableID' => (int) $variables['StateOfCharge'], 'fillColor' => 'clear', 'strokeColor' => '#22c55e', 'timeOffset' => 0, 'title' => $this->Translate('State of charge'), 'axis' => 0],
+                ['variableID' => (int) $variables['TargetSOC'], 'fillColor' => 'clear', 'strokeColor' => '#94a3b8', 'timeOffset' => 0, 'title' => $this->Translate('Charging limit'), 'axis' => 0],
+                ['variableID' => (int) $variables['ChargePower'], 'fillColor' => 'clear', 'strokeColor' => '#f59e0b', 'timeOffset' => 0, 'title' => $this->Translate('Charging power'), 'axis' => 1]
             ],
             'type' => 'line',
             'axes' => [
-                [
-                    'profile' => '~Intensity.100',
-                    'side' => 'left'
-                ],
-                [
-                    'profile' => '~Power',
-                    'side' => 'right'
-                ]
+                ['profile' => '~Intensity.100', 'side' => 'left'],
+                ['profile' => '~Power', 'side' => 'right']
             ]
         ];
 
@@ -117,11 +95,11 @@ trait MySkodaHistoryTrait
         }
 
         $chartId = IPS_CreateMedia(4);
-        IPS_SetParent($chartId, $this->InstanceID);
+        IPS_SetParent($chartId, $chartsGroupId);
         IPS_SetIdent($chartId, self::CHARGING_HISTORY_IDENT);
         IPS_SetName($chartId, $this->Translate('Charging history'));
         IPS_SetIcon($chartId, 'Graph');
-        IPS_SetPosition($chartId, 1000);
+        IPS_SetPosition($chartId, 10);
         IPS_SetMediaFile($chartId, 'media/' . $chartId . '.chart', false);
         IPS_SetMediaContent($chartId, base64_encode($content));
         return true;

@@ -16,6 +16,8 @@ trait MySkodaVariablesTrait
 
     private function registerVariables(): void
     {
+        $this->ensureObjectGroups();
+
         foreach ($this->coreVariableDefinitions() as $definition) {
             $this->registerVariableOnce($definition);
         }
@@ -25,6 +27,8 @@ trait MySkodaVariablesTrait
                 $this->registerVariableOnce($definition);
             }
         }
+
+        $this->organizeModuleObjects();
     }
 
     private function coreVariableDefinitions(): array
@@ -160,15 +164,15 @@ trait MySkodaVariablesTrait
         if ($definition['initialValue'] !== null && @$this->GetIDForIdent($ident) !== false) {
             $this->SetValue($ident, $definition['initialValue']);
         }
+
+        $this->placeVariableInGroup($ident);
     }
 
     private function applyActions(): void
     {
         $enabled = $this->ReadPropertyBoolean('EnableRemote');
         foreach (['Charging', 'TargetSOC', 'ChargeMode', 'Climate', 'TargetTemperature'] as $ident) {
-            if (@$this->GetIDForIdent($ident) !== false) {
-                $this->MaintainAction($ident, $enabled);
-            }
+            $this->maintainGroupedAction($ident, $enabled);
         }
     }
 

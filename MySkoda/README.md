@@ -5,6 +5,7 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 ## Funktionsumfang
 
 - Fahrzeugstatus und Fahrzeugdaten über die MySkoda Public API
+- thematische Gruppierung der Datenpunkte unter Dummy-Instanzen mit Namen und Icons
 - stabile Variablen-Idents für Skripte und weitere Module
 - Laden und Klimatisierung über Variablenaktionen
 - Ladelimit und Lademodus, sofern vom Fahrzeug unterstützt
@@ -23,14 +24,6 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 - MySkoda API-Key
 - optional S-PIN für Standheizung
 - Archive Control für den optionalen Ladeverlauf
-
-### API-Key erstellen
-
-In der **MySkoda App**:
-
-**Profil → Smart Home → Create Key → Namen vergeben → FIN/VIN und API-Token in die Symcon-Instanz übernehmen.**
-
-Nach dem Übernehmen prüft das Modul die Verbindung und zeigt das Ergebnis im Instanzformular.
 
 ## Installation
 
@@ -57,32 +50,64 @@ Anschließend eine Instanz **MySkoda** anlegen.
 | Detail-/Diagnosevariablen | legt zusätzliche Datenpunkte an | aus |
 | Ladeverlauf und Aufzeichnung | initialisiert Diagramm und Logging | an |
 
+## Objektstruktur
+
+Die Datenpunkte werden funktional unter Dummy-Instanzen einsortiert:
+
+```text
+MySkoda
+├─ Fahrzeug
+├─ Fahrzeugstatus
+├─ Laden
+├─ Klimatisierung
+├─ Standort
+├─ API & Diagnose
+├─ Diagramme
+│  └─ Ladeverlauf
+└─ Letzte Aktualisierung
+```
+
+Die Gruppen besitzen feste Idents und Darstellungen:
+
+| Gruppe | Ident | Icon |
+|---|---|---|
+| Fahrzeug | `MSKODA_GroupVehicle` | Car |
+| Fahrzeugstatus | `MSKODA_GroupStatus` | Lock |
+| Laden | `MSKODA_GroupCharging` | Electricity |
+| Klimatisierung | `MSKODA_GroupClimate` | Temperature |
+| Standort | `MSKODA_GroupLocation` | Location |
+| API & Diagnose | `MSKODA_GroupDiagnostics` | Gear |
+| Diagramme | `MSKODA_GroupCharts` | Graph |
+| Letzte Aktualisierung | `MSKODA_GroupLastUpdate` | Clock |
+
 ## Variablen und stabile Idents
 
-Die Datenvariablen liegen direkt unter der MySkoda-Instanz. Der `Ident` ist die stabile technische Schnittstelle für Skripte und weitere Module.
+Der `Ident` einer Fahrzeugvariable ist die stabile technische Schnittstelle für Skripte und weitere Module. Die Gruppierung unter Dummy-Instanzen ändert den Variablen-Ident nicht.
 
-Eine Variable wird nur registriert, solange ihr Ident noch nicht existiert. Sobald sie angelegt ist, registriert MySkoda deren Name, Position und Darstellung nicht erneut. Dadurch können diese Eigenschaften in IP-Symcon angepasst werden, ohne dass eine spätere Modulaktualisierung sie zurücksetzt.
+Ein Visualisierungsmodul kann die Datenpunkte rekursiv unterhalb der MySkoda-Instanz über diese Idents erkennen. Die Objekt-ID einer bestehenden Variable bleibt bei normalem Betrieb erhalten.
+
+Eine Variable wird nur registriert, solange ihr Ident noch nicht existiert. Sobald sie angelegt ist, registriert MySkoda Name, Position und Darstellung nicht erneut. Benutzeranpassungen an diesen Eigenschaften werden durch spätere Modulaktualisierungen nicht überschrieben. Noch ungruppierte Modulvariablen werden ihrer vorgesehenen Dummy-Instanz zugeordnet; bereits anderweitig einsortierte Variablen werden nicht erneut verschoben.
 
 Die Fahrzeugwerte selbst werden bei jedem erfolgreichen Abruf aktualisiert.
 
 ### Standard-Datenpunkte
 
-| Ident | Datentyp | Bedeutung | Bedienbar |
-|---|---|---|---:|
-| `StateOfCharge` | Integer | Ladezustand in % | Nein |
-| `Range` | Integer | Restreichweite in km | Nein |
-| `Mileage` | Integer | Kilometerstand in km | Nein |
-| `Locked` | Boolean | Fahrzeug verriegelt | Nein |
-| `DoorsOpen` | Boolean | mindestens eine Tür offen | Nein |
-| `WindowsOpen` | Boolean | mindestens ein Fenster offen | Nein |
-| `Charging` | Boolean | Ladevorgang | Ja |
-| `ChargePower` | Float | Ladeleistung in W | Nein |
-| `TargetSOC` | Integer | Ladelimit in % | Ja |
-| `ChargeMode` | Integer | Lademodus | Ja |
-| `Climate` | Boolean | Klimatisierung | Ja |
-| `TargetTemperature` | Float | Klima-Solltemperatur in °C | Ja |
-| `ApiKeyWarning` | Boolean | API-Key läuft in höchstens 30 Tagen ab | Nein |
-| `LastUpdate` | Integer | Zeitpunkt der letzten erfolgreichen Abfrage | Nein |
+| Ident | Datentyp | Gruppe | Bedeutung | Bedienbar |
+|---|---|---|---|---:|
+| `StateOfCharge` | Integer | Fahrzeug | Ladezustand in % | Nein |
+| `Range` | Integer | Fahrzeug | Restreichweite in km | Nein |
+| `Mileage` | Integer | Fahrzeug | Kilometerstand in km | Nein |
+| `Locked` | Boolean | Fahrzeugstatus | Fahrzeug verriegelt | Nein |
+| `DoorsOpen` | Boolean | Fahrzeugstatus | mindestens eine Tür offen | Nein |
+| `WindowsOpen` | Boolean | Fahrzeugstatus | mindestens ein Fenster offen | Nein |
+| `Charging` | Boolean | Laden | Ladevorgang | Ja |
+| `ChargePower` | Float | Laden | Ladeleistung in W | Nein |
+| `TargetSOC` | Integer | Laden | Ladelimit in % | Ja |
+| `ChargeMode` | Integer | Laden | Lademodus | Ja |
+| `Climate` | Boolean | Klimatisierung | Klimatisierung | Ja |
+| `TargetTemperature` | Float | Klimatisierung | Klima-Solltemperatur in °C | Ja |
+| `ApiKeyWarning` | Boolean | API & Diagnose | API-Key läuft in höchstens 30 Tagen ab | Nein |
+| `LastUpdate` | Integer | Letzte Aktualisierung | Zeitpunkt der letzten erfolgreichen Abfrage | Nein |
 
 ### Optionale Datenpunkte
 
@@ -94,7 +119,7 @@ Einmal angelegte Detailvariablen bleiben bestehen und werden weiter mit aktuelle
 
 ### Lademodus
 
-`ChargeMode` verwendet feste Integerwerte, damit der Datenpunkt unabhängig von der Reihenfolge der API-Antwort stabil bleibt:
+`ChargeMode` verwendet feste Integerwerte:
 
 | Wert | Modus |
 |---:|---|
@@ -115,7 +140,7 @@ Wenn **Ladeverlauf und Aufzeichnung** aktiviert ist, initialisiert das Modul ein
 - Logging für `StateOfCharge`
 - Logging für `TargetSOC`
 - Logging für `ChargePower`
-- das Diagramm `MSKODA_ChargingHistory`
+- das Diagramm `MSKODA_ChargingHistory` unter **Diagramme**
 
 Bereits aktives Logging wird nicht neu konfiguriert. Nach erfolgreicher Initialisierung verändert das Modul weder die Archiv-Einstellungen noch die Diagrammkonfiguration erneut.
 
@@ -124,10 +149,6 @@ Im Diagramm liegen Ladezustand und Ladelimit auf der linken Prozent-Achse; die L
 ## Standortdaten
 
 Standortdaten werden nur bereitgestellt, wenn die MySkoda API sie für das verwendete Profil liefert. Fehlen Koordinaten in einer Antwort, werden vorhandene optionale Standortvariablen auf `0.0` gesetzt.
-
-## Mitteilungen
-
-Für API-Key-Warnungen kann eine Symcon-Visualisierungsinstanz als Mitteilungsziel ausgewählt werden. Das Modul prüft das gewählte Ziel vor dem Versand.
 
 ## PHP-Befehle
 

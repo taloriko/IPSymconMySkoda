@@ -7,10 +7,11 @@ IP-Symcon-Modul zur Anbindung eines Fahrzeugs an die offizielle **MySkoda Public
 - Fahrzeugdaten über FIN/VIN und MySkoda API-Key
 - zyklischer Abruf mit Berücksichtigung von Rate-Limit und `Retry-After`
 - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
-- Ladezustand, Ladeleistung, Ladelimit und Lademodus
+- Ladeleistung, Ladelimit und Lademodus
 - Klimatisierung sowie unterstützte Remote-Funktionen
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
+- thematische Objektstruktur über Dummy-Instanzen mit Namen und Icons
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
 - optionaler Ladeverlauf mit Symcon Archive Control
 - stabile Variablen-Idents als Schnittstelle für Skripte und Visualisierungsmodule
@@ -43,13 +44,28 @@ In der **MySkoda App**:
 
 Nach dem Übernehmen prüft das Modul die Verbindung zur MySkoda Public API.
 
-## Schnittstelle für Visualisierungen
+## Objektstruktur und Visualisierungsschnittstelle
 
-Alle Fahrzeugdaten werden als direkte Variablen der MySkoda-Instanz angelegt. Jeder Datenpunkt besitzt einen festen `Ident`, zum Beispiel `StateOfCharge`, `Range`, `Charging`, `TargetSOC` oder `Climate`.
+Die Datenpunkte werden unter thematischen Dummy-Instanzen einsortiert:
 
-Diese Idents sind die vorgesehene Schnittstelle für Skripte und weitere Module. Ein Visualisierungsmodul kann die benötigten Variablen dadurch direkt über die MySkoda-Instanz ermitteln.
+```text
+MySkoda
+├─ Fahrzeug
+├─ Fahrzeugstatus
+├─ Laden
+├─ Klimatisierung
+├─ Standort
+├─ API & Diagnose
+├─ Diagramme
+│  └─ Ladeverlauf
+└─ Letzte Aktualisierung
+```
 
-Die Darstellung einer vorhandenen Variable wird bei späteren Modulaktualisierungen nicht erneut registriert. Benutzeranpassungen an Name, Position oder Darstellung bleiben damit erhalten; aktualisiert wird nur der Datenwert.
+Die Gruppen besitzen feste technische Idents sowie passende Namen und Icons. Die Fahrzeugwerte behalten unabhängig von der Gruppierung ihre festen Variablen-Idents, zum Beispiel `StateOfCharge`, `Range`, `Charging`, `TargetSOC` oder `Climate`.
+
+Diese Variablen-Idents sind die vorgesehene Schnittstelle für Skripte und weitere Module. Ein Visualisierungsmodul kann die benötigten Werte rekursiv unterhalb der MySkoda-Instanz über ihre Idents ermitteln.
+
+Eine vorhandene Variable wird bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden deshalb nur bei der Erstanlage gesetzt und danach nicht durch Updates überschrieben. Die thematische Zuordnung wird nur für noch ungruppierte Modulobjekte hergestellt.
 
 ## Hinweis
 
