@@ -54,7 +54,7 @@ Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul wertet die von de
 
 ## Objektstruktur
 
-Das Modul hält den Objektbaum bewusst einfach. Unter der MySkoda-Instanz liegen ausschließlich die echten Modulvariablen:
+Das Modul hält den Objektbaum bewusst einfach. Unter der MySkoda-Instanz liegen ausschließlich die echten Modulvariablen. Es werden **keine Dummy-Instanzen**, Kategorien oder Links angelegt.
 
 ```text
 MySkoda
