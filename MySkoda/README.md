@@ -10,6 +10,7 @@ Gerätemodul für IP-Symcon zur Anbindung eines Škoda-Fahrzeugs an die offiziel
 - Ladelimit und Lademodus, sofern vom Fahrzeug unterstützt
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
+- automatische Erkennung zusätzlicher, noch nicht integrierter OpenAPI-Funktionen
 - optionale Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nach ausdrücklicher Aktivierung
 - API-Key-Ablaufwarnung 30 Tage vor Ablauf
 - optionale Symcon-Mitteilung über eine ausgewählte Visualisierungsinstanz
@@ -78,6 +79,7 @@ Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut reg
 | `Climate` | Klimatisierung | Boolean | Ja |
 | `TargetTemperature` | Solltemperatur | Float | Ja |
 | `ApiKeyWarning` | API-Key Warnung | Boolean | Nein |
+| `NewApiFeatures` | Neue API-Funktionen | Integer | Nein |
 | `LastUpdate` | Letzte Aktualisierung | Integer | Nein |
 
 ### Optionale Datenpunkte
@@ -103,6 +105,21 @@ Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden fehlende
 | `PartialErrors` | API-Teilfehler |
 
 Einmal angelegte Detailvariablen bleiben bestehen. Das Deaktivieren der Option löscht keine Variablen.
+
+## Neue API-Funktionen erkennen
+
+Nach einer erfolgreichen Fahrzeugabfrage prüft das Modul zusätzlich die öffentliche OpenAPI-Definition der MyŠkoda Public API. Die Definition wird intern für 24 Stunden zwischengespeichert. Dadurch wird die Prüfung nicht bei jedem Fahrzeugabruf erneut aus dem Internet geladen und sie verbraucht kein fahrzeugbezogenes API-Kontingent.
+
+Die Variable `NewApiFeatures` zeigt an, ob die API Operationen enthält, die Version 1.0 noch nicht als Modul-Funktion kennt:
+
+| Wert | Bedeutung |
+|---:|---|
+| `0` | keine zusätzlichen API-Operationen erkannt |
+| `> 0` | zusätzliche, noch nicht integrierte API-Operationen erkannt |
+
+Das Modul erzeugt aus neu gefundenen API-Funktionen **keine automatischen Variablen** und keine zusätzlichen Objekte. Neue Datenpunkte werden erst mit einer neuen Modulversion definiert. Damit bleiben Ident, Datentyp, Übersetzung, Darstellung und Verhalten der Modulvariablen kontrolliert und versionsfest.
+
+Beim frischen Laden der OpenAPI-Definition werden unbekannte Operationen zusätzlich unter **Debug → API discovery** ausgegeben. Der Button **API-Definition neu laden** stößt die Prüfung unabhängig vom 24-Stunden-Cache manuell an.
 
 ## Statusdarstellungen
 
@@ -165,7 +182,7 @@ Es wird kein eigenes Diagramm und kein zusätzliches Medienobjekt angelegt. Die 
 
 ## Standortdaten
 
-Standortdaten werden nur bereitgestellt, wenn die MySkoda API sie für das Fahrzeug liefert. Fehlen Koordinaten in einer Antwort, werden vorhandene optionale Standortvariablen auf `0.0` gesetzt.
+Standortdaten werden nur bereitgestellt, wenn die MySkoda API sie für das Fahrzeug und den jeweiligen Benutzer liefert. Bei Fahrzeugen mit mehreren Benutzern sind Standortdaten nur sichtbar, wenn der jeweilige Benutzer die Standortfreigabe erteilt hat. Fehlen Koordinaten in einer Antwort, werden vorhandene optionale Standortvariablen auf `0.0` gesetzt.
 
 ## Öffentliche PHP-Befehle
 
@@ -201,14 +218,17 @@ $ok = MSKODA_TestNotification(12345);
 - **Keine Verbindung:** FIN/VIN und API-Token prüfen und anschließend **Verbindung testen** ausführen.
 - **Status 203:** Das API-Rate-Limit oder eine von der API vorgegebene Wartezeit ist aktiv. Das Modul wartet automatisch.
 - **Einzelne Werte fehlen:** Nicht jedes Fahrzeug bzw. jeder MySkoda-Dienst liefert alle API-Funktionen. Optionale Werte werden nur dargestellt, wenn die API sie bereitstellt.
+- **Neue API-Funktionen > 0:** Die öffentliche API enthält neue Operationen. Prüfen, ob eine neuere Modulversion verfügbar ist; Entwickler können die unbekannten Operationen im Debug unter `API discovery` sehen.
 - **Remote-Befehl nicht verfügbar:** Fahrzeugfähigkeiten, MySkoda-Dienste und ggf. S-PIN prüfen.
-- **Breiten/Längengrad zeigen 0"** Ein Auto kann mehrere Benutzer haben, nur wenn der jeweilige Benutzer Standortdaten freigegebn hat sind diese sichtbar.
+- **Breiten-/Längengrad zeigen 0:** Ein Fahrzeug kann mehrere Benutzer haben. Standortdaten sind nur sichtbar, wenn der jeweilige Benutzer die Standortfreigabe erteilt hat.
 
 Bei Fehlermeldungen niemals API-Key, S-PIN oder vollständige FIN öffentlich posten.
 
 ## Datenschutz und externe Dienste
 
 Das Modul kommuniziert direkt mit der offiziellen MyŠkoda Public API. Dafür werden die in der Instanz hinterlegte FIN/VIN und der API-Token für die notwendigen API-Anfragen verwendet. Remote-Befehle werden nur bei Benutzeraktion oder über die dokumentierten Modulmethoden ausgelöst.
+
+Zusätzlich lädt das Modul die öffentliche OpenAPI-Definition der MyŠkoda Public API, um neue API-Funktionen erkennen zu können. Für diesen Abruf wird kein Fahrzeug-API-Key übertragen.
 
 ## Lizenz und Markenhinweis
 
