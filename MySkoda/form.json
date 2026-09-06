@@ -41,7 +41,7 @@
           "type": "NumberSpinner",
           "name": "Interval",
           "caption": "Polling interval",
-          "suffix": " Sekunden",
+          "suffix": " s",
           "minimum": 180,
           "maximum": 3600
         },
@@ -106,11 +106,11 @@
         {
           "type": "CheckBox",
           "name": "EnableChargingHistory",
-          "caption": "Enable archiving"
+          "caption": "Set up archiving"
         },
         {
           "type": "Label",
-          "caption": "Archives state of charge, charging limit, charging power and mileage. Mileage is stored as a counter; values less than or equal to 0 are discarded."
+          "caption": "After explicit activation, archive logging is configured once for state of charge, charging limit, charging power and mileage. Later Archive Control changes remain untouched."
         }
       ]
     },
