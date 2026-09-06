@@ -10,7 +10,6 @@ Gerätemodul für IP-Symcon zur Anbindung eines Škoda-Fahrzeugs an die offiziel
 - Ladelimit und Lademodus, sofern vom Fahrzeug unterstützt
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
-- deutsche Darstellung von Lade- und Parkstatus bei unveränderten API-Rohwerten
 - optionale Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nach ausdrücklicher Aktivierung
 - API-Key-Ablaufwarnung 30 Tage vor Ablauf
 - optionale Symcon-Mitteilung über eine ausgewählte Visualisierungsinstanz
@@ -203,6 +202,7 @@ $ok = MSKODA_TestNotification(12345);
 - **Status 203:** Das API-Rate-Limit oder eine von der API vorgegebene Wartezeit ist aktiv. Das Modul wartet automatisch.
 - **Einzelne Werte fehlen:** Nicht jedes Fahrzeug bzw. jeder MySkoda-Dienst liefert alle API-Funktionen. Optionale Werte werden nur dargestellt, wenn die API sie bereitstellt.
 - **Remote-Befehl nicht verfügbar:** Fahrzeugfähigkeiten, MySkoda-Dienste und ggf. S-PIN prüfen.
+- **Breiten/Längengrad zeigen 0"** Ein Auto kann mehrere Benutzer haben, nur wenn der jeweilige Benutzer Standortdaten freigegebn hat sind diese sichtbar.
 
 Bei Fehlermeldungen niemals API-Key, S-PIN oder vollständige FIN öffentlich posten.
 
