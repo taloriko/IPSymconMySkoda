@@ -5,10 +5,13 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 ## 1. Funktionsumfang
 
 - Fahrzeugstatus über die offizielle MySkoda Public API
-- kompakter Standard-Datenpunktbestand
+- thematisch gruppierte Datenpunkte unter Dummy-Instanzen
+- stabile Variablen-Idents für Skripte und externe Visualisierungen
 - optionale Detail- und Diagnosevariablen
 - Laden und Klimatisierung über Variablenaktionen
 - Ladelimit und Lademodus, sofern Fahrzeug und API dies unterstützen
+- kombinierter Ladeverlauf aus Ladezustand, Ladelimit und Ladeleistung
+- automatische Aktivierung der benötigten Archivierung, sofern noch kein Logging besteht
 - PHP-Befehle für Standheizung, aktive Lüftung und Ladeprofil-Updates
 - vollständige API-Antwort über `MSKODA_GetRawData()`
 - Rate-Limit- und `Retry-After`-Behandlung
@@ -23,6 +26,7 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 - MySkoda API-Key
 - optional S-PIN für Standheizung
 - für die gewünschte Funktion aktive MySkoda/Škoda-Connect-Dienste
+- Archive Control für den optionalen Ladeverlauf
 
 ### API-Key erstellen
 
@@ -55,6 +59,21 @@ Anschließend eine Instanz **MySkoda** anlegen.
 | API-Key Ablaufwarnung | Push bei höchstens 30 Tagen Restlaufzeit | aus |
 | Visualisierung für Mitteilungen | ausgewählte Symcon-Visualisierungsinstanz | keine |
 | Detail-/Diagnosevariablen | zusätzliche Fahrzeug- und API-Daten | aus |
+| Lade-Diagramm und Aufzeichnung | stellt den kombinierten Ladeverlauf bereit | an |
+
+### Ladeverlauf und Archivierung
+
+Für den Ladeverlauf werden genau diese drei Variablen verwendet:
+
+- `StateOfCharge` – Ladezustand, linke Y-Achse in %
+- `TargetSOC` – Ladelimit, linke Y-Achse in %
+- `ChargePower` – Ladeleistung, rechte Y-Achse
+
+Beim Anwenden der Instanz prüft das Modul für jede dieser Variablen den Logging-Status im Archive Control. **Nur wenn eine Variable noch nicht geloggt wird, wird das Logging aktiviert.**
+
+Bestehende Archiveinstellungen werden nicht verändert. Insbesondere ändert das Modul keine Aggregationsart, Kompaktierung oder sonstige benutzerspezifische Archiveinstellungen. Vorhandene Archivdaten werden weder verändert noch gelöscht. Ein bereits vorhandenes Lade-Diagramm wird ebenfalls nicht überschrieben.
+
+Wird die Option später deaktiviert, löscht das Modul weder Archivdaten noch eine bereits angelegte Diagrammkonfiguration.
 
 ### Standortfreigabe
 
@@ -62,7 +81,26 @@ Standortdaten werden von der MySkoda API nur geliefert, wenn im verwendeten **My
 
 Fehlen Standortdaten, schreibt das Modul `0.0` für Breitengrad und `0.0` für Längengrad. Dadurch bleiben keine veralteten Koordinaten aus einem früheren Abruf stehen.
 
-## 5. Standard-Datenpunkte
+## 5. Objektstruktur und Datenpunkte
+
+Die Statusvariablen werden thematisch unter Dummy-Instanzen einsortiert:
+
+```text
+MySkoda
+├─ Fahrzeug
+├─ Fahrzeugstatus
+├─ Laden
+│  └─ Diagramme
+│     └─ Ladeverlauf
+├─ Klimatisierung
+├─ Standort
+├─ API & Diagnose
+└─ Letzte Aktualisierung
+```
+
+Die Gruppierung ändert weder die Objekt-ID noch den Ident einer bestehenden Statusvariable. Externe Skripte und Visualisierungen können daher weiterhin mit den stabilen Idents arbeiten. Die herstellerunabhängige EV-Tile-Visualisierung kann die Variablen rekursiv unterhalb der MySkoda-Instanz erkennen.
+
+### Standard-Datenpunkte
 
 | Ident | Bedeutung | Bedienbar |
 |---|---|---:|
@@ -88,6 +126,8 @@ Bei aktivierten Detailvariablen werden zusätzlich unter anderem Fahrzeugname, K
 Das Modul legt keine Legacy-Variablenprofile und keine globalen eigenen Darstellungs-Vorlagen an. Die Darstellungen werden direkt über native Symcon-8.x-Darstellungen an den moduleigenen Variablen registriert.
 
 Für Hinweiszustände gilt: erwarteter Zustand grün, Hinweis/Aufmerksamkeit orange. Rot wird für normale Statushinweise nicht verwendet.
+
+Der API-Rohwert von `ChargingState` bleibt als Variablenwert erhalten. Bekannte Zustände werden über die native Wertanzeige lesbar lokalisiert, beispielsweise `CONNECT_CABLE` als **Ladekabel anschließen** und `CHARGING` als **Lädt**.
 
 ## 6. Mitteilungen
 
