@@ -56,27 +56,17 @@ trait MySkodaStructureTrait
         'LastUpdate' => 'lastUpdate'
     ];
 
-    /**
-     * Keeps registered status variables directly below the module instance.
-     * IPSModuleStrict requires this layout for protected read-only variables.
-     */
     private function ensureObjectGroups(): void
     {
-        $this->restoreManagedVariablesToModuleRoot();
-
         foreach (array_keys(self::GROUPS) as $groupKey) {
             $this->getGroupId($groupKey);
         }
     }
 
-    /**
-     * Builds the user-facing grouped view with links to the module variables.
-     * Existing groups and links are left untouched.
-     */
     private function organizeModuleObjects(): void
     {
         foreach (self::VARIABLE_GROUPS as $ident => $groupKey) {
-            $this->ensureVariableLink($ident, $groupKey);
+            $this->placeVariableInGroup($ident);
         }
 
         $chartId = @IPS_GetObjectIDByIdent('MSKODA_ChargingHistory', $this->InstanceID);
@@ -95,82 +85,87 @@ trait MySkodaStructureTrait
             return;
         }
 
-        $this->ensureVariableLink($ident, $groupKey);
+        $variableId = $this->findVariableByIdent($ident);
+        $groupId = $this->getGroupId($groupKey);
+        if ($variableId <= 0 || $groupId <= 0) {
+            return;
+        }
+
+        $linkIdent = self::LINK_IDENT_PREFIX . $ident;
+        $linkId = @IPS_GetObjectIDByIdent($linkIdent, $groupId);
+        if ($linkId !== false && IPS_LinkExists((int) $linkId)) {
+            IPS_DeleteLink((int) $linkId);
+            IPS_SetHidden($variableId, false);
+        }
+
+        if (IPS_GetParent($variableId) !== $groupId) {
+            IPS_SetParent($variableId, $groupId);
+        }
     }
 
     private function maintainGroupedAction(string $ident, bool $enabled): void
     {
-        $variableId = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
-        if ($variableId === false || !IPS_VariableExists((int) $variableId)) {
+        $variableId = $this->findVariableByIdent($ident);
+        if ($variableId <= 0) {
             return;
         }
 
-        $variable = IPS_GetVariable((int) $variableId);
+        $variable = IPS_GetVariable($variableId);
         $actionEnabled = (int) ($variable['VariableAction'] ?? 0) === $this->InstanceID;
         if ($actionEnabled === $enabled) {
             return;
         }
 
-        $this->MaintainAction($ident, $enabled);
-    }
+        $originalParent = IPS_GetParent($variableId);
+        if ($originalParent !== $this->InstanceID) {
+            IPS_SetParent($variableId, $this->InstanceID);
+        }
 
-    private function restoreManagedVariablesToModuleRoot(): void
-    {
-        foreach (array_keys(self::VARIABLE_GROUPS) as $ident) {
-            $directId = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
-            if ($directId !== false && IPS_VariableExists((int) $directId)) {
-                continue;
-            }
-
-            $nestedId = $this->findObjectByIdentRecursive($this->InstanceID, $ident, 0);
-            if ($nestedId <= 0 || !IPS_VariableExists($nestedId)) {
-                continue;
-            }
-
-            if (IPS_GetParent($nestedId) !== $this->InstanceID) {
-                IPS_SetParent($nestedId, $this->InstanceID);
+        try {
+            $this->MaintainAction($ident, $enabled);
+        } finally {
+            if ($originalParent !== $this->InstanceID && IPS_ObjectExists($originalParent)) {
+                IPS_SetParent($variableId, $originalParent);
             }
         }
     }
 
-    private function ensureVariableLink(string $ident, string $groupKey): void
+    protected function GetIDForIdent($Ident)
     {
-        $variableId = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
+        $directId = @parent::GetIDForIdent($Ident);
+        if ($directId !== false) {
+            return $directId;
+        }
+
+        $foundId = $this->findObjectByIdentRecursive($this->InstanceID, (string) $Ident, 0);
+        return $foundId > 0 ? $foundId : false;
+    }
+
+    protected function SetValue($Ident, $Value)
+    {
+        $variableId = $this->GetIDForIdent($Ident);
         if ($variableId === false || !IPS_VariableExists((int) $variableId)) {
-            return;
+            return false;
         }
 
-        $groupId = $this->getGroupId($groupKey);
-        if ($groupId <= 0) {
-            return;
+        SetValue((int) $variableId, $Value);
+        return true;
+    }
+
+    protected function GetValue($Ident)
+    {
+        $variableId = $this->GetIDForIdent($Ident);
+        if ($variableId === false || !IPS_VariableExists((int) $variableId)) {
+            return null;
         }
 
-        $linkIdent = self::LINK_IDENT_PREFIX . $ident;
-        $existingId = @IPS_GetObjectIDByIdent($linkIdent, $groupId);
-        if ($existingId !== false) {
-            if (!IPS_LinkExists((int) $existingId)) {
-                $this->SendDebug('Structure', 'Ident ' . $linkIdent . ' is already used by another object.', 0);
-                return;
-            }
+        return GetValue((int) $variableId);
+    }
 
-            $link = IPS_GetLink((int) $existingId);
-            if ((int) ($link['TargetID'] ?? 0) !== (int) $variableId) {
-                $this->SendDebug('Structure', 'Link ' . $linkIdent . ' points to another object.', 0);
-            }
-            return;
-        }
-
-        $variableObject = IPS_GetObject((int) $variableId);
-        $linkId = IPS_CreateLink();
-        IPS_SetParent($linkId, $groupId);
-        IPS_SetIdent($linkId, $linkIdent);
-        IPS_SetName($linkId, IPS_GetName((int) $variableId));
-        IPS_SetPosition($linkId, (int) ($variableObject['ObjectPosition'] ?? 0));
-        IPS_SetLinkTargetID($linkId, (int) $variableId);
-
-        // The source variable remains technically attached to the module and is
-        // hidden only when its grouped link is created for the first time.
-        IPS_SetHidden((int) $variableId, true);
+    private function findVariableByIdent(string $ident): int
+    {
+        $objectId = $this->GetIDForIdent($ident);
+        return $objectId !== false && IPS_VariableExists((int) $objectId) ? (int) $objectId : 0;
     }
 
     private function getGroupId(string $groupKey): int
