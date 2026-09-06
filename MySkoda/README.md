@@ -32,9 +32,10 @@ Nach der Installation eine Instanz **MySkoda** anlegen.
 
 1. In der MySkoda App unter **Profil → Smart Home → Schlüssel erstellen** einen API-Key erzeugen.
 2. FIN/VIN und API-Token in der Instanz eintragen.
-3. Konfiguration übernehmen.
-4. Über **Verbindung testen** den Datenabruf prüfen.
-5. Optional Detailvariablen, Mitteilungen und Archivierung aktivieren.
+3. Im sichtbaren Abschnitt **Archivierung** bei Bedarf **Fahrzeugdaten archivieren** aktivieren.
+4. Konfiguration übernehmen.
+5. Über **Verbindung testen** den Datenabruf prüfen.
+6. Optional Detailvariablen und Mitteilungen aktivieren.
 
 Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul berücksichtigt die von der API gelieferten Rate-Limit-Informationen und `Retry-After`. Dadurch wird ein aktives API-Limit nicht durch weitere unnötige Anfragen belastet.
 
@@ -48,10 +49,10 @@ Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul berücksichtigt d
 | Remote-Steuerung | erlaubt Lade- und Klimabefehle | an |
 | Klima ohne externe Stromversorgung | Übergabe an die MySkoda-Klimafunktion | an |
 | S-PIN | optional für Standheizung | leer |
+| Fahrzeugdaten archivieren | richtet das Logging nach ausdrücklicher Aktivierung einmalig ein | aus |
 | API-Key-Ablaufwarnung | Mitteilung bei höchstens 30 Tagen Restlaufzeit | aus |
 | Visualisierung für Mitteilungen | Ziel für Symcon-Mitteilungen | keine |
 | Detail-/Diagnosevariablen | legt zusätzliche Datenpunkte an | aus |
-| Archivierung einrichten | richtet das Logging nach ausdrücklicher Aktivierung einmalig ein | aus |
 
 ## Objektstruktur
 
@@ -150,7 +151,7 @@ Vor dem Senden prüft das Modul die vom Fahrzeug gemeldeten verfügbaren Lademod
 
 ## Archivierung
 
-Die Archivierung ist standardmäßig **aus**. Erst wenn **Archivierung einrichten** vom Benutzer bewusst aktiviert und die Konfiguration übernommen wird, konfiguriert das Modul einmalig folgende Variablen im Archive Control:
+Die Archivierung ist standardmäßig **aus**. Der Abschnitt **Archivierung** ist bei der Einrichtung sichtbar. Erst wenn **Fahrzeugdaten archivieren** vom Benutzer bewusst aktiviert und die Konfiguration übernommen wird, konfiguriert das Modul einmalig folgende Variablen im Archive Control:
 
 - `StateOfCharge` – Ladezustand
 - `TargetSOC` – Ladelimit
