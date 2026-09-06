@@ -41,7 +41,7 @@
           "type": "NumberSpinner",
           "name": "Interval",
           "caption": "Polling interval",
-          "suffix": " seconds",
+          "suffix": " Sekunden",
           "minimum": 180,
           "maximum": 3600
         },
@@ -133,12 +133,12 @@
         {
           "type": "Button",
           "caption": "Test connection",
-          "onClick": "echo MSKODA_TestConnection($id) ? 'Connection successful - vehicle data received.' : 'Connection failed - check instance status and API data.';"
+          "onClick": "echo MSKODA_TestConnection($id) ? 'Verbindung erfolgreich - Fahrzeugdaten empfangen.' : 'Verbindung fehlgeschlagen - Instanzstatus und API-Daten prüfen.';"
         },
         {
           "type": "Button",
           "caption": "Update now",
-          "onClick": "MSKODA_Update($id); echo 'Update executed';"
+          "onClick": "MSKODA_Update($id); echo 'Aktualisierung ausgeführt';"
         }
       ]
     },
@@ -148,12 +148,12 @@
         {
           "type": "Button",
           "caption": "Test notification",
-          "onClick": "echo MSKODA_TestNotification($id) ? 'Notification sent.' : 'Notification could not be sent. Check the selected visualization and registered mobile devices.';"
+          "onClick": "echo MSKODA_TestNotification($id) ? 'Mitteilung gesendet.' : 'Mitteilung konnte nicht gesendet werden. Ausgewählte Visualisierung und registrierte Mobilgeräte prüfen.';"
         },
         {
           "type": "Button",
           "caption": "Reload API definition",
-          "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API definition updated' : 'API definition could not be loaded';"
+          "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API-Definition aktualisiert' : 'API-Definition konnte nicht geladen werden';"
         }
       ]
     }
