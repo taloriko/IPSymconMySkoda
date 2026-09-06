@@ -14,7 +14,8 @@ trait MySkodaStructureTrait
         'climate' => ['ident' => 'MSKODA_GroupClimate', 'name' => 'Air conditioning', 'icon' => 'Temperature', 'position' => 400],
         'location' => ['ident' => 'MSKODA_GroupLocation', 'name' => 'Location', 'icon' => 'Location', 'position' => 500],
         'diagnostics' => ['ident' => 'MSKODA_GroupDiagnostics', 'name' => 'API and diagnostics', 'icon' => 'Gear', 'position' => 600],
-        'lastUpdate' => ['ident' => 'MSKODA_GroupLastUpdate', 'name' => 'Last update', 'icon' => 'Clock', 'position' => 700]
+        'charts' => ['ident' => 'MSKODA_GroupCharts', 'name' => 'Charts', 'icon' => 'Graph', 'position' => 700],
+        'lastUpdate' => ['ident' => 'MSKODA_GroupLastUpdate', 'name' => 'Last update', 'icon' => 'Clock', 'position' => 800]
     ];
 
     private const VARIABLE_GROUPS = [
@@ -63,9 +64,10 @@ trait MySkodaStructureTrait
 
     public function ApplyChanges(): void
     {
-        // RegisterVariable* and MaintainAction work on direct children. Keep the
-        // existing variable objects/IDs, move them temporarily to the instance
-        // root for registration and restore the thematic structure afterwards.
+        // RegisterVariable* and MaintainAction expect module variables directly
+        // below the instance. Existing variables are therefore moved to the
+        // registration root only for ApplyChanges and then restored to their
+        // thematic dummy instances. Object IDs and variable idents stay stable.
         $this->prepareManagedVariablesForRegistration();
         $this->applyChangesCoreV22();
         $this->organizeManagedObjects();
@@ -103,9 +105,9 @@ trait MySkodaStructureTrait
         }
 
         if ($this->ReadPropertyBoolean('EnableChargingHistory')) {
-            $chargingGroup = (int) ($groups['charging'] ?? 0);
-            if ($chargingGroup > 0) {
-                $this->ensureChargingHistory($chargingGroup);
+            $chartsGroup = (int) ($groups['charts'] ?? 0);
+            if ($chartsGroup > 0) {
+                $this->ensureChargingHistory($chartsGroup);
             }
         }
     }
@@ -210,11 +212,20 @@ trait MySkodaStructureTrait
     {
         $existing = @IPS_GetObjectIDByIdent($ident, $parentId);
         if ($existing !== false && $this->isDummyInstance((int) $existing)) {
+            IPS_SetName((int) $existing, $name);
+            IPS_SetIcon((int) $existing, $icon);
+            IPS_SetPosition((int) $existing, $position);
             return (int) $existing;
         }
 
         $recursive = $this->findObjectByIdentRecursive($this->InstanceID, $ident, 0);
         if ($recursive > 0 && $this->isDummyInstance($recursive)) {
+            if (IPS_GetParent($recursive) !== $parentId) {
+                IPS_SetParent($recursive, $parentId);
+            }
+            IPS_SetName($recursive, $name);
+            IPS_SetIcon($recursive, $icon);
+            IPS_SetPosition($recursive, $position);
             return $recursive;
         }
 
@@ -241,19 +252,8 @@ trait MySkodaStructureTrait
         return (string) ($instance['ModuleInfo']['ModuleID'] ?? '') === self::DUMMY_MODULE_ID;
     }
 
-    private function ensureChargingHistory(int $chargingGroup): void
+    private function ensureChargingHistory(int $chartsGroup): void
     {
-        $chartGroup = $this->ensureDummy(
-            $chargingGroup,
-            'MSKODA_GroupCharts',
-            $this->Translate('Charts'),
-            'Graph',
-            900
-        );
-        if ($chartGroup <= 0) {
-            return;
-        }
-
         $archiveId = $this->getArchiveControlId();
         if ($archiveId <= 0) {
             $this->SendDebug('Charging history', 'Archive Control not found.', 0);
@@ -273,7 +273,8 @@ trait MySkodaStructureTrait
         if (count($variableIds) !== 3) {
             return;
         }
-        $this->ensureChargingChart($chartGroup, $variableIds);
+
+        $this->ensureChargingChart($chartsGroup, $variableIds);
     }
 
     private function getArchiveControlId(): int
@@ -285,66 +286,82 @@ trait MySkodaStructureTrait
     private function enableLoggingIfMissing(int $archiveId, int $variableId): void
     {
         try {
-            if (!AC_GetLoggingStatus($archiveId, $variableId)) {
-                AC_SetLoggingStatus($archiveId, $variableId, true);
+            // Existing logging is user configuration. If it is already active,
+            // do not change aggregation, graph, compaction or any other setting.
+            if (AC_GetLoggingStatus($archiveId, $variableId)) {
+                return;
             }
+
+            // Only the one missing setting is enabled. Logging is never disabled
+            // and archived values are never removed by this module.
+            AC_SetLoggingStatus($archiveId, $variableId, true);
         } catch (Throwable $e) {
             $this->SendDebug('Archive logging', $e->getMessage(), 0);
         }
     }
 
-    private function ensureChargingChart(int $chartGroup, array $variableIds): void
+    private function ensureChargingChart(int $chartsGroup, array $variableIds): void
     {
-        $existing = @IPS_GetObjectIDByIdent('MSKODA_ChargingHistory', $chartGroup);
+        $existing = @IPS_GetObjectIDByIdent('MSKODA_ChargingHistory', $chartsGroup);
         if ($existing !== false) {
             // Existing chart configuration belongs to the user. Never overwrite it.
             return;
         }
 
         $chartId = IPS_CreateMedia(4);
-        IPS_SetParent($chartId, $chartGroup);
+        IPS_SetParent($chartId, $chartsGroup);
         IPS_SetIdent($chartId, 'MSKODA_ChargingHistory');
         IPS_SetName($chartId, $this->Translate('Charging history'));
         IPS_SetIcon($chartId, 'Graph');
         IPS_SetPosition($chartId, 10);
         IPS_SetMediaFile($chartId, 'media/' . $chartId . '.chart', false);
 
-        $datasets = [
-            [
-                'variableID' => (int) $variableIds['StateOfCharge'],
-                'fillColor' => '#22c55e',
-                'strokeColor' => '#22c55e',
-                'timeOffset' => 0,
-                'visible' => true,
-                'title' => $this->Translate('State of charge'),
-                'type' => 'line',
-                'side' => 'left'
+        // Axis 0: SOC and charging limit in percent.
+        // Axis 1: charging power in W/kW. The chart itself is only created once;
+        // subsequent user changes to its appearance are deliberately preserved.
+        $chart = [
+            'datasets' => [
+                [
+                    'variableID' => (int) $variableIds['StateOfCharge'],
+                    'fillColor' => 'clear',
+                    'strokeColor' => '#22c55e',
+                    'timeOffset' => 0,
+                    'title' => $this->Translate('State of charge'),
+                    'axis' => 0
+                ],
+                [
+                    'variableID' => (int) $variableIds['TargetSOC'],
+                    'fillColor' => 'clear',
+                    'strokeColor' => '#94a3b8',
+                    'timeOffset' => 0,
+                    'title' => $this->Translate('Charging limit'),
+                    'axis' => 0
+                ],
+                [
+                    'variableID' => (int) $variableIds['ChargePower'],
+                    'fillColor' => 'clear',
+                    'strokeColor' => '#f59e0b',
+                    'timeOffset' => 0,
+                    'title' => $this->Translate('Charging power'),
+                    'axis' => 1
+                ]
             ],
-            [
-                'variableID' => (int) $variableIds['TargetSOC'],
-                'fillColor' => '#94a3b8',
-                'strokeColor' => '#94a3b8',
-                'timeOffset' => 0,
-                'visible' => true,
-                'title' => $this->Translate('Charging limit'),
-                'type' => 'line',
-                'side' => 'left'
-            ],
-            [
-                'variableID' => (int) $variableIds['ChargePower'],
-                'fillColor' => '#f59e0b',
-                'strokeColor' => '#f59e0b',
-                'timeOffset' => 0,
-                'visible' => true,
-                'title' => $this->Translate('Charging power'),
-                'type' => 'line',
-                'side' => 'right'
+            'type' => 'line',
+            'axes' => [
+                [
+                    'profile' => '~Intensity.100',
+                    'side' => 'left'
+                ],
+                [
+                    'profile' => '~Power',
+                    'side' => 'right'
+                ]
             ]
         ];
 
         IPS_SetMediaContent(
             $chartId,
-            base64_encode(json_encode(['datasets' => $datasets], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
+            base64_encode(json_encode($chart, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES))
         );
     }
 }
