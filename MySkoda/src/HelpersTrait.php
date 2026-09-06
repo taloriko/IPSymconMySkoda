@@ -57,8 +57,16 @@ trait MySkodaHelpersTrait
 
     private function dropVariable(string $ident): void
     {
-        if (@$this->GetIDForIdent($ident) !== false) {
-            $this->UnregisterVariable($ident);
+        $id = @$this->GetIDForIdent($ident);
+        if ($id === false || !IPS_VariableExists($id)) {
+            return;
         }
+
+        // UnregisterVariable operates on direct module children. Preserve the
+        // existing variable ID until the actual unregister operation occurs.
+        if (IPS_GetParent($id) !== $this->InstanceID) {
+            IPS_SetParent($id, $this->InstanceID);
+        }
+        $this->UnregisterVariable($ident);
     }
 }
