@@ -15,7 +15,7 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 - optionale Detail-, Standort- und Diagnosevariablen
 - deutsche Darstellung von Lade- und Parkstatus bei unveränderten API-Rohwerten
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
-- Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
+- optional und nur nach ausdrücklicher Aktivierung: Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
 - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
 - stabile Variablen-Idents als Schnittstelle für Skripte und Visualisierungsmodule
 
@@ -101,7 +101,9 @@ Dadurch bleiben Skripte unabhängig von der eingestellten Sprache, während die 
 
 ## Archivierung
 
-Bei aktivierter Archivierung werden folgende Variablen geloggt:
+Die Archivierung ist **standardmäßig deaktiviert** und wird nur nach ausdrücklicher Aktivierung in der Instanz eingerichtet.
+
+Dabei werden einmalig folgende Variablen für das Logging konfiguriert:
 
 - `StateOfCharge` – Ladezustand
 - `TargetSOC` – Ladelimit
@@ -110,7 +112,7 @@ Bei aktivierter Archivierung werden folgende Variablen geloggt:
 
 Der Kilometerstand wird als **Zähler** archiviert. Ein von der API gelieferter Kilometerstand `<= 0` wird nicht in die Variable geschrieben. Zusätzlich ist für den Archiv-Zähler das Ignorieren von Null- und negativen Werten aktiviert.
 
-Das Modul erzeugt bewusst kein eigenes Diagramm. Die Darstellung der Archivdaten ist Aufgabe der Visualisierung.
+Nach der erstmaligen Einrichtung verändert das Modul die Archive-Control-Einstellungen nicht erneut. Benutzeranpassungen bleiben damit erhalten. Das Modul erzeugt bewusst kein eigenes Diagramm.
 
 ## Dokumentation
 
