@@ -55,12 +55,22 @@ trait MySkodaStructureTrait
         'LastUpdate' => 'lastUpdate'
     ];
 
-    /**
-     * Status variables must be direct children while RegisterVariable* and
-     * MaintainAction are executed. Existing variables are therefore moved to
-     * the instance root before registration and grouped again afterwards.
-     * Their object IDs and idents remain unchanged.
-     */
+    public function Create(): void
+    {
+        $this->createCoreV22();
+        $this->RegisterPropertyBoolean('EnableChargingHistory', true);
+    }
+
+    public function ApplyChanges(): void
+    {
+        // RegisterVariable* and MaintainAction work on direct children. Keep the
+        // existing variable objects/IDs, move them temporarily to the instance
+        // root for registration and restore the thematic structure afterwards.
+        $this->prepareManagedVariablesForRegistration();
+        $this->applyChangesCoreV22();
+        $this->organizeManagedObjects();
+    }
+
     private function prepareManagedVariablesForRegistration(): void
     {
         foreach (array_keys(self::VARIABLE_GROUPS) as $ident) {
