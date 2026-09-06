@@ -5,15 +5,12 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 ## Funktionsumfang
 
 - Fahrzeugstatus und Fahrzeugdaten über die MySkoda Public API
-- thematische Gruppierung der Datenpunkte unter Dummy-Instanzen mit Namen und Icons
 - stabile Variablen-Idents für Skripte und weitere Module
 - Laden und Klimatisierung über Variablenaktionen
 - Ladelimit und Lademodus, sofern vom Fahrzeug unterstützt
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
-- optionaler Ladeverlauf mit Archive Control
-- vollständige API-Antwort über `MSKODA_GetRawData()`
-- Rate-Limit- und `Retry-After`-Behandlung
+- Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
 - API-Key-Ablaufwarnung 30 Tage vor Ablauf
 - optionale Symcon-Mitteilung über eine ausgewählte Visualisierungsinstanz
 
@@ -23,17 +20,7 @@ Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySk
 - 17-stellige FIN/VIN
 - MySkoda API-Key
 - optional S-PIN für Standheizung
-- Archive Control für den optionalen Ladeverlauf
-
-## Installation
-
-Im **Module Control** folgendes Repository hinzufügen:
-
-```text
-https://github.com/taloriko/IPSymconMySkoda
-```
-
-Anschließend eine Instanz **MySkoda** anlegen.
+- Archive Control für die optionale Archivierung
 
 ## Konfiguration
 
@@ -41,127 +28,94 @@ Anschließend eine Instanz **MySkoda** anlegen.
 |---|---|---:|
 | FIN / VIN | 17-stellige Fahrzeug-Identifikationsnummer | leer |
 | API-Token | MySkoda Public API-Key | leer |
-| Abrufintervall | automatischer Abruf in Sekunden | 300 |
+| Abfrageintervall | automatischer Abruf in Sekunden | 300 |
 | Remote-Steuerung | erlaubt Lade- und Klimabefehle | an |
 | Klima ohne externe Stromversorgung | Übergabe an die MySkoda-Klimafunktion | an |
 | S-PIN | optional für Standheizung | leer |
 | API-Key-Ablaufwarnung | Mitteilung bei höchstens 30 Tagen Restlaufzeit | aus |
 | Visualisierung für Mitteilungen | Ziel für Symcon-Mitteilungen | keine |
 | Detail-/Diagnosevariablen | legt zusätzliche Datenpunkte an | aus |
-| Ladeverlauf und Aufzeichnung | initialisiert Diagramm und Logging | an |
+| Archivierung | archiviert Lade- und Kilometerdaten | an |
 
 ## Objektstruktur
 
-Die Fahrzeugdaten werden direkt unter Dummy-Instanzen gruppiert:
+Das Modul legt **keine Dummy-Instanzen, Kategorien oder Links** an. Unter der MySkoda-Instanz befinden sich ausschließlich die echten Modulvariablen.
 
-```text
-MySkoda
-├─ Fahrzeug
-│  ├─ VehicleName
-│  ├─ LicensePlate
-│  ├─ StateOfCharge
-│  ├─ Range
-│  └─ Mileage
-├─ Fahrzeugstatus
-│  ├─ Locked
-│  ├─ DoorsOpen
-│  └─ WindowsOpen
-├─ Laden
-│  ├─ Charging
-│  ├─ ChargePower
-│  ├─ TargetSOC
-│  └─ ChargeMode
-├─ Klimatisierung
-│  ├─ Climate
-│  └─ TargetTemperature
-├─ Standort
-├─ API & Diagnose
-├─ Diagramme
-│  └─ Ladeverlauf
-└─ Letzte Aktualisierung
-   └─ LastUpdate
-```
+Die fachliche Gruppierung erfolgt in einem separaten Visualisierungsmodul. Dadurch bleibt das Datenmodul klein und die Visualisierung kann die Darstellung unabhängig aufbauen.
 
-Die Gruppen besitzen feste Idents und Darstellungen:
-
-| Gruppe | Ident | Icon |
-|---|---|---|
-| Fahrzeug | `MSKODA_GroupVehicle` | Car |
-| Fahrzeugstatus | `MSKODA_GroupStatus` | Lock |
-| Laden | `MSKODA_GroupCharging` | Electricity |
-| Klimatisierung | `MSKODA_GroupClimate` | Temperature |
-| Standort | `MSKODA_GroupLocation` | Location |
-| API & Diagnose | `MSKODA_GroupDiagnostics` | Gear |
-| Diagramme | `MSKODA_GroupCharts` | Graph |
-| Letzte Aktualisierung | `MSKODA_GroupLastUpdate` | Clock |
-
-Unter diesen Dummy-Instanzen liegen die echten MySkoda-Variablen. Es werden keine zusätzlichen Gruppierungslinks angelegt.
-
-## Variablen und stabile Idents
-
-Der `Ident` einer Fahrzeugvariable ist die stabile technische Schnittstelle für Skripte und weitere Module. Beispiele sind `StateOfCharge`, `Range`, `Charging`, `TargetSOC` und `Climate`.
-
-Ein weiteres Modul kann diese Variablen rekursiv unterhalb der MySkoda-Instanz über ihren Ident ermitteln. Die Objekt-ID einer bestehenden Variable bleibt bei normalem Betrieb erhalten.
-
-Eine Variable wird nur registriert, solange ihr Ident noch nicht existiert. Sobald sie angelegt ist, registriert MySkoda Name, Position und Darstellung nicht erneut. Benutzeranpassungen an diesen Eigenschaften werden durch spätere Modulaktualisierungen nicht überschrieben.
-
-Die Fahrzeugwerte selbst werden bei jedem erfolgreichen Abruf aktualisiert.
+Die sichtbaren Namen der Variablen sind deutsch. Die technischen Idents bleiben stabil, damit Skripte und Visualisierungsmodule zuverlässig darauf zugreifen können.
 
 ### Standard-Datenpunkte
 
-| Ident | Datentyp | Gruppe | Bedeutung | Bedienbar |
-|---|---|---|---|---:|
-| `StateOfCharge` | Integer | Fahrzeug | Ladezustand in % | Nein |
-| `Range` | Integer | Fahrzeug | Restreichweite in km | Nein |
-| `Mileage` | Integer | Fahrzeug | Kilometerstand in km | Nein |
-| `Locked` | Boolean | Fahrzeugstatus | Fahrzeug verriegelt | Nein |
-| `DoorsOpen` | Boolean | Fahrzeugstatus | mindestens eine Tür offen | Nein |
-| `WindowsOpen` | Boolean | Fahrzeugstatus | mindestens ein Fenster offen | Nein |
-| `Charging` | Boolean | Laden | Ladevorgang | Ja |
-| `ChargePower` | Float | Laden | Ladeleistung in W | Nein |
-| `TargetSOC` | Integer | Laden | Ladelimit in % | Ja |
-| `ChargeMode` | Integer | Laden | Lademodus | Ja |
-| `Climate` | Boolean | Klimatisierung | Klimatisierung | Ja |
-| `TargetTemperature` | Float | Klimatisierung | Klima-Solltemperatur in °C | Ja |
-| `ApiKeyWarning` | Boolean | API & Diagnose | API-Key läuft in höchstens 30 Tagen ab | Nein |
-| `LastUpdate` | Integer | Letzte Aktualisierung | Zeitpunkt der letzten erfolgreichen Abfrage | Nein |
+| Ident | Sichtbarer Name | Datentyp | Bedienbar |
+|---|---|---|---:|
+| `StateOfCharge` | Ladezustand | Integer | Nein |
+| `Range` | Reichweite | Integer | Nein |
+| `Mileage` | Kilometerstand | Integer | Nein |
+| `Locked` | Verriegelt | Boolean | Nein |
+| `DoorsOpen` | Türen offen | Boolean | Nein |
+| `WindowsOpen` | Fenster offen | Boolean | Nein |
+| `Charging` | Laden | Boolean | Ja |
+| `ChargePower` | Ladeleistung | Float | Nein |
+| `TargetSOC` | Ladelimit | Integer | Ja |
+| `ChargeMode` | Lademodus | Integer | Ja |
+| `Climate` | Klimatisierung | Boolean | Ja |
+| `TargetTemperature` | Solltemperatur | Float | Ja |
+| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein |
+| `LastUpdate` | Letzte Aktualisierung | Integer | Nein |
 
 ### Optionale Datenpunkte
 
 Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden fehlende zusätzliche Variablen erstellt:
 
-`VehicleName`, `LicensePlate`, `TrunkOpen`, `BonnetOpen`, `SunroofOpen`, `LightsOn`, `ParkingState`, `ChargingState`, `ChargeType`, `FullyChargedAt`, `Latitude`, `Longitude`, `ApiKeyExpiresAtVar`, `RequestsRemaining`, `PartialErrors`.
+| Ident | Sichtbarer Name |
+|---|---|
+| `VehicleName` | Fahrzeugname |
+| `LicensePlate` | Kennzeichen |
+| `TrunkOpen` | Kofferraum offen |
+| `BonnetOpen` | Motorhaube offen |
+| `SunroofOpen` | Schiebedach offen |
+| `LightsOn` | Licht an |
+| `ParkingState` | Parkstatus |
+| `ChargingState` | Ladestatus |
+| `ChargeType` | Ladeart |
+| `FullyChargedAt` | Vollgeladen um |
+| `Latitude` | Breitengrad |
+| `Longitude` | Längengrad |
+| `ApiKeyExpiresAtVar` | API-Key gültig bis |
+| `RequestsRemaining` | Verbleibende API-Anfragen |
+| `PartialErrors` | API-Teilfehler |
 
 Einmal angelegte Detailvariablen bleiben bestehen und werden weiter mit aktuellen Werten versorgt. Das Deaktivieren der Option löscht keine Variablen.
 
-### Lademodus
+## Lademodus
 
 `ChargeMode` verwendet feste Integerwerte:
 
-| Wert | Modus |
-|---:|---|
-| 0 | `MANUAL` |
-| 1 | `TIMER` |
-| 2 | `TIMER_CHARGING_WITH_CLIMATISATION` |
-| 3 | `PREFERRED_CHARGING_TIMES` |
-| 4 | `ONLY_OWN_CURRENT` |
-| 5 | `IMMEDIATE_DISCHARGING` |
-| 6 | `HOME_STORAGE_CHARGING` |
+| Wert | Modus | Anzeige |
+|---:|---|---|
+| 0 | `MANUAL` | Manuell |
+| 1 | `TIMER` | Timer |
+| 2 | `TIMER_CHARGING_WITH_CLIMATISATION` | Timer + Klimatisierung |
+| 3 | `PREFERRED_CHARGING_TIMES` | Bevorzugte Ladezeiten |
+| 4 | `ONLY_OWN_CURRENT` | Nur eigener Strom |
+| 5 | `IMMEDIATE_DISCHARGING` | Sofort entladen |
+| 6 | `HOME_STORAGE_CHARGING` | Heimspeicher laden |
 
 Vor dem Senden prüft das Modul die vom Fahrzeug gemeldeten verfügbaren Lademodi.
 
-## Ladeverlauf und Archivierung
+## Archivierung
 
-Wenn **Ladeverlauf und Aufzeichnung** aktiviert ist, initialisiert das Modul einmalig:
+Bei aktivierter Archivierung werden folgende Variablen im Archive Control geloggt:
 
-- Logging für `StateOfCharge`
-- Logging für `TargetSOC`
-- Logging für `ChargePower`
-- das Diagramm `MSKODA_ChargingHistory` unter **Diagramme**
+- `StateOfCharge` – Ladezustand
+- `TargetSOC` – Ladelimit
+- `ChargePower` – Ladeleistung
+- `Mileage` – Kilometerstand
 
-Bereits aktives Logging wird nicht neu konfiguriert. Nach erfolgreicher Initialisierung verändert das Modul weder die Archiv-Einstellungen noch die Diagrammkonfiguration erneut.
+Der Kilometerstand wird mit Aggregationstyp **Zähler** eingerichtet. Werte `<= 0` werden bereits beim Einlesen verworfen und deshalb nicht in die Kilometerstandsvariable geschrieben. Zusätzlich wird für den Zähler das Ignorieren von Null- und negativen Werten im Archive Control aktiviert.
 
-Im Diagramm liegen Ladezustand und Ladelimit auf der linken Prozent-Achse; die Ladeleistung liegt auf der rechten Leistungs-Achse.
+Es wird kein eigenes Diagramm und kein zusätzliches Medienobjekt angelegt. Die Darstellung der Archivdaten ist Aufgabe der Visualisierung.
 
 ## Standortdaten
 
