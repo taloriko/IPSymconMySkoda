@@ -8,6 +8,7 @@
 - deutsche Lokalisierung für Konfiguration, Variablennamen und Statusdarstellungen
 - deutsche Darstellung für Lade- und Parkstatus bei unveränderten API-Rohwerten
 - Remote-Steuerung für unterstützte Lade- und Klimafunktionen
+- automatische Erkennung zusätzlicher, noch nicht integrierter OpenAPI-Funktionen über die Variable `NewApiFeatures`; neue Datenpunkte werden ausschließlich über Modulupdates ergänzt
 - Rate-Limit-Behandlung, API-Key-Warnung und optionale Symcon-Mitteilungen
 - Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nur nach ausdrücklicher Benutzeraktivierung; spätere Archiveinstellungen bleiben unberührt
 - Kilometerstand als Archiv-Zähler; ungültige Werte kleiner oder gleich 0 werden verworfen
