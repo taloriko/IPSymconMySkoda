@@ -50,11 +50,23 @@ def main() -> None:
     }:
         assert required in names
 
+    form_text = (ROOT / "MySkoda" / "form.json").read_text(encoding="utf-8")
+    for german_text in [
+        "Verbindung",
+        "Abfrage und Steuerung",
+        "Mitteilungen",
+        "Zusätzliche Daten",
+        "Archivierung aktivieren",
+        "Verbindung testen",
+        "Jetzt aktualisieren",
+    ]:
+        assert german_text in form_text
+
     module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
     assert "final class MySkoda extends IPSModule" in module_php
     assert "extends IPSModuleStrict" not in module_php
     assert "IP-Symcon-MySkoda/1.0" in module_php
-    assert "StructureTrait.php" in module_php
+    assert "StructureTrait.php" not in module_php
     assert "HistoryTrait.php" in module_php
     assert "V22" not in module_php
 
@@ -63,14 +75,27 @@ def main() -> None:
         for source in (ROOT / "MySkoda").rglob("*.php")
     )
     variables = (ROOT / "MySkoda" / "src" / "VariablesTrait.php").read_text(encoding="utf-8")
-    structure = (ROOT / "MySkoda" / "src" / "StructureTrait.php").read_text(encoding="utf-8")
     history = (ROOT / "MySkoda" / "src" / "HistoryTrait.php").read_text(encoding="utf-8")
     core = (ROOT / "MySkoda" / "src" / "CoreTrait.php").read_text(encoding="utf-8")
 
-    # Variables are registered once and keep stable technical idents.
+    # Das Datenmodul erzeugt ausschließlich Variablen.
+    for forbidden in [
+        "IPS_CreateInstance",
+        "IPS_CreateCategory",
+        "IPS_CreateLink",
+        "IPS_CreateMedia",
+        "MSKODA_Group",
+        "MSKODA_Link_",
+        "getGroupId(",
+        "placeVariableInGroup",
+        "maintainGroupedAction",
+    ]:
+        assert forbidden not in php_sources
+
+    assert not (ROOT / "MySkoda" / "src" / "StructureTrait.php").exists()
+
+    # Variablen werden nur einmal registriert und behalten stabile technische Idents.
     assert "registerVariableOnce" in variables
-    assert "placeVariableInGroup($ident)" in variables
-    assert "maintainGroupedAction" in variables
     assert "UnregisterVariable" not in php_sources
     assert "IPS_DeleteVariable" not in php_sources
 
@@ -92,33 +117,34 @@ def main() -> None:
     ]:
         assert f"'{stable_ident}'" in variables
 
-    # Dummy instances contain the real variables directly.
-    assert "{485D0419-BE97-4548-AA9C-C083EB82E61E}" in structure
-    assert "IPS_CreateInstance" in structure
-    assert "IPS_SetName" in structure
-    assert "IPS_SetIcon" in structure
-    assert "IPS_SetParent($variableId, $groupId)" in structure
-    assert "protected function GetIDForIdent" in structure
-    assert "protected function SetValue" in structure
-    assert "protected function GetValue" in structure
-    assert "findObjectByIdentRecursive" in structure
-    assert "IPS_CreateLink" not in php_sources
-    assert "IPS_SetLinkTargetID" not in php_sources
-    assert "MSKODA_Link_" not in php_sources
-
-    for group_ident in [
-        "MSKODA_GroupVehicle",
-        "MSKODA_GroupStatus",
-        "MSKODA_GroupCharging",
-        "MSKODA_GroupClimate",
-        "MSKODA_GroupLocation",
-        "MSKODA_GroupDiagnostics",
-        "MSKODA_GroupCharts",
-        "MSKODA_GroupLastUpdate",
+    # Sichtbare Namen und Bedienbezeichnungen sind deutsch.
+    for german_name in [
+        "Ladezustand",
+        "Reichweite",
+        "Kilometerstand",
+        "Verriegelt",
+        "Türen offen",
+        "Fenster offen",
+        "Laden",
+        "Ladeleistung",
+        "Ladelimit",
+        "Lademodus",
+        "Klimatisierung",
+        "Solltemperatur",
+        "API-Key Warnung",
+        "Letzte Aktualisierung",
+        "Fahrzeugname",
+        "Kennzeichen",
+        "Schiebedach offen",
+        "Ladekabel anschließen",
+        "Bevorzugte Ladezeiten",
     ]:
-        assert group_ident in structure
+        assert german_name in variables
 
-    # Existing variable metadata is not re-registered dynamically.
+    assert "'Caption' => 'Nein'" in variables
+    assert "'Caption' => 'Ja'" in variables
+
+    # Vorhandene Variablen-Darstellungen werden nicht dynamisch überschrieben.
     assert "CHARGE_MODES" in variables
     assert "AvailableChargeModes" in variables
     assert "updateChargeModePresentation" not in php_sources
@@ -133,34 +159,32 @@ def main() -> None:
     ]:
         assert forbidden not in php_sources
 
-    # Charging history is initialized once and remains non-destructive.
-    assert "ChargingHistoryInitialized" in core
-    assert "ReadAttributeBoolean('ChargingHistoryInitialized')" in history
-    assert "WriteAttributeBoolean('ChargingHistoryInitialized', true)" in history
-    assert "getGroupId('charts')" in history
-    assert "IPS_SetParent($chartId, $chartsGroupId)" in history
+    # Archivierung: Ladezustand, Ladelimit, Ladeleistung und Kilometerstand.
+    for ident in ["StateOfCharge", "TargetSOC", "ChargePower", "Mileage"]:
+        assert f"'{ident}'" in history
+
     assert "AC_GetLoggingStatus" in history
     assert "AC_SetLoggingStatus" in history
-    assert "MSKODA_ChargingHistory" in history
-    assert "IPS_CreateMedia(4)" in history
+    assert "AC_GetAggregationType" in history
+    assert "AC_SetAggregationType($archiveId, $mileageId, 1)" in history
+    assert "AC_GetCounterIgnoreZeros" in history
+    assert "AC_SetCounterIgnoreZeros($archiveId, $mileageId, true)" in history
+    assert "AC_ReAggregateVariable" in history
+    assert "MSKODA_ChargingHistory" not in php_sources
+
+    # Ein API-Kilometerstand <= 0 wird nicht in die Variable geschrieben.
+    assert "$mileage > 0" in variables
+    assert "$this->SetValue('Mileage', $mileage);" in variables
+    assert "setPathValue('Mileage'" not in variables
+
+    assert "ChargingHistoryInitialized" in core
+    assert "WriteAttributeBoolean('ChargingHistoryInitialized', true)" in history
 
     for forbidden in [
-        "AC_SetAggregationType",
         "AC_DeleteVariableData",
-        "AC_ReAggregateVariable",
         "AC_SetCompaction",
         "AC_SetGraphStatus",
         "IPS_DeleteMedia",
-    ]:
-        assert forbidden not in php_sources
-
-    for forbidden in [
-        "removeObsolete",
-        "obsoleteVisualization",
-        "Migration",
-        "migrate",
-        "Legacy",
-        "legacy",
     ]:
         assert forbidden not in php_sources
 
@@ -174,7 +198,6 @@ def main() -> None:
         "HistoryTrait.php",
         "NotificationTrait.php",
         "OpenApiTrait.php",
-        "StructureTrait.php",
         "VariablesTrait.php",
     }
     source_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
@@ -182,10 +205,11 @@ def main() -> None:
 
     root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
     module_readme = (ROOT / "MySkoda" / "README.md").read_text(encoding="utf-8")
-    assert "Dummy-Instanzen" in root_readme
-    assert "echten MySkoda-Variablen" in root_readme
-    assert "MSKODA_GroupVehicle" in module_readme
-    assert "rekursiv" in root_readme.lower()
+    assert "keine Dummy-Instanzen" in root_readme
+    assert "ausschließlich die echten Modulvariablen" in root_readme
+    assert "keine Dummy-Instanzen, Kategorien oder Links" in module_readme
+    assert "Kilometerstand" in root_readme
+    assert "Zähler" in root_readme
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## 1.0 - 2026-09-06" in changelog
