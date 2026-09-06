@@ -119,6 +119,7 @@ def main() -> None:
         "Additional data": "Zusätzliche Daten",
         "Test connection": "Verbindung testen",
         "Update now": "Jetzt aktualisieren",
+        "New API functions": "Neue API-Funktionen",
     }.items():
         assert translations.get(required_translation) == expected
 
@@ -144,6 +145,9 @@ def main() -> None:
     assert "IP-Symcon-MySkoda/1.0" in module_php
     assert "StructureTrait.php" not in module_php
     assert "HistoryTrait.php" in module_php
+    assert "public function Update(): void" in module_php
+    assert "public function TestConnection(): bool" in module_php
+    assert "$this->refreshOpenApi(false);" in module_php
 
     php_sources = "\n".join(
         source.read_text(encoding="utf-8")
@@ -152,6 +156,7 @@ def main() -> None:
     variables = (ROOT / "MySkoda" / "src" / "VariablesTrait.php").read_text(encoding="utf-8")
     history = (ROOT / "MySkoda" / "src" / "HistoryTrait.php").read_text(encoding="utf-8")
     core = (ROOT / "MySkoda" / "src" / "CoreTrait.php").read_text(encoding="utf-8")
+    openapi = (ROOT / "MySkoda" / "src" / "OpenApiTrait.php").read_text(encoding="utf-8")
 
     # Store review: no short PHP tags and instance-associated logging only.
     assert re.search(r"<\?(?!php)", php_sources) is None
@@ -202,6 +207,17 @@ def main() -> None:
     ]:
         assert f"'{stable_ident}'" in variables
 
+    # API discovery is informational only; new endpoints never create dynamic data variables.
+    assert "'NewApiFeatures'" in openapi
+    assert "'New API functions'" in openapi
+    assert "ensureApiDiscoveryVariable" in openapi
+    assert "updateApiDiscoveryStatus" in openapi
+    assert "isKnownModuleOperation" in openapi
+    assert "Unknown OpenAPI operations:" in openapi
+    assert "registerVariableOnce" in openapi
+    assert "RegisterVariable" not in openapi
+    assert "NewApiFeatures" not in history
+
     # German presentation remains complete while API/raw values stay stable.
     for source, german in {
         "State of charge": "Ladezustand",
@@ -216,6 +232,7 @@ def main() -> None:
         "Charging active": "Laden aktiv",
         "Ready for charging": "Ladebereit",
         "Unknown": "Unbekannt",
+        "New API functions": "Neue API-Funktionen",
     }.items():
         assert translations.get(source) == german
 
@@ -300,6 +317,8 @@ def main() -> None:
         "Zähler",
         "Geparkt",
         "Laden aktiv",
+        "Neue API-Funktionen",
+        "nicht automatisch als IP-Symcon-Variablen angelegt",
         "MIT-Lizenz",
     ]:
         assert text in root_readme
@@ -308,6 +327,9 @@ def main() -> None:
         "Voraussetzungen",
         "Installation und erste Einrichtung",
         "Konfiguration",
+        "Neue API-Funktionen erkennen",
+        "NewApiFeatures",
+        "keine automatischen Variablen",
         "Statusdarstellungen",
         "Parkstatus",
         "Ladestatus",
@@ -324,6 +346,7 @@ def main() -> None:
     assert "## 1.0 - 2026-09-06" in changelog
     assert "## 2." not in changelog
     assert "Parkstatus" in changelog
+    assert "NewApiFeatures" in changelog
     assert not (ROOT / "docs").exists()
 
 
