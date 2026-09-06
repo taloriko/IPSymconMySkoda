@@ -16,7 +16,7 @@ trait MySkodaCoreTrait
         $this->RegisterPropertyBoolean('ClimateWithoutExternalPower', true);
         $this->RegisterPropertyString('SPIN', '');
         $this->RegisterPropertyBoolean('ShowDetails', false);
-        $this->RegisterPropertyBoolean('EnableChargingHistory', true);
+        $this->RegisterPropertyBoolean('EnableChargingHistory', false);
         $this->RegisterPropertyBoolean('NotifyKeyExpiry', false);
         $this->RegisterPropertyInteger('NotificationInstanceID', 0);
 
