@@ -68,6 +68,22 @@
     },
     {
       "type": "ExpansionPanel",
+      "caption": "Archiving",
+      "expanded": true,
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "EnableChargingHistory",
+          "caption": "Archive vehicle data"
+        },
+        {
+          "type": "Label",
+          "caption": "After explicit activation, archive logging is configured once for state of charge, charging limit, charging power and mileage. Later Archive Control changes remain untouched."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
       "caption": "Notifications",
       "expanded": false,
       "items": [
@@ -102,15 +118,6 @@
         {
           "type": "Label",
           "caption": "Missing detail variables are created when enabled. Existing variables are kept when this option is disabled."
-        },
-        {
-          "type": "CheckBox",
-          "name": "EnableChargingHistory",
-          "caption": "Set up archiving"
-        },
-        {
-          "type": "Label",
-          "caption": "After explicit activation, archive logging is configured once for state of charge, charging limit, charging power and mileage. Later Archive Control changes remain untouched."
         }
       ]
     },
