@@ -24,4 +24,19 @@ final class MySkoda extends IPSModuleStrict
     private const OPENAPI_URL = self::API_ROOT . '/v3/api-docs';
     private const USER_AGENT = 'IP-Symcon-MySkoda/1.0';
     private const QUOTA_RESERVE = 2;
+
+    public function Update(): void
+    {
+        $this->fetchVehicle(false);
+        $this->refreshOpenApi(false);
+    }
+
+    public function TestConnection(): bool
+    {
+        $ok = $this->fetchVehicle(true);
+        if ($ok) {
+            $this->refreshOpenApi(false);
+        }
+        return $ok;
+    }
 }
