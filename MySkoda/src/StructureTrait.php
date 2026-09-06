@@ -5,7 +5,6 @@ declare(strict_types=1);
 trait MySkodaStructureTrait
 {
     private const DUMMY_MODULE_ID = '{485D0419-BE97-4548-AA9C-C083EB82E61E}';
-    private const LINK_IDENT_PREFIX = 'MSKODA_Link_';
 
     private const GROUPS = [
         'vehicle' => ['ident' => 'MSKODA_GroupVehicle', 'name' => 'Vehicle', 'icon' => 'Car', 'position' => 100],
@@ -89,13 +88,6 @@ trait MySkodaStructureTrait
         $groupId = $this->getGroupId($groupKey);
         if ($variableId <= 0 || $groupId <= 0) {
             return;
-        }
-
-        $linkIdent = self::LINK_IDENT_PREFIX . $ident;
-        $linkId = @IPS_GetObjectIDByIdent($linkIdent, $groupId);
-        if ($linkId !== false && IPS_LinkExists((int) $linkId)) {
-            IPS_DeleteLink((int) $linkId);
-            IPS_SetHidden($variableId, false);
         }
 
         if (IPS_GetParent($variableId) !== $groupId) {
