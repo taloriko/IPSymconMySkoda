@@ -7,9 +7,8 @@ trait MySkodaHistoryTrait
     private const ARCHIVE_CONTROL_MODULE_ID = '{43192F0B-135B-4CE7-A0A7-1475603F3060}';
 
     /**
-     * Aktiviert die Archivierung der vorgesehenen Fahrzeugwerte.
-     * Der Kilometerstand wird als Zähler geführt. Null- und negative Werte
-     * werden zusätzlich bereits vor der Variablenaktualisierung verworfen.
+     * Initializes archive logging once after explicit user opt-in.
+     * Later user changes in Archive Control remain untouched.
      */
     private function initializeChargingHistory(): void
     {
@@ -17,9 +16,13 @@ trait MySkodaHistoryTrait
             return;
         }
 
+        if ($this->ReadAttributeBoolean('ChargingHistoryInitialized')) {
+            return;
+        }
+
         $archiveId = $this->getArchiveControlId();
         if ($archiveId <= 0) {
-            $this->SendDebug('Archivierung', 'Archive Control nicht gefunden.', 0);
+            $this->SendDebug('Archive', 'Archive Control not found.', 0);
             return;
         }
 
