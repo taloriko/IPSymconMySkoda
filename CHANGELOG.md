@@ -9,6 +9,6 @@
 - deutsche Darstellung für Lade- und Parkstatus bei unveränderten API-Rohwerten
 - Remote-Steuerung für unterstützte Lade- und Klimafunktionen
 - Rate-Limit-Behandlung, API-Key-Warnung und optionale Symcon-Mitteilungen
-- Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
+- Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nur nach ausdrücklicher Benutzeraktivierung; spätere Archiveinstellungen bleiben unberührt
 - Kilometerstand als Archiv-Zähler; ungültige Werte kleiner oder gleich 0 werden verworfen
 - native IP-Symcon-Darstellungen
