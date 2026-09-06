@@ -91,22 +91,26 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Advanced",
+      "caption": "Additional data",
       "expanded": false,
       "items": [
         {
           "type": "CheckBox",
           "name": "ShowDetails",
-          "caption": "Show detail and diagnostic variables"
+          "caption": "Create detail and diagnostic variables"
+        },
+        {
+          "type": "Label",
+          "caption": "Missing detail variables are created when enabled. Existing variables are kept when this option is disabled."
         },
         {
           "type": "CheckBox",
           "name": "EnableChargingHistory",
-          "caption": "Provide charging history chart and logging"
+          "caption": "Initialize charging history and logging"
         },
         {
           "type": "Label",
-          "caption": "State of charge, charging limit and charging power are enabled for logging only when they are not already logged. Existing Archive Control settings and recorded data are never changed or deleted."
+          "caption": "Charging history is initialized once. After creation the module does not change chart or Archive Control settings."
         }
       ]
     },
