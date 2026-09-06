@@ -46,7 +46,7 @@ Nach dem Übernehmen prüft das Modul die Verbindung zur MySkoda Public API.
 
 ## Objektstruktur und Visualisierungsschnittstelle
 
-Die Datenpunkte werden unter thematischen Dummy-Instanzen einsortiert:
+Die Fahrzeugdaten werden in der Oberfläche thematisch gruppiert:
 
 ```text
 MySkoda
@@ -61,11 +61,11 @@ MySkoda
 └─ Letzte Aktualisierung
 ```
 
-Die Gruppen besitzen feste technische Idents sowie passende Namen und Icons. Die Fahrzeugwerte behalten unabhängig von der Gruppierung ihre festen Variablen-Idents, zum Beispiel `StateOfCharge`, `Range`, `Charging`, `TargetSOC` oder `Climate`.
+Die Gruppen sind Dummy-Instanzen mit festen technischen Idents, Namen und Icons. Darunter liegen Links auf die zugehörigen MySkoda-Statusvariablen. Dadurch bleibt die übersichtliche Gruppierung erhalten, während die eigentlichen Modulvariablen technisch direkt an der MySkoda-Instanz verbleiben.
 
-Diese Variablen-Idents sind die vorgesehene Schnittstelle für Skripte und weitere Module. Ein Visualisierungsmodul kann die benötigten Werte rekursiv unterhalb der MySkoda-Instanz über ihre Idents ermitteln.
+Die Statusvariablen besitzen feste Idents wie `StateOfCharge`, `Range`, `Charging`, `TargetSOC` oder `Climate`. Diese Idents sind die vorgesehene Schnittstelle für Skripte und weitere Module. Ein Visualisierungsmodul kann die benötigten Werte dadurch direkt über die MySkoda-Instanz ermitteln.
 
-Eine vorhandene Variable wird bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden deshalb nur bei der Erstanlage gesetzt und danach nicht durch Updates überschrieben. Die thematische Zuordnung wird nur für noch ungruppierte Modulobjekte hergestellt.
+Variablen, Gruppen und Links werden nur bei Bedarf angelegt. Bereits vorhandene Namen, Positionen und Darstellungen werden bei späteren Modulaktualisierungen nicht erneut gesetzt.
 
 ## Hinweis
 
