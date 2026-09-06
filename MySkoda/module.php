@@ -12,13 +12,17 @@ require_once __DIR__ . '/src/StructureTrait.php';
 
 final class MySkoda extends IPSModuleStrict
 {
-    use MySkodaCoreTrait;
+    use MySkodaCoreTrait, MySkodaStructureTrait {
+        MySkodaStructureTrait::Create insteadof MySkodaCoreTrait;
+        MySkodaCoreTrait::Create as private createCoreV22;
+        MySkodaStructureTrait::ApplyChanges insteadof MySkodaCoreTrait;
+        MySkodaCoreTrait::ApplyChanges as private applyChangesCoreV22;
+    }
     use MySkodaVariablesTrait;
     use MySkodaApiTrait;
     use MySkodaOpenApiTrait;
     use MySkodaNotificationTrait;
     use MySkodaHelpersTrait;
-    use MySkodaStructureTrait;
 
     private const API_ROOT = 'https://public.api.connect.skoda-auto.cz';
     private const OPENAPI_URL = self::API_ROOT . '/v3/api-docs';
