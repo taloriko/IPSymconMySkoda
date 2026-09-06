@@ -44,29 +44,16 @@ trait MySkodaHelpersTrait
         if ($value === null || $value === '') {
             return 0;
         }
+
         $timestamp = strtotime((string) $value);
         return $timestamp === false ? 0 : $timestamp;
     }
 
     private function setIfExists(string $ident, mixed $value): void
     {
-        if (@$this->GetIDForIdent($ident) !== false) {
+        $id = @$this->GetIDForIdent($ident);
+        if ($id !== false && IPS_VariableExists($id)) {
             $this->SetValue($ident, $value);
         }
-    }
-
-    private function dropVariable(string $ident): void
-    {
-        $id = @$this->GetIDForIdent($ident);
-        if ($id === false || !IPS_VariableExists($id)) {
-            return;
-        }
-
-        // UnregisterVariable operates on direct module children. Preserve the
-        // existing variable ID until the actual unregister operation occurs.
-        if (IPS_GetParent($id) !== $this->InstanceID) {
-            IPS_SetParent($id, $this->InstanceID);
-        }
-        $this->UnregisterVariable($ident);
     }
 }
