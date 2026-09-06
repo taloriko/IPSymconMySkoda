@@ -1,6 +1,8 @@
 # MySkoda für IP-Symcon
 
-IP-Symcon-Modul zur Anbindung eines Fahrzeugs an die offizielle **MySkoda Public API**.
+MySkoda ist ein IP-Symcon-Modul zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**.
+
+Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als native IP-Symcon-Variablen bereit und unterstützt – soweit vom Fahrzeug und der API freigegeben – ausgewählte Remote-Funktionen.
 
 ## Funktionen
 
@@ -11,6 +13,7 @@ IP-Symcon-Modul zur Anbindung eines Fahrzeugs an die offizielle **MySkoda Public
 - Klimatisierung sowie unterstützte Remote-Funktionen
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
+- deutsche Darstellung von Lade- und Parkstatus bei unveränderten API-Rohwerten
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
 - Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
 - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
@@ -21,10 +24,19 @@ IP-Symcon-Modul zur Anbindung eines Fahrzeugs an die offizielle **MySkoda Public
 - IP-Symcon **8.1 oder neuer**
 - 17-stellige FIN/VIN
 - MySkoda API-Key
-- optional S-PIN für Standheizung
 - aktive MySkoda/Škoda-Connect-Dienste für die jeweils verwendete Fahrzeugfunktion
+- optional S-PIN für Standheizung
+- Archive Control für die optionale Archivierung
+
+Die offizielle MyŠkoda Public API ist unter <https://public.api.connect.skoda-auto.cz/docs> dokumentiert.
 
 ## Installation
+
+### Über den Module Store
+
+Nach Veröffentlichung im IP-Symcon Module Store kann **MySkoda** direkt dort installiert werden.
+
+### Manuell über Git
 
 Das Repository im **Module Control** hinzufügen:
 
@@ -32,17 +44,17 @@ Das Repository im **Module Control** hinzufügen:
 https://github.com/taloriko/IPSymconMySkoda
 ```
 
-Danach eine Instanz **MySkoda** anlegen und FIN/VIN sowie API-Token konfigurieren.
+Anschließend eine Instanz **MySkoda** anlegen.
 
-Die vollständige Dokumentation befindet sich unter [MySkoda/README.md](MySkoda/README.md).
+## Erste Einrichtung
 
-## API-Key
+1. In der MySkoda App einen API-Key erstellen: **Profil → Smart Home → Schlüssel erstellen**.
+2. FIN/VIN und API-Token in der MySkoda-Instanz eintragen.
+3. Konfiguration übernehmen.
+4. Mit **Verbindung testen** prüfen, ob Fahrzeugdaten empfangen werden.
+5. Optional Detailvariablen, Mitteilungen und Archivierung aktivieren.
 
-In der **MySkoda App**:
-
-**Profil → Smart Home → Schlüssel erstellen → Namen vergeben → FIN/VIN und API-Token in die Symcon-Instanz übernehmen.**
-
-Nach dem Übernehmen prüft das Modul die Verbindung zur MySkoda Public API.
+Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul wertet die von der API gelieferten Rate-Limit-Header aus und berücksichtigt `Retry-After`.
 
 ## Objektstruktur
 
@@ -66,11 +78,26 @@ MySkoda
 └─ Letzte Aktualisierung
 ```
 
-Es werden **keine Dummy-Instanzen, Kategorien oder Links** angelegt. Die fachliche Gruppierung übernimmt die Visualisierung.
+Es werden **keine Dummy-Instanzen, Kategorien oder Links** angelegt. Die fachliche Gruppierung und Darstellung übernimmt die Visualisierung.
 
-Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charging`, `TargetSOC` oder `Climate` bleiben stabil und sind die vorgesehene Schnittstelle für Skripte und weitere Module. Die sichtbaren Namen sind deutsch.
+Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charging`, `TargetSOC` oder `Climate` bleiben stabil und bilden die Schnittstelle für Skripte und weitere Module.
 
-Eine vorhandene Variable wird bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden nur bei der Erstanlage gesetzt und danach nicht durch Updates überschrieben.
+Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden deshalb nur bei der Erstanlage gesetzt und danach nicht durch ein Update überschrieben.
+
+## Deutsche Statusdarstellung
+
+Statuswerte der API bleiben technisch unverändert. Die IP-Symcon-Darstellung übersetzt bekannte Werte für die Oberfläche.
+
+Beispiele:
+
+- `PARKED` → **Geparkt**
+- `MOVING` → **In Bewegung**
+- `DRIVING` → **In Fahrt**
+- `CHARGING` → **Laden aktiv**
+- `READY_FOR_CHARGING` → **Ladebereit**
+- `UNKNOWN` → **Unbekannt**
+
+Dadurch bleiben Skripte unabhängig von der eingestellten Sprache, während die Oberfläche deutsch dargestellt wird.
 
 ## Archivierung
 
@@ -83,12 +110,20 @@ Bei aktivierter Archivierung werden folgende Variablen geloggt:
 
 Der Kilometerstand wird als **Zähler** archiviert. Ein von der API gelieferter Kilometerstand `<= 0` wird nicht in die Variable geschrieben. Zusätzlich ist für den Archiv-Zähler das Ignorieren von Null- und negativen Werten aktiviert.
 
-## Hinweis
+Das Modul erzeugt bewusst kein eigenes Diagramm. Die Darstellung der Archivdaten ist Aufgabe der Visualisierung.
 
-Dieses Projekt ist eine unabhängige Community-Integration und weder ein offizielles Produkt von Škoda Auto a.s. noch von Škoda Auto a.s. unterstützt.
+## Dokumentation
 
-## Lizenz
+Die vollständige Modul-Dokumentation befindet sich unter [MySkoda/README.md](MySkoda/README.md).
+
+## Fehler melden
+
+Fehler und nachvollziehbare Verbesserungsvorschläge können über die GitHub-Issues des Projekts gemeldet werden. Bitte keine API-Keys, S-PINs, vollständigen FINs oder andere Zugangsdaten veröffentlichen.
+
+## Lizenz und Markenhinweis
 
 Copyright © 2026 **taloriko**.
 
 Veröffentlicht unter der [MIT-Lizenz](LICENSE).
+
+Dieses Projekt ist eine unabhängige Community-Integration und weder ein offizielles Produkt von Škoda Auto a.s. noch mit Škoda Auto a.s. verbunden oder von Škoda Auto a.s. unterstützt.
