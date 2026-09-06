@@ -67,11 +67,13 @@ Für den Ladeverlauf werden genau diese drei Variablen verwendet:
 
 - `StateOfCharge` – Ladezustand, linke Y-Achse in %
 - `TargetSOC` – Ladelimit, linke Y-Achse in %
-- `ChargePower` – Ladeleistung, rechte Y-Achse
+- `ChargePower` – Ladeleistung, rechte Y-Achse in W/kW
 
 Beim Anwenden der Instanz prüft das Modul für jede dieser Variablen den Logging-Status im Archive Control. **Nur wenn eine Variable noch nicht geloggt wird, wird das Logging aktiviert.**
 
-Bestehende Archiveinstellungen werden nicht verändert. Insbesondere ändert das Modul keine Aggregationsart, Kompaktierung oder sonstige benutzerspezifische Archiveinstellungen. Vorhandene Archivdaten werden weder verändert noch gelöscht. Ein bereits vorhandenes Lade-Diagramm wird ebenfalls nicht überschrieben.
+Ist Logging bereits aktiv, verändert MySkoda daran nichts. Insbesondere werden keine Aggregationsart, Kompaktierung, Graph-Einstellung oder sonstige benutzerspezifische Archiveinstellungen überschrieben. Vorhandene Archivdaten werden weder verändert noch gelöscht.
+
+Das Lade-Diagramm wird nur angelegt, wenn noch keines mit dem Modul-Ident vorhanden ist. Eine bestehende Diagrammkonfiguration wird bei späteren Updates nicht überschrieben und kann vom Benutzer angepasst werden.
 
 Wird die Option später deaktiviert, löscht das Modul weder Archivdaten noch eine bereits angelegte Diagrammkonfiguration.
 
@@ -90,11 +92,11 @@ MySkoda
 ├─ Fahrzeug
 ├─ Fahrzeugstatus
 ├─ Laden
-│  └─ Diagramme
-│     └─ Ladeverlauf
 ├─ Klimatisierung
 ├─ Standort
 ├─ API & Diagnose
+├─ Diagramme
+│  └─ Ladeverlauf
 └─ Letzte Aktualisierung
 ```
 
