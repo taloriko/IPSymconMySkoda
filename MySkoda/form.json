@@ -1,0 +1,175 @@
+{
+  "elements": [
+    {
+      "type": "ExpansionPanel",
+      "caption": "Connection",
+      "expanded": true,
+      "items": [
+        {
+          "type": "Label",
+          "caption": "Vehicle data is read directly from the official MySkoda Public API."
+        },
+        {
+          "type": "Label",
+          "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key. Then enter VIN and API token here."
+        },
+        {
+          "type": "ValidationTextBox",
+          "name": "VIN",
+          "caption": "VIN",
+          "validate": "^[A-HJ-NPR-Z0-9]{17}$"
+        },
+        {
+          "type": "PasswordTextBox",
+          "name": "APIToken",
+          "caption": "API token"
+        },
+        {
+          "type": "Label",
+          "name": "ConnectionFeedback",
+          "caption": "Connection has not been tested yet.",
+          "bold": true
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Polling and control",
+      "expanded": true,
+      "items": [
+        {
+          "type": "NumberSpinner",
+          "name": "Interval",
+          "caption": "Polling interval",
+          "suffix": " s",
+          "minimum": 180,
+          "maximum": 3600
+        },
+        {
+          "type": "Label",
+          "caption": "Recommended: 300 seconds. The module observes the rate-limit information returned by the API."
+        },
+        {
+          "type": "CheckBox",
+          "name": "EnableRemote",
+          "caption": "Enable remote control"
+        },
+        {
+          "type": "CheckBox",
+          "name": "ClimateWithoutExternalPower",
+          "caption": "Allow air conditioning without external power"
+        },
+        {
+          "type": "PasswordTextBox",
+          "name": "SPIN",
+          "caption": "S-PIN (optional, auxiliary heating only)"
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Archiving",
+      "expanded": true,
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "EnableChargingHistory",
+          "caption": "Archive vehicle data"
+        },
+        {
+          "type": "Label",
+          "caption": "After explicit activation, archive logging is configured once for state of charge, charging limit, charging power and mileage. Later Archive Control changes remain untouched."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Notifications",
+      "expanded": false,
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "NotifyKeyExpiry",
+          "caption": "Send a Symcon notification when the API key has 30 days or less remaining"
+        },
+        {
+          "type": "SelectInstance",
+          "name": "NotificationInstanceID",
+          "caption": "Visualization for notifications",
+          "validModules": []
+        },
+        {
+          "type": "Label",
+          "name": "NotificationTargetFeedback",
+          "caption": "Select a Tile Visualization or WebFront for notifications."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Additional data",
+      "expanded": false,
+      "items": [
+        {
+          "type": "CheckBox",
+          "name": "ShowDetails",
+          "caption": "Create detail and diagnostic variables"
+        },
+        {
+          "type": "Label",
+          "caption": "Missing detail variables are created when enabled. Existing variables are kept when this option is disabled."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
+      "caption": "Help and documentation",
+      "expanded": false,
+      "items": [
+        {
+          "type": "Label",
+          "caption": "Documentation and source code: github.com/taloriko/IPSymconMySkoda"
+        }
+      ]
+    }
+  ],
+  "actions": [
+    {
+      "type": "RowLayout",
+      "items": [
+        {
+          "type": "Button",
+          "caption": "Test connection",
+          "onClick": "echo MSKODA_TestConnection($id) ? 'Verbindung erfolgreich - Fahrzeugdaten empfangen.' : 'Verbindung fehlgeschlagen - Instanzstatus und API-Daten prüfen.';"
+        },
+        {
+          "type": "Button",
+          "caption": "Update now",
+          "onClick": "MSKODA_Update($id); echo 'Aktualisierung ausgeführt';"
+        }
+      ]
+    },
+    {
+      "type": "RowLayout",
+      "items": [
+        {
+          "type": "Button",
+          "caption": "Test notification",
+          "onClick": "echo MSKODA_TestNotification($id) ? 'Mitteilung gesendet.' : 'Mitteilung konnte nicht gesendet werden. Ausgewählte Visualisierung und registrierte Mobilgeräte prüfen.';"
+        },
+        {
+          "type": "Button",
+          "caption": "Reload API definition",
+          "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API-Definition aktualisiert' : 'API-Definition konnte nicht geladen werden';"
+        }
+      ]
+    }
+  ],
+  "status": [
+    {"code": 102, "icon": "active", "caption": "Connected to MySkoda"},
+    {"code": 104, "icon": "inactive", "caption": "Inactive"},
+    {"code": 201, "icon": "error", "caption": "VIN or API token is missing or invalid"},
+    {"code": 202, "icon": "error", "caption": "Connection to MySkoda failed / API error"},
+    {"code": 203, "icon": "warning", "caption": "Rate limit / waiting period active"}
+  ]
+}
