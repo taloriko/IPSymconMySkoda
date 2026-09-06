@@ -78,7 +78,7 @@ def main() -> None:
     assert "SunroofOpen" in php_sources
     assert "IPS_GetInstanceListByModuleType(6)" in php_sources
 
-    # Thematische Dummies und stabile Statusvariablen-Idents.
+    # Thematische Dummy-Instanzen; Statusvariablen behalten ihre stabilen Idents.
     assert "{485D0419-BE97-4548-AA9C-C083EB82E61E}" in structure
     assert "IPS_CreateInstance" in structure
     for group_ident in [
@@ -88,22 +88,31 @@ def main() -> None:
         "MSKODA_GroupClimate",
         "MSKODA_GroupLocation",
         "MSKODA_GroupDiagnostics",
+        "MSKODA_GroupCharts",
         "MSKODA_GroupLastUpdate",
     ]:
         assert group_ident in structure
     for stable_ident in ["StateOfCharge", "TargetSOC", "ChargePower", "LastUpdate"]:
         assert stable_ident in structure
+    assert "protected function GetIDForIdent" in structure
+    assert "protected function SetValue" in structure
+    assert "protected function GetValue" in structure
 
-    # Ladeverlauf: Prozentwerte links, Leistung rechts.
+    # Ladeverlauf: SOC und Limit auf Achse 0 (%), Ladeleistung auf Achse 1 (W/kW).
     assert "{43192F0B-135B-4CE7-A0A7-1475603F3060}" in structure
     assert "IPS_CreateMedia(4)" in structure
     assert "MSKODA_ChargingHistory" in structure
+    assert "'profile' => '~Intensity.100'" in structure
+    assert "'profile' => '~Power'" in structure
+    assert "'axis' => 0" in structure
+    assert "'axis' => 1" in structure
     assert "'side' => 'left'" in structure
     assert "'side' => 'right'" in structure
 
     # Archivierung ist strikt nicht-destruktiv: nur fehlendes Logging aktivieren.
     assert "AC_GetLoggingStatus" in structure
-    assert "AC_SetLoggingStatus" in structure
+    assert "if (AC_GetLoggingStatus($archiveId, $variableId))" in structure
+    assert "AC_SetLoggingStatus($archiveId, $variableId, true)" in structure
     for destructive_call in [
         "AC_SetAggregationType",
         "AC_DeleteVariableData",
