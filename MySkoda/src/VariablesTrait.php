@@ -412,8 +412,13 @@ trait MySkodaVariablesTrait
         }
 
         $this->WriteAttributeString('ChargeModeMap', json_encode($map, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+
+        // Dynamic presentation updates still use RegisterVariable*/MaintainAction,
+        // therefore temporarily place only this variable at the instance root.
+        $this->moveManagedVariableToRegistrationRoot('ChargeMode');
         $this->RegisterVariableInteger('ChargeMode', $this->Translate('Charging mode'), $this->chargeModePresentation($map), 250);
         $this->MaintainAction('ChargeMode', $this->ReadPropertyBoolean('EnableRemote') && $map !== []);
+        $this->placeManagedVariable('ChargeMode');
     }
 
     private function chargeModePresentation(array $map): array
