@@ -11,9 +11,9 @@ IP-Symcon-Modul zur Anbindung eines Fahrzeugs an die offizielle **MySkoda Public
 - Klimatisierung sowie unterstützte Remote-Funktionen
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
-- thematische Objektstruktur über Dummy-Instanzen mit Namen und Icons
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
-- optionaler Ladeverlauf mit Symcon Archive Control
+- Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
+- Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
 - stabile Variablen-Idents als Schnittstelle für Skripte und Visualisierungsmodule
 
 ## Voraussetzungen
@@ -40,35 +40,48 @@ Die vollständige Dokumentation befindet sich unter [MySkoda/README.md](MySkoda/
 
 In der **MySkoda App**:
 
-**Profil → Smart Home → Create Key → Namen vergeben → FIN/VIN und API-Token in die Symcon-Instanz übernehmen.**
+**Profil → Smart Home → Schlüssel erstellen → Namen vergeben → FIN/VIN und API-Token in die Symcon-Instanz übernehmen.**
 
 Nach dem Übernehmen prüft das Modul die Verbindung zur MySkoda Public API.
 
-## Objektstruktur und Visualisierungsschnittstelle
+## Objektstruktur
 
-Die Fahrzeugdaten werden direkt unter thematischen Dummy-Instanzen einsortiert:
+Das Modul hält den Objektbaum bewusst einfach. Unter der MySkoda-Instanz liegen ausschließlich die echten Modulvariablen:
 
 ```text
 MySkoda
-├─ Fahrzeug
-│  ├─ Ladezustand
-│  ├─ Reichweite
-│  └─ Kilometerstand
-├─ Fahrzeugstatus
+├─ Ladezustand
+├─ Reichweite
+├─ Kilometerstand
+├─ Verriegelt
+├─ Türen offen
+├─ Fenster offen
 ├─ Laden
+├─ Ladeleistung
+├─ Ladelimit
+├─ Lademodus
 ├─ Klimatisierung
-├─ Standort
-├─ API & Diagnose
-├─ Diagramme
-│  └─ Ladeverlauf
+├─ Solltemperatur
+├─ API-Key Warnung
 └─ Letzte Aktualisierung
 ```
 
-Die Gruppen sind Dummy-Instanzen mit festen technischen Idents, Namen und Icons. Darunter liegen die echten MySkoda-Variablen – keine zusätzlichen Links.
+Es werden **keine Dummy-Instanzen, Kategorien oder Links** angelegt. Die fachliche Gruppierung übernimmt die Visualisierung.
 
-Die Variablen besitzen feste Idents wie `StateOfCharge`, `Range`, `Charging`, `TargetSOC` oder `Climate`. Diese Idents sind die vorgesehene Schnittstelle für Skripte und weitere Module. Ein Visualisierungsmodul kann die benötigten Werte rekursiv unterhalb der MySkoda-Instanz über diese Idents ermitteln.
+Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charging`, `TargetSOC` oder `Climate` bleiben stabil und sind die vorgesehene Schnittstelle für Skripte und weitere Module. Die sichtbaren Namen sind deutsch.
 
-Eine vorhandene Variable wird bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden deshalb nur bei der Erstanlage gesetzt und danach nicht durch Updates überschrieben.
+Eine vorhandene Variable wird bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden nur bei der Erstanlage gesetzt und danach nicht durch Updates überschrieben.
+
+## Archivierung
+
+Bei aktivierter Archivierung werden folgende Variablen geloggt:
+
+- `StateOfCharge` – Ladezustand
+- `TargetSOC` – Ladelimit
+- `ChargePower` – Ladeleistung
+- `Mileage` – Kilometerstand
+
+Der Kilometerstand wird als **Zähler** archiviert. Ein von der API gelieferter Kilometerstand `<= 0` wird nicht in die Variable geschrieben. Zusätzlich ist für den Archiv-Zähler das Ignorieren von Null- und negativen Werten aktiviert.
 
 ## Hinweis
 
