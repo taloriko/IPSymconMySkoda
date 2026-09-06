@@ -5,6 +5,7 @@ declare(strict_types=1);
 trait MySkodaStructureTrait
 {
     private const DUMMY_MODULE_ID = '{485D0419-BE97-4548-AA9C-C083EB82E61E}';
+    private const LINK_IDENT_PREFIX = 'MSKODA_Link_';
 
     private const GROUPS = [
         'vehicle' => ['ident' => 'MSKODA_GroupVehicle', 'name' => 'Vehicle', 'icon' => 'Car', 'position' => 100],
@@ -56,39 +57,33 @@ trait MySkodaStructureTrait
     ];
 
     /**
-     * Ensures that all module-owned groups exist.
-     * Existing groups are intentionally left untouched so user changes survive.
+     * Keeps registered status variables directly below the module instance.
+     * IPSModuleStrict requires this layout for protected read-only variables.
      */
     private function ensureObjectGroups(): void
     {
+        $this->restoreManagedVariablesToModuleRoot();
+
         foreach (array_keys(self::GROUPS) as $groupKey) {
             $this->getGroupId($groupKey);
         }
     }
 
     /**
-     * Places only ungrouped module objects below their intended dummy instance.
-     * Objects that are already below another container are not moved again.
+     * Builds the user-facing grouped view with links to the module variables.
+     * Existing groups and links are left untouched.
      */
     private function organizeModuleObjects(): void
     {
         foreach (self::VARIABLE_GROUPS as $ident => $groupKey) {
-            $variableId = $this->findVariableByIdent($ident);
-            if ($variableId <= 0 || IPS_GetParent($variableId) !== $this->InstanceID) {
-                continue;
-            }
-
-            $groupId = $this->getGroupId($groupKey);
-            if ($groupId > 0) {
-                IPS_SetParent($variableId, $groupId);
-            }
+            $this->ensureVariableLink($ident, $groupKey);
         }
 
         $chartId = @IPS_GetObjectIDByIdent('MSKODA_ChargingHistory', $this->InstanceID);
         if ($chartId !== false && IPS_MediaExists((int) $chartId)) {
-            $groupId = $this->getGroupId('charts');
-            if ($groupId > 0) {
-                IPS_SetParent((int) $chartId, $groupId);
+            $chartsGroupId = $this->getGroupId('charts');
+            if ($chartsGroupId > 0) {
+                IPS_SetParent((int) $chartId, $chartsGroupId);
             }
         }
     }
@@ -100,75 +95,82 @@ trait MySkodaStructureTrait
             return;
         }
 
-        $variableId = $this->findVariableByIdent($ident);
-        $groupId = $this->getGroupId($groupKey);
-        if ($variableId > 0 && $groupId > 0 && IPS_GetParent($variableId) === $this->InstanceID) {
-            IPS_SetParent($variableId, $groupId);
-        }
+        $this->ensureVariableLink($ident, $groupKey);
     }
 
-    /**
-     * Updates the module action only when its state really changes.
-     * Module actions are configured while the variable is a direct child and
-     * the original group is restored immediately afterwards.
-     */
     private function maintainGroupedAction(string $ident, bool $enabled): void
     {
-        $variableId = $this->findVariableByIdent($ident);
-        if ($variableId <= 0) {
+        $variableId = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
+        if ($variableId === false || !IPS_VariableExists((int) $variableId)) {
             return;
         }
 
-        $variable = IPS_GetVariable($variableId);
+        $variable = IPS_GetVariable((int) $variableId);
         $actionEnabled = (int) ($variable['VariableAction'] ?? 0) === $this->InstanceID;
         if ($actionEnabled === $enabled) {
             return;
         }
 
-        $originalParent = IPS_GetParent($variableId);
-        if ($originalParent !== $this->InstanceID) {
-            IPS_SetParent($variableId, $this->InstanceID);
-        }
+        $this->MaintainAction($ident, $enabled);
+    }
 
-        try {
-            $this->MaintainAction($ident, $enabled);
-        } finally {
-            if ($originalParent !== $this->InstanceID && IPS_ObjectExists($originalParent)) {
-                IPS_SetParent($variableId, $originalParent);
+    private function restoreManagedVariablesToModuleRoot(): void
+    {
+        foreach (array_keys(self::VARIABLE_GROUPS) as $ident) {
+            $directId = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
+            if ($directId !== false && IPS_VariableExists((int) $directId)) {
+                continue;
+            }
+
+            $nestedId = $this->findObjectByIdentRecursive($this->InstanceID, $ident, 0);
+            if ($nestedId <= 0 || !IPS_VariableExists($nestedId)) {
+                continue;
+            }
+
+            if (IPS_GetParent($nestedId) !== $this->InstanceID) {
+                IPS_SetParent($nestedId, $this->InstanceID);
             }
         }
     }
 
-    protected function GetIDForIdent(string $Ident): int|false
+    private function ensureVariableLink(string $ident, string $groupKey): void
     {
-        $direct = @parent::GetIDForIdent($Ident);
-        if ($direct !== false) {
-            return $direct;
+        $variableId = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
+        if ($variableId === false || !IPS_VariableExists((int) $variableId)) {
+            return;
         }
 
-        $found = $this->findObjectByIdentRecursive($this->InstanceID, $Ident, 0);
-        return $found > 0 ? $found : false;
-    }
-
-    protected function SetValue(string $Ident, mixed $Value): bool
-    {
-        $variableId = $this->GetIDForIdent($Ident);
-        if ($variableId === false || !IPS_VariableExists($variableId)) {
-            return false;
+        $groupId = $this->getGroupId($groupKey);
+        if ($groupId <= 0) {
+            return;
         }
 
-        SetValue($variableId, $Value);
-        return true;
-    }
+        $linkIdent = self::LINK_IDENT_PREFIX . $ident;
+        $existingId = @IPS_GetObjectIDByIdent($linkIdent, $groupId);
+        if ($existingId !== false) {
+            if (!IPS_LinkExists((int) $existingId)) {
+                $this->SendDebug('Structure', 'Ident ' . $linkIdent . ' is already used by another object.', 0);
+                return;
+            }
 
-    protected function GetValue(string $Ident): mixed
-    {
-        $variableId = $this->GetIDForIdent($Ident);
-        if ($variableId === false || !IPS_VariableExists($variableId)) {
-            return null;
+            $link = IPS_GetLink((int) $existingId);
+            if ((int) ($link['TargetID'] ?? 0) !== (int) $variableId) {
+                $this->SendDebug('Structure', 'Link ' . $linkIdent . ' points to another object.', 0);
+            }
+            return;
         }
 
-        return GetValue($variableId);
+        $variableObject = IPS_GetObject((int) $variableId);
+        $linkId = IPS_CreateLink();
+        IPS_SetParent($linkId, $groupId);
+        IPS_SetIdent($linkId, $linkIdent);
+        IPS_SetName($linkId, IPS_GetName((int) $variableId));
+        IPS_SetPosition($linkId, (int) ($variableObject['ObjectPosition'] ?? 0));
+        IPS_SetLinkTargetID($linkId, (int) $variableId);
+
+        // The source variable remains technically attached to the module and is
+        // hidden only when its grouped link is created for the first time.
+        IPS_SetHidden((int) $variableId, true);
     }
 
     private function getGroupId(string $groupKey): int
@@ -198,12 +200,6 @@ trait MySkodaStructureTrait
         return $groupId;
     }
 
-    private function findVariableByIdent(string $ident): int
-    {
-        $objectId = $this->GetIDForIdent($ident);
-        return $objectId !== false && IPS_VariableExists($objectId) ? $objectId : 0;
-    }
-
     private function findObjectByIdentRecursive(int $parentId, string $ident, int $depth): int
     {
         if ($depth > 4 || !IPS_ObjectExists($parentId)) {
@@ -220,14 +216,13 @@ trait MySkodaStructureTrait
 
         foreach ($children as $childId) {
             $object = IPS_GetObject($childId);
-            $objectType = (int) ($object['ObjectType'] ?? -1);
-            if (!in_array($objectType, [0, 1], true)) {
+            if (!in_array((int) ($object['ObjectType'] ?? -1), [0, 1], true)) {
                 continue;
             }
 
-            $found = $this->findObjectByIdentRecursive((int) $childId, $ident, $depth + 1);
-            if ($found > 0) {
-                return $found;
+            $foundId = $this->findObjectByIdentRecursive((int) $childId, $ident, $depth + 1);
+            if ($foundId > 0) {
+                return $foundId;
             }
         }
 
