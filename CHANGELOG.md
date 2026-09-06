@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.1 - 2026-09-06
+
+- Statusvariablen funktional nach Fahrzeug, Fahrzeugstatus, Laden, Klimatisierung, Standort sowie API/Diagnose sortiert
+- native Symcon-/Font-Awesome-Icons für passende Datenpunkte ergänzt
+- Ladestatus wird über eine native String-Wertanzeige verständlich lokalisiert, der originale API-Wert bleibt erhalten
+- bekannte Ladezustände wie `CONNECT_CABLE`, `CHARGING` und `CHARGING_INTERRUPTED` erhalten lesbare Beschriftungen
+- API- und Diagnosewerte stehen gesammelt am Ende der Instanz
+
 ## 2.0 - 2026-09-05
 
 - Fahrzeugstatus über die offizielle MySkoda Public API

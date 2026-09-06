@@ -30,7 +30,7 @@ def main() -> None:
     assert GUID.match(library["id"])
     assert GUID.match(module["id"])
     assert library["compatibility"]["version"] >= "8.1"
-    assert library["version"] == "2.0"
+    assert library["version"] == "2.1"
     assert module["name"] == "MySkoda"
     assert module["vendor"] == "taloriko"
     assert module["prefix"].isalnum()
@@ -49,11 +49,12 @@ def main() -> None:
 
     php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
     assert "class MySkoda extends IPSModuleStrict" in php
-    assert "IP-Symcon-MySkoda/2.0" in php
+    assert "IP-Symcon-MySkoda/2.1" in php
     for legacy in ["BootstrapV", "CoreV19Trait", "Visualization", "NotificationV19Trait", "PresentationTrait"]:
         assert legacy not in php
 
     php_sources = "\n".join(source.read_text(encoding="utf-8") for source in (ROOT / "MySkoda").rglob("*.php"))
+    variables = (ROOT / "MySkoda" / "src" / "VariablesTrait.php").read_text(encoding="utf-8")
     assert "SetVisualizationType(1)" not in php_sources
     assert "SetVisualizationType(0)" in php_sources
     assert "GetVisualizationTile" not in php_sources
@@ -69,8 +70,19 @@ def main() -> None:
     assert "IPS_LogMessage" not in php_sources
     assert "IPS_SetProperty" not in php_sources
     assert "IPS_ApplyChanges" not in php_sources
+    assert "IPS_CreateCategory" not in php_sources
     assert "SunroofOpen" in php_sources
     assert "IPS_GetInstanceListByModuleType(6)" in php_sources
+
+    # Thematische Reihenfolge, native Icons und lokalisierter Ladestatus.
+    assert "chargingStatePresentation" in variables
+    assert "CONNECT_CABLE" in variables
+    assert "CHARGING_INTERRUPTED" in variables
+    assert "'ICON' => 'lightbulb'" not in variables  # Licht-Icon kommt über booleanYesNoPresentation.
+    assert "booleanYesNoPresentation(false, 'lightbulb')" in variables
+    assert "'ICON' => 'location-dot'" in variables
+    assert "'ICON' => 'clock'" in variables
+    assert "RegisterVariableBoolean('Charging'" in variables
 
     assert not (ROOT / "MySkoda" / "module.html").exists()
     assert not (ROOT / "docs" / "VISUALIZATION.md").exists()
