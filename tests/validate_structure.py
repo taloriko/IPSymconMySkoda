@@ -51,7 +51,8 @@ def main() -> None:
         assert required in names
 
     module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
-    assert "final class MySkoda extends IPSModuleStrict" in module_php
+    assert "final class MySkoda extends IPSModule" in module_php
+    assert "extends IPSModuleStrict" not in module_php
     assert "IP-Symcon-MySkoda/1.0" in module_php
     assert "StructureTrait.php" in module_php
     assert "HistoryTrait.php" in module_php
@@ -66,7 +67,7 @@ def main() -> None:
     history = (ROOT / "MySkoda" / "src" / "HistoryTrait.php").read_text(encoding="utf-8")
     core = (ROOT / "MySkoda" / "src" / "CoreTrait.php").read_text(encoding="utf-8")
 
-    # Variables are registered once and remain real IPSModuleStrict variables.
+    # Variables are registered once and keep stable technical idents.
     assert "registerVariableOnce" in variables
     assert "placeVariableInGroup($ident)" in variables
     assert "maintainGroupedAction" in variables
@@ -91,25 +92,19 @@ def main() -> None:
     ]:
         assert f"'{stable_ident}'" in variables
 
-    # Grouping is a view layer made of dummy instances and links.
+    # Dummy instances contain the real variables directly.
     assert "{485D0419-BE97-4548-AA9C-C083EB82E61E}" in structure
-    assert "LINK_IDENT_PREFIX" in structure
     assert "IPS_CreateInstance" in structure
     assert "IPS_SetName" in structure
     assert "IPS_SetIcon" in structure
-    assert "IPS_CreateLink" in structure
-    assert "IPS_SetLinkTargetID" in structure
-    assert "IPS_SetHidden" in structure
-    assert "restoreManagedVariablesToModuleRoot" in structure
-    assert "IPS_GetObjectIDByIdent($ident, $this->InstanceID)" in structure
-
-    # IPSModuleStrict read-only variables must never be written through a custom
-    # SetValue implementation or the global SetValue(ID, ...) function.
-    assert "protected function SetValue" not in structure
-    assert "protected function GetValue" not in structure
-    assert "protected function GetIDForIdent" not in structure
-    assert "SetValue($variableId" not in structure
-    assert "SetValue($nestedId" not in structure
+    assert "IPS_SetParent($variableId, $groupId)" in structure
+    assert "protected function GetIDForIdent" in structure
+    assert "protected function SetValue" in structure
+    assert "protected function GetValue" in structure
+    assert "findObjectByIdentRecursive" in structure
+    assert "IPS_CreateLink" not in php_sources
+    assert "IPS_SetLinkTargetID" not in php_sources
+    assert "MSKODA_Link_" not in php_sources
 
     for group_ident in [
         "MSKODA_GroupVehicle",
@@ -123,7 +118,7 @@ def main() -> None:
     ]:
         assert group_ident in structure
 
-    # Stable charge-mode mapping; API responses only update values.
+    # Existing variable metadata is not re-registered dynamically.
     assert "CHARGE_MODES" in variables
     assert "AvailableChargeModes" in variables
     assert "updateChargeModePresentation" not in php_sources
@@ -159,7 +154,6 @@ def main() -> None:
     ]:
         assert forbidden not in php_sources
 
-    # No migration history or cleanup routines are part of the product code.
     for forbidden in [
         "removeObsolete",
         "obsoleteVisualization",
@@ -189,10 +183,9 @@ def main() -> None:
     root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
     module_readme = (ROOT / "MySkoda" / "README.md").read_text(encoding="utf-8")
     assert "Dummy-Instanzen" in root_readme
-    assert "Links" in root_readme
+    assert "echten MySkoda-Variablen" in root_readme
     assert "MSKODA_GroupVehicle" in module_readme
-    assert "MSKODA_Link_<VariablenIdent>" in module_readme
-    assert "IPSModuleStrict" in module_readme
+    assert "rekursiv" in root_readme.lower()
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## 1.0 - 2026-09-06" in changelog
