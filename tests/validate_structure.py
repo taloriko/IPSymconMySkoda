@@ -63,8 +63,8 @@ def main() -> None:
         assert german_text in form_text
 
     module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
-    assert "final class MySkoda extends IPSModule" in module_php
-    assert "extends IPSModuleStrict" not in module_php
+    assert "final class MySkoda extends IPSModuleStrict" in module_php
+    assert "final class MySkoda extends IPSModule\n" not in module_php
     assert "IP-Symcon-MySkoda/1.0" in module_php
     assert "StructureTrait.php" not in module_php
     assert "HistoryTrait.php" in module_php
