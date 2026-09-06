@@ -30,57 +30,87 @@ def main() -> None:
     assert GUID.match(library["id"])
     assert GUID.match(module["id"])
     assert library["compatibility"]["version"] >= "8.1"
-    assert library["version"] == "2.2"
+    assert library["version"] == "1.0"
     assert module["name"] == "MySkoda"
     assert module["vendor"] == "taloriko"
-    assert module["prefix"].isalnum()
+    assert module["prefix"] == "MSKODA"
     assert isinstance(locale.get("translations", {}).get("de"), dict)
 
-    all_elements = list(walk(form["elements"]))
-    names = {element.get("name") for element in all_elements}
-    assert "VehicleDesign" not in names
-    assert "HideVisualizationTitle" not in names
-    assert "EnableChargingHistory" in names
-    target = next(element for element in all_elements if element.get("name") == "NotificationInstanceID")
-    assert target.get("type") == "SelectInstance"
+    elements = list(walk(form["elements"]))
+    names = {element.get("name") for element in elements}
+    for required in {
+        "VIN",
+        "APIToken",
+        "Interval",
+        "EnableRemote",
+        "ShowDetails",
+        "EnableChargingHistory",
+        "NotifyKeyExpiry",
+        "NotificationInstanceID",
+    }:
+        assert required in names
 
-    panels = {element.get("caption") for element in form["elements"] if element.get("type") == "ExpansionPanel"}
-    assert {"Connection", "Polling and control", "Notifications", "Advanced", "Help and documentation"}.issubset(panels)
-    assert "Visualization settings" not in panels
+    module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
+    assert "final class MySkoda extends IPSModuleStrict" in module_php
+    assert "IP-Symcon-MySkoda/1.0" in module_php
+    assert "StructureTrait.php" in module_php
+    assert "HistoryTrait.php" in module_php
+    assert "V22" not in module_php
 
-    php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
-    assert "class MySkoda extends IPSModuleStrict" in php
-    assert "IP-Symcon-MySkoda/2.2" in php
-    assert "StructureTrait.php" in php
-    for legacy in ["BootstrapV", "CoreV19Trait", "Visualization", "NotificationV19Trait", "PresentationTrait"]:
-        assert legacy not in php
-
-    php_sources = "\n".join(source.read_text(encoding="utf-8") for source in (ROOT / "MySkoda").rglob("*.php"))
+    php_sources = "\n".join(
+        source.read_text(encoding="utf-8")
+        for source in (ROOT / "MySkoda").rglob("*.php")
+    )
     variables = (ROOT / "MySkoda" / "src" / "VariablesTrait.php").read_text(encoding="utf-8")
     structure = (ROOT / "MySkoda" / "src" / "StructureTrait.php").read_text(encoding="utf-8")
+    history = (ROOT / "MySkoda" / "src" / "HistoryTrait.php").read_text(encoding="utf-8")
+    core = (ROOT / "MySkoda" / "src" / "CoreTrait.php").read_text(encoding="utf-8")
 
-    assert "SetVisualizationType(1)" not in php_sources
-    assert "SetVisualizationType(0)" in php_sources
-    assert "GetVisualizationTile" not in php_sources
-    assert "UpdateVisualizationValue" not in php_sources
-    assert "RefreshVisuals" not in php_sources
-    assert "VehicleDesign" not in php_sources
-    assert "IPS_SetHiddenTitle" not in php_sources
-    assert "VARIABLE_PRESENTATION_WEB_CONTENT" not in php_sources
-    assert "VARIABLE_PRESENTATION_LEGACY" not in php_sources
-    assert "IPS_CreateVariableProfile" not in php_sources
-    assert "IPS_CreateTemplate" not in php_sources
-    assert "IPS_SetTemplate" not in php_sources
-    assert "IPS_LogMessage" not in php_sources
-    assert "IPS_SetProperty" not in php_sources
-    assert "IPS_ApplyChanges" not in php_sources
-    assert "IPS_CreateCategory" not in php_sources
-    assert "SunroofOpen" in php_sources
-    assert "IPS_GetInstanceListByModuleType(6)" in php_sources
+    # Variables are registered once and remain real IPSModuleStrict variables.
+    assert "registerVariableOnce" in variables
+    assert "placeVariableInGroup($ident)" in variables
+    assert "maintainGroupedAction" in variables
+    assert "UnregisterVariable" not in php_sources
+    assert "IPS_DeleteVariable" not in php_sources
 
-    # Thematische Dummy-Instanzen; Statusvariablen behalten ihre stabilen Idents.
+    for stable_ident in [
+        "StateOfCharge",
+        "Range",
+        "Mileage",
+        "Locked",
+        "DoorsOpen",
+        "WindowsOpen",
+        "Charging",
+        "ChargePower",
+        "TargetSOC",
+        "ChargeMode",
+        "Climate",
+        "TargetTemperature",
+        "ApiKeyWarning",
+        "LastUpdate",
+    ]:
+        assert f"'{stable_ident}'" in variables
+
+    # Grouping is a view layer made of dummy instances and links.
     assert "{485D0419-BE97-4548-AA9C-C083EB82E61E}" in structure
+    assert "LINK_IDENT_PREFIX" in structure
     assert "IPS_CreateInstance" in structure
+    assert "IPS_SetName" in structure
+    assert "IPS_SetIcon" in structure
+    assert "IPS_CreateLink" in structure
+    assert "IPS_SetLinkTargetID" in structure
+    assert "IPS_SetHidden" in structure
+    assert "restoreManagedVariablesToModuleRoot" in structure
+    assert "IPS_GetObjectIDByIdent($ident, $this->InstanceID)" in structure
+
+    # IPSModuleStrict read-only variables must never be written through a custom
+    # SetValue implementation or the global SetValue(ID, ...) function.
+    assert "protected function SetValue" not in structure
+    assert "protected function GetValue" not in structure
+    assert "protected function GetIDForIdent" not in structure
+    assert "SetValue($variableId" not in structure
+    assert "SetValue($nestedId" not in structure
+
     for group_ident in [
         "MSKODA_GroupVehicle",
         "MSKODA_GroupStatus",
@@ -92,28 +122,34 @@ def main() -> None:
         "MSKODA_GroupLastUpdate",
     ]:
         assert group_ident in structure
-    for stable_ident in ["StateOfCharge", "TargetSOC", "ChargePower", "LastUpdate"]:
-        assert stable_ident in structure
-    assert "protected function GetIDForIdent" in structure
-    assert "protected function SetValue" in structure
-    assert "protected function GetValue" in structure
 
-    # Ladeverlauf: SOC und Limit auf Achse 0 (%), Ladeleistung auf Achse 1 (W/kW).
-    assert "{43192F0B-135B-4CE7-A0A7-1475603F3060}" in structure
-    assert "IPS_CreateMedia(4)" in structure
-    assert "MSKODA_ChargingHistory" in structure
-    assert "'profile' => '~Intensity.100'" in structure
-    assert "'profile' => '~Power'" in structure
-    assert "'axis' => 0" in structure
-    assert "'axis' => 1" in structure
-    assert "'side' => 'left'" in structure
-    assert "'side' => 'right'" in structure
+    # Stable charge-mode mapping; API responses only update values.
+    assert "CHARGE_MODES" in variables
+    assert "AvailableChargeModes" in variables
+    assert "updateChargeModePresentation" not in php_sources
+    assert "ChargeModeMap" not in php_sources
 
-    # Archivierung ist strikt nicht-destruktiv: nur fehlendes Logging aktivieren.
-    assert "AC_GetLoggingStatus" in structure
-    assert "if (AC_GetLoggingStatus($archiveId, $variableId))" in structure
-    assert "AC_SetLoggingStatus($archiveId, $variableId, true)" in structure
-    for destructive_call in [
+    for forbidden in [
+        "IPS_SetVariableCustomPresentation",
+        "IPS_SetVariableCustomProfile",
+        "IPS_CreateVariableProfile",
+        "IPS_CreateTemplate",
+        "IPS_SetTemplate",
+    ]:
+        assert forbidden not in php_sources
+
+    # Charging history is initialized once and remains non-destructive.
+    assert "ChargingHistoryInitialized" in core
+    assert "ReadAttributeBoolean('ChargingHistoryInitialized')" in history
+    assert "WriteAttributeBoolean('ChargingHistoryInitialized', true)" in history
+    assert "getGroupId('charts')" in history
+    assert "IPS_SetParent($chartId, $chartsGroupId)" in history
+    assert "AC_GetLoggingStatus" in history
+    assert "AC_SetLoggingStatus" in history
+    assert "MSKODA_ChargingHistory" in history
+    assert "IPS_CreateMedia(4)" in history
+
+    for forbidden in [
         "AC_SetAggregationType",
         "AC_DeleteVariableData",
         "AC_ReAggregateVariable",
@@ -121,34 +157,47 @@ def main() -> None:
         "AC_SetGraphStatus",
         "IPS_DeleteMedia",
     ]:
-        assert destructive_call not in php_sources
+        assert forbidden not in php_sources
 
-    # Bestehende Chart-Konfiguration wird nicht ueberschrieben.
-    assert "Existing chart configuration belongs to the user" in structure
+    # No migration history or cleanup routines are part of the product code.
+    for forbidden in [
+        "removeObsolete",
+        "obsoleteVisualization",
+        "Migration",
+        "migrate",
+        "Legacy",
+        "legacy",
+    ]:
+        assert forbidden not in php_sources
 
-    # Native Icons und lokalisierter Ladestatus.
-    assert "chargingStatePresentation" in variables
-    assert "CONNECT_CABLE" in variables
-    assert "CHARGING_INTERRUPTED" in variables
-    assert "'ICON' => 'lightbulb'" not in variables
-    assert "booleanYesNoPresentation(false, 'lightbulb')" in variables
-    assert "'ICON' => 'location-dot'" in variables
-    assert "'ICON' => 'clock'" in variables
-    assert "RegisterVariableBoolean('Charging'" in variables
+    assert "IPS_SetProperty" not in php_sources
+    assert "IPS_ApplyChanges" not in php_sources
 
-    assert not (ROOT / "MySkoda" / "module.html").exists()
-    assert not (ROOT / "docs" / "VISUALIZATION.md").exists()
-
-    src_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
-    assert src_names == {
+    expected_sources = {
         "ApiTrait.php",
         "CoreTrait.php",
         "HelpersTrait.php",
+        "HistoryTrait.php",
         "NotificationTrait.php",
         "OpenApiTrait.php",
         "StructureTrait.php",
         "VariablesTrait.php",
     }
+    source_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
+    assert source_names == expected_sources
+
+    root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    module_readme = (ROOT / "MySkoda" / "README.md").read_text(encoding="utf-8")
+    assert "Dummy-Instanzen" in root_readme
+    assert "Links" in root_readme
+    assert "MSKODA_GroupVehicle" in module_readme
+    assert "MSKODA_Link_<VariablenIdent>" in module_readme
+    assert "IPSModuleStrict" in module_readme
+
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert "## 1.0 - 2026-09-06" in changelog
+    assert "## 2." not in changelog
+    assert not (ROOT / "docs").exists()
 
 
 if __name__ == "__main__":
