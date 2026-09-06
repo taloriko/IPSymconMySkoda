@@ -52,7 +52,7 @@ Anschließend eine Instanz **MySkoda** anlegen.
 
 ## Objektstruktur
 
-Die Datenpunkte werden funktional unter Dummy-Instanzen einsortiert:
+Die Fahrzeugdaten werden in der Oberfläche funktional unter Dummy-Instanzen gruppiert:
 
 ```text
 MySkoda
@@ -80,13 +80,19 @@ Die Gruppen besitzen feste Idents und Darstellungen:
 | Diagramme | `MSKODA_GroupCharts` | Graph |
 | Letzte Aktualisierung | `MSKODA_GroupLastUpdate` | Clock |
 
+Die eigentlichen Statusvariablen bleiben als von `IPSModuleStrict` verwaltete Modulvariablen direkt unter der MySkoda-Instanz. In den Dummy-Gruppen werden Links auf diese Variablen angelegt. Dadurch bleibt die gewünschte Sortierung sichtbar, während die Variablen über den vom Symcon-SDK vorgesehenen Modulzugriff aktualisiert werden können.
+
+Die technischen Links besitzen eigene Idents nach dem Schema `MSKODA_Link_<VariablenIdent>`. Die Variablen-Idents selbst bleiben davon unverändert.
+
 ## Variablen und stabile Idents
 
-Der `Ident` einer Fahrzeugvariable ist die stabile technische Schnittstelle für Skripte und weitere Module. Die Gruppierung unter Dummy-Instanzen ändert den Variablen-Ident nicht.
+Der `Ident` einer Fahrzeugvariable ist die stabile technische Schnittstelle für Skripte und weitere Module. Beispiele sind `StateOfCharge`, `Range`, `Charging`, `TargetSOC` und `Climate`.
 
-Ein Visualisierungsmodul kann die Datenpunkte rekursiv unterhalb der MySkoda-Instanz über diese Idents erkennen. Die Objekt-ID einer bestehenden Variable bleibt bei normalem Betrieb erhalten.
+Ein weiteres Modul kann die Statusvariablen direkt unterhalb der MySkoda-Instanz über diese Idents ermitteln. Die Gruppierungslinks dienen ausschließlich der übersichtlichen Darstellung im Objektbaum und in Visualisierungen.
 
-Eine Variable wird nur registriert, solange ihr Ident noch nicht existiert. Sobald sie angelegt ist, registriert MySkoda Name, Position und Darstellung nicht erneut. Benutzeranpassungen an diesen Eigenschaften werden durch spätere Modulaktualisierungen nicht überschrieben. Noch ungruppierte Modulvariablen werden ihrer vorgesehenen Dummy-Instanz zugeordnet; bereits anderweitig einsortierte Variablen werden nicht erneut verschoben.
+Eine Variable wird nur registriert, solange ihr Ident noch nicht existiert. Sobald sie angelegt ist, registriert MySkoda Name, Position und Darstellung nicht erneut. Benutzeranpassungen an diesen Eigenschaften werden durch spätere Modulaktualisierungen nicht überschrieben.
+
+Auch Dummy-Gruppen und Gruppierungslinks werden nur bei Bedarf angelegt. Bereits vorhandene Gruppen und Links werden nicht umbenannt, umsortiert oder neu gestaltet.
 
 Die Fahrzeugwerte selbst werden bei jedem erfolgreichen Abruf aktualisiert.
 
