@@ -16,8 +16,6 @@ trait MySkodaVariablesTrait
 
     private function registerVariables(): void
     {
-        $this->ensureObjectGroups();
-
         foreach ($this->coreVariableDefinitions() as $definition) {
             $this->registerVariableOnce($definition);
         }
@@ -27,31 +25,29 @@ trait MySkodaVariablesTrait
                 $this->registerVariableOnce($definition);
             }
         }
-
-        $this->organizeModuleObjects();
     }
 
     private function coreVariableDefinitions(): array
     {
         return [
-            $this->variable('StateOfCharge', 'State of charge', VARIABLETYPE_INTEGER, 30, [
+            $this->variable('StateOfCharge', 'Ladezustand', VARIABLETYPE_INTEGER, 30, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_BATTERY
             ]),
-            $this->variable('Range', 'Range', VARIABLETYPE_INTEGER, 40, $this->valuePresentation('route', ' km', 0)),
-            $this->variable('Mileage', 'Mileage', VARIABLETYPE_INTEGER, 50, array_merge(
+            $this->variable('Range', 'Reichweite', VARIABLETYPE_INTEGER, 40, $this->valuePresentation('route', ' km', 0)),
+            $this->variable('Mileage', 'Kilometerstand', VARIABLETYPE_INTEGER, 50, array_merge(
                 $this->valuePresentation('gauge-high', ' km', 0),
                 ['THOUSANDS_SEPARATOR' => '.']
             )),
-            $this->variable('Locked', 'Locked', VARIABLETYPE_BOOLEAN, 100, $this->booleanYesNoPresentation(true, 'lock', 'lock-open', 'lock')),
-            $this->variable('DoorsOpen', 'Doors open', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(false, 'door-closed', 'door-closed', 'door-open')),
-            $this->variable('WindowsOpen', 'Windows open', VARIABLETYPE_BOOLEAN, 120, $this->booleanYesNoPresentation(false, 'window-maximize')),
-            $this->variable('Charging', 'Charging', VARIABLETYPE_BOOLEAN, 200, $this->booleanActionPresentation('plug')),
-            $this->variable('ChargePower', 'Charging power', VARIABLETYPE_FLOAT, 230, [
+            $this->variable('Locked', 'Verriegelt', VARIABLETYPE_BOOLEAN, 100, $this->booleanYesNoPresentation(true, 'lock', 'lock-open', 'lock')),
+            $this->variable('DoorsOpen', 'Türen offen', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(false, 'door-closed', 'door-closed', 'door-open')),
+            $this->variable('WindowsOpen', 'Fenster offen', VARIABLETYPE_BOOLEAN, 120, $this->booleanYesNoPresentation(false, 'window-maximize')),
+            $this->variable('Charging', 'Laden', VARIABLETYPE_BOOLEAN, 200, $this->booleanActionPresentation('plug')),
+            $this->variable('ChargePower', 'Ladeleistung', VARIABLETYPE_FLOAT, 230, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_POWER
             ]),
-            $this->variable('TargetSOC', 'Charging limit', VARIABLETYPE_INTEGER, 240, [
+            $this->variable('TargetSOC', 'Ladelimit', VARIABLETYPE_INTEGER, 240, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
                 'ICON' => 'battery-half',
                 'MIN' => 50,
@@ -61,9 +57,9 @@ trait MySkodaVariablesTrait
                 'PERCENTAGE' => false,
                 'USAGE_TYPE' => 5
             ]),
-            $this->variable('ChargeMode', 'Charging mode', VARIABLETYPE_INTEGER, 250, $this->chargeModePresentation()),
-            $this->variable('Climate', 'Air conditioning', VARIABLETYPE_BOOLEAN, 300, $this->booleanActionPresentation('fan')),
-            $this->variable('TargetTemperature', 'Target temperature', VARIABLETYPE_FLOAT, 310, [
+            $this->variable('ChargeMode', 'Lademodus', VARIABLETYPE_INTEGER, 250, $this->chargeModePresentation()),
+            $this->variable('Climate', 'Klimatisierung', VARIABLETYPE_BOOLEAN, 300, $this->booleanActionPresentation('fan')),
+            $this->variable('TargetTemperature', 'Solltemperatur', VARIABLETYPE_FLOAT, 310, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
                 'ICON' => 'temperature-half',
                 'MIN' => 16,
@@ -75,8 +71,8 @@ trait MySkodaVariablesTrait
                 'PERCENTAGE' => false,
                 'DIGITS' => 1
             ], 22.0),
-            $this->variable('ApiKeyWarning', 'API key warning', VARIABLETYPE_BOOLEAN, 900, $this->booleanYesNoPresentation(false, 'key')),
-            $this->variable('LastUpdate', 'Last update', VARIABLETYPE_INTEGER, 990, [
+            $this->variable('ApiKeyWarning', 'API-Key Warnung', VARIABLETYPE_BOOLEAN, 900, $this->booleanYesNoPresentation(false, 'key')),
+            $this->variable('LastUpdate', 'Letzte Aktualisierung', VARIABLETYPE_INTEGER, 990, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
                 'ICON' => 'clock'
@@ -87,29 +83,29 @@ trait MySkodaVariablesTrait
     private function detailVariableDefinitions(): array
     {
         return [
-            $this->variable('VehicleName', 'Vehicle name', VARIABLETYPE_STRING, 10, $this->valuePresentation('car')),
-            $this->variable('LicensePlate', 'License plate', VARIABLETYPE_STRING, 20, $this->valuePresentation('id-card')),
-            $this->variable('TrunkOpen', 'Trunk open', VARIABLETYPE_BOOLEAN, 130, $this->booleanYesNoPresentation(false, 'car-rear')),
-            $this->variable('BonnetOpen', 'Bonnet open', VARIABLETYPE_BOOLEAN, 140, $this->booleanYesNoPresentation(false, 'car')),
-            $this->variable('SunroofOpen', 'Sunroof open', VARIABLETYPE_BOOLEAN, 150, $this->booleanYesNoPresentation(false, 'car-side')),
-            $this->variable('LightsOn', 'Lights on', VARIABLETYPE_BOOLEAN, 160, $this->booleanYesNoPresentation(false, 'lightbulb')),
-            $this->variable('ParkingState', 'Parking state', VARIABLETYPE_STRING, 170, $this->valuePresentation('square-parking')),
-            $this->variable('ChargingState', 'Charging state', VARIABLETYPE_STRING, 210, $this->chargingStatePresentation()),
-            $this->variable('ChargeType', 'Charge type', VARIABLETYPE_STRING, 220, $this->valuePresentation('plug')),
-            $this->variable('FullyChargedAt', 'Fully charged at', VARIABLETYPE_INTEGER, 260, [
+            $this->variable('VehicleName', 'Fahrzeugname', VARIABLETYPE_STRING, 10, $this->valuePresentation('car')),
+            $this->variable('LicensePlate', 'Kennzeichen', VARIABLETYPE_STRING, 20, $this->valuePresentation('id-card')),
+            $this->variable('TrunkOpen', 'Kofferraum offen', VARIABLETYPE_BOOLEAN, 130, $this->booleanYesNoPresentation(false, 'car-rear')),
+            $this->variable('BonnetOpen', 'Motorhaube offen', VARIABLETYPE_BOOLEAN, 140, $this->booleanYesNoPresentation(false, 'car')),
+            $this->variable('SunroofOpen', 'Schiebedach offen', VARIABLETYPE_BOOLEAN, 150, $this->booleanYesNoPresentation(false, 'car-side')),
+            $this->variable('LightsOn', 'Licht an', VARIABLETYPE_BOOLEAN, 160, $this->booleanYesNoPresentation(false, 'lightbulb')),
+            $this->variable('ParkingState', 'Parkstatus', VARIABLETYPE_STRING, 170, $this->valuePresentation('square-parking')),
+            $this->variable('ChargingState', 'Ladestatus', VARIABLETYPE_STRING, 210, $this->chargingStatePresentation()),
+            $this->variable('ChargeType', 'Ladeart', VARIABLETYPE_STRING, 220, $this->valuePresentation('plug')),
+            $this->variable('FullyChargedAt', 'Vollgeladen um', VARIABLETYPE_INTEGER, 260, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
                 'ICON' => 'clock'
             ]),
-            $this->variable('Latitude', 'Latitude', VARIABLETYPE_FLOAT, 400, $this->valuePresentation('location-dot', '', 6)),
-            $this->variable('Longitude', 'Longitude', VARIABLETYPE_FLOAT, 410, $this->valuePresentation('location-dot', '', 6)),
-            $this->variable('ApiKeyExpiresAtVar', 'API key valid until', VARIABLETYPE_INTEGER, 910, [
+            $this->variable('Latitude', 'Breitengrad', VARIABLETYPE_FLOAT, 400, $this->valuePresentation('location-dot', '', 6)),
+            $this->variable('Longitude', 'Längengrad', VARIABLETYPE_FLOAT, 410, $this->valuePresentation('location-dot', '', 6)),
+            $this->variable('ApiKeyExpiresAtVar', 'API-Key gültig bis', VARIABLETYPE_INTEGER, 910, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
                 'ICON' => 'key'
             ]),
-            $this->variable('RequestsRemaining', 'API requests remaining', VARIABLETYPE_INTEGER, 920, $this->valuePresentation('gauge')),
-            $this->variable('PartialErrors', 'API partial errors', VARIABLETYPE_STRING, 930, [
+            $this->variable('RequestsRemaining', 'Verbleibende API-Anfragen', VARIABLETYPE_INTEGER, 920, $this->valuePresentation('gauge')),
+            $this->variable('PartialErrors', 'API-Teilfehler', VARIABLETYPE_STRING, 930, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'ICON' => 'triangle-exclamation',
                 'MULTILINE' => true
@@ -129,8 +125,8 @@ trait MySkodaVariablesTrait
     }
 
     /**
-     * Creates a data point only while its ident is missing.
-     * Existing metadata belongs to the user and is never registered again.
+     * Legt eine Variable nur an, solange ihr Ident noch nicht existiert.
+     * Vorhandene Namen, Positionen und Darstellungen werden nicht überschrieben.
      */
     private function registerVariableOnce(array $definition): void
     {
@@ -138,18 +134,18 @@ trait MySkodaVariablesTrait
         $existingId = @$this->GetIDForIdent($ident);
         if ($existingId !== false) {
             if (!IPS_VariableExists($existingId)) {
-                $this->LogMessage(sprintf('MySkoda: ident "%s" is already used by another object.', $ident), KL_WARNING);
+                $this->LogMessage(sprintf('MySkoda: Ident "%s" wird bereits von einem anderen Objekt verwendet.', $ident), KL_WARNING);
                 return;
             }
 
             $variable = IPS_GetVariable($existingId);
             if ((int) ($variable['VariableType'] ?? -1) !== (int) $definition['type']) {
-                $this->LogMessage(sprintf('MySkoda: variable "%s" has an unexpected type.', $ident), KL_ERROR);
+                $this->LogMessage(sprintf('MySkoda: Variable "%s" hat einen unerwarteten Datentyp.', $ident), KL_ERROR);
             }
             return;
         }
 
-        $name = $this->Translate((string) $definition['name']);
+        $name = (string) $definition['name'];
         $presentation = (array) $definition['presentation'];
         $position = (int) $definition['position'];
 
@@ -158,21 +154,19 @@ trait MySkodaVariablesTrait
             VARIABLETYPE_INTEGER => $this->RegisterVariableInteger($ident, $name, $presentation, $position),
             VARIABLETYPE_FLOAT => $this->RegisterVariableFloat($ident, $name, $presentation, $position),
             VARIABLETYPE_STRING => $this->RegisterVariableString($ident, $name, $presentation, $position),
-            default => throw new InvalidArgumentException('Unsupported variable type')
+            default => throw new InvalidArgumentException('Nicht unterstützter Variablentyp')
         };
 
         if ($definition['initialValue'] !== null && @$this->GetIDForIdent($ident) !== false) {
             $this->SetValue($ident, $definition['initialValue']);
         }
-
-        $this->placeVariableInGroup($ident);
     }
 
     private function applyActions(): void
     {
         $enabled = $this->ReadPropertyBoolean('EnableRemote');
         foreach (['Charging', 'TargetSOC', 'ChargeMode', 'Climate', 'TargetTemperature'] as $ident) {
-            $this->maintainGroupedAction($ident, $enabled);
+            $this->MaintainAction($ident, $enabled);
         }
     }
 
@@ -180,7 +174,11 @@ trait MySkodaVariablesTrait
     {
         $this->setPathValue('StateOfCharge', $vehicle, 'charging.status.battery.stateOfChargeInPercent', static fn (mixed $v): int => (int) $v);
         $this->setPathValue('Range', $vehicle, 'charging.status.battery.remainingCruisingRangeInMeters', static fn (mixed $v): int => (int) round((float) $v / 1000));
-        $this->setPathValue('Mileage', $vehicle, 'odometer.mileageInKm', static fn (mixed $v): int => (int) round((float) $v));
+
+        $mileage = (int) round((float) $this->path($vehicle, 'odometer.mileageInKm', 0));
+        if ($mileage > 0) {
+            $this->SetValue('Mileage', $mileage);
+        }
 
         $lock = strtoupper((string) $this->path($vehicle, 'status.overall.doorsLocked', $this->path($vehicle, 'status.overall.locked', 'UNKNOWN')));
         $this->SetValue('Locked', in_array($lock, ['YES', 'LOCKED'], true));
@@ -199,7 +197,7 @@ trait MySkodaVariablesTrait
             if ($index !== false) {
                 $this->SetValue('ChargeMode', (int) $index);
             } else {
-                $this->SendDebug('Charge mode', 'Unknown API value: ' . $mode, 0);
+                $this->SendDebug('Lademodus', 'Unbekannter API-Wert: ' . $mode, 0);
             }
         }
 
@@ -314,8 +312,8 @@ trait MySkodaVariablesTrait
             'ICON' => $icon,
             'COLOR' => -1,
             'OPTIONS' => json_encode([
-                ['Value' => false, 'Caption' => $this->Translate('No'), 'IconActive' => $falseIcon !== '', 'IconValue' => $falseIcon, 'ColorActive' => true, 'ColorValue' => $falseColor],
-                ['Value' => true, 'Caption' => $this->Translate('Yes'), 'IconActive' => $trueIcon !== '', 'IconValue' => $trueIcon, 'ColorActive' => true, 'ColorValue' => $trueColor]
+                ['Value' => false, 'Caption' => 'Nein', 'IconActive' => $falseIcon !== '', 'IconValue' => $falseIcon, 'ColorActive' => true, 'ColorValue' => $falseColor],
+                ['Value' => true, 'Caption' => 'Ja', 'IconActive' => $trueIcon !== '', 'IconValue' => $trueIcon, 'ColorActive' => true, 'ColorValue' => $trueColor]
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ];
     }
@@ -325,19 +323,19 @@ trait MySkodaVariablesTrait
         $green = 0x22C55E;
         $orange = 0xF59E0B;
         $states = [
-            ['CONNECT_CABLE', 'Connect charging cable', 'plug', $orange],
-            ['CHARGING', 'Charging active', 'bolt', $green],
-            ['CONSERVING', 'Charge conservation', 'battery-full', $green],
-            ['READY_FOR_CHARGING', 'Ready for charging', 'plug-circle-check', $green],
-            ['DISCHARGING', 'Discharging', 'battery-half', $orange],
-            ['CHARGING_INTERRUPTED', 'Charging interrupted', 'triangle-exclamation', $orange],
-            ['OFF', 'Off', 'plug', -1],
-            ['UNKNOWN', 'Unknown', 'circle-question', -1]
+            ['CONNECT_CABLE', 'Ladekabel anschließen', 'plug', $orange],
+            ['CHARGING', 'Laden aktiv', 'bolt', $green],
+            ['CONSERVING', 'Ladeerhaltung', 'battery-full', $green],
+            ['READY_FOR_CHARGING', 'Ladebereit', 'plug-circle-check', $green],
+            ['DISCHARGING', 'Entladen', 'battery-half', $orange],
+            ['CHARGING_INTERRUPTED', 'Laden unterbrochen', 'triangle-exclamation', $orange],
+            ['OFF', 'Aus', 'plug', -1],
+            ['UNKNOWN', 'Unbekannt', 'circle-question', -1]
         ];
 
         $options = [];
         foreach ($states as [$value, $caption, $icon, $color]) {
-            $options[] = ['Value' => $value, 'Caption' => $this->Translate($caption), 'IconActive' => true, 'IconValue' => $icon, 'ColorActive' => $color >= 0, 'ColorValue' => $color];
+            $options[] = ['Value' => $value, 'Caption' => $caption, 'IconActive' => true, 'IconValue' => $icon, 'ColorActive' => $color >= 0, 'ColorValue' => $color];
         }
 
         return [
@@ -366,13 +364,13 @@ trait MySkodaVariablesTrait
     private function humanizeMode(string $mode): string
     {
         $known = [
-            'MANUAL' => $this->Translate('Manual'),
-            'TIMER' => $this->Translate('Timer'),
-            'TIMER_CHARGING_WITH_CLIMATISATION' => $this->Translate('Timer + climate'),
-            'PREFERRED_CHARGING_TIMES' => $this->Translate('Preferred charging times'),
-            'ONLY_OWN_CURRENT' => $this->Translate('Only own current'),
-            'IMMEDIATE_DISCHARGING' => $this->Translate('Immediate discharging'),
-            'HOME_STORAGE_CHARGING' => $this->Translate('Home storage charging')
+            'MANUAL' => 'Manuell',
+            'TIMER' => 'Timer',
+            'TIMER_CHARGING_WITH_CLIMATISATION' => 'Timer + Klimatisierung',
+            'PREFERRED_CHARGING_TIMES' => 'Bevorzugte Ladezeiten',
+            'ONLY_OWN_CURRENT' => 'Nur eigener Strom',
+            'IMMEDIATE_DISCHARGING' => 'Sofort entladen',
+            'HOME_STORAGE_CHARGING' => 'Heimspeicher laden'
         ];
         return $known[$mode] ?? ucwords(strtolower(str_replace('_', ' ', $mode)));
     }
