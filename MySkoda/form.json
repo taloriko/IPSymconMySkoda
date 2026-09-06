@@ -2,122 +2,126 @@
   "elements": [
     {
       "type": "ExpansionPanel",
-      "caption": "Connection",
+      "caption": "Verbindung",
       "expanded": true,
       "items": [
         {
           "type": "Label",
-          "caption": "Vehicle data is read directly from the official MySkoda Public API."
+          "caption": "Die Fahrzeugdaten werden direkt über die offizielle MySkoda Public API gelesen."
         },
         {
           "type": "Label",
-          "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key. Then copy VIN and API token into this instance."
+          "caption": "API-Key in der MySkoda App erstellen: Profil -> Smart Home -> Schlüssel erstellen. Anschließend FIN und API-Token hier eintragen."
         },
         {
           "type": "ValidationTextBox",
           "name": "VIN",
-          "caption": "VIN",
+          "caption": "FIN / VIN",
           "validate": "^[A-HJ-NPR-Z0-9]{17}$"
         },
         {
           "type": "PasswordTextBox",
           "name": "APIToken",
-          "caption": "API token"
+          "caption": "API-Token"
         },
         {
           "type": "Label",
           "name": "ConnectionFeedback",
-          "caption": "Connection has not been tested yet.",
+          "caption": "Verbindung wurde noch nicht geprüft.",
           "bold": true
         }
       ]
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Polling and control",
+      "caption": "Abfrage und Steuerung",
       "expanded": true,
       "items": [
         {
           "type": "NumberSpinner",
           "name": "Interval",
-          "caption": "Polling interval",
-          "suffix": " seconds",
+          "caption": "Abfrageintervall",
+          "suffix": " Sekunden",
           "minimum": 180,
           "maximum": 3600
         },
         {
           "type": "Label",
-          "caption": "Recommended: 300 seconds. The module observes the rate-limit headers returned by the API."
+          "caption": "Empfehlung: 300 Sekunden. Das Modul berücksichtigt die Rate-Limit-Angaben der API."
         },
         {
           "type": "CheckBox",
           "name": "EnableRemote",
-          "caption": "Enable remote control"
+          "caption": "Remote-Steuerung aktivieren"
         },
         {
           "type": "CheckBox",
           "name": "ClimateWithoutExternalPower",
-          "caption": "Allow air conditioning without external power"
+          "caption": "Klimatisierung ohne externe Stromversorgung erlauben"
         },
         {
           "type": "PasswordTextBox",
           "name": "SPIN",
-          "caption": "S-PIN (optional, auxiliary heating only)"
+          "caption": "S-PIN (optional, nur Standheizung)"
         }
       ]
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Notifications",
+      "caption": "Mitteilungen",
       "expanded": false,
       "items": [
         {
           "type": "CheckBox",
           "name": "NotifyKeyExpiry",
-          "caption": "Send a Symcon notification when the API key has 30 days or less remaining"
+          "caption": "Symcon-Mitteilung senden, wenn der API-Key höchstens noch 30 Tage gültig ist"
         },
         {
           "type": "SelectInstance",
           "name": "NotificationInstanceID",
-          "caption": "Visualization for notifications",
+          "caption": "Visualisierung für Mitteilungen",
           "validModules": []
         },
         {
           "type": "Label",
           "name": "NotificationTargetFeedback",
-          "caption": "Select a Tile Visualization or WebFront for notifications."
+          "caption": "Tile Visualization oder WebFront für Mitteilungen auswählen."
         }
       ]
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Advanced",
+      "caption": "Zusätzliche Daten",
       "expanded": false,
       "items": [
         {
           "type": "CheckBox",
           "name": "ShowDetails",
-          "caption": "Show detail and diagnostic variables"
+          "caption": "Detail- und Diagnosevariablen anlegen"
+        },
+        {
+          "type": "Label",
+          "caption": "Fehlende Detailvariablen werden bei Aktivierung angelegt. Bereits vorhandene Variablen bleiben beim Deaktivieren erhalten."
         },
         {
           "type": "CheckBox",
           "name": "EnableChargingHistory",
-          "caption": "Provide charging history chart and logging"
+          "caption": "Archivierung aktivieren"
         },
         {
           "type": "Label",
-          "caption": "State of charge, charging limit and charging power are enabled for logging only when they are not already logged. Existing Archive Control settings and recorded data are never changed or deleted."
+          "caption": "Archiviert Ladezustand, Ladelimit, Ladeleistung und Kilometerstand. Der Kilometerstand wird als Zähler geführt; Werte kleiner oder gleich 0 werden verworfen."
         }
       ]
     },
     {
       "type": "ExpansionPanel",
-      "caption": "Help and documentation",
+      "caption": "Hilfe und Dokumentation",
       "expanded": false,
       "items": [
         {
           "type": "Label",
-          "caption": "Documentation and source code: github.com/taloriko/IPSymconMySkoda"
+          "caption": "Dokumentation und Quellcode: github.com/taloriko/IPSymconMySkoda"
         }
       ]
     }
@@ -128,13 +132,13 @@
       "items": [
         {
           "type": "Button",
-          "caption": "Test connection",
-          "onClick": "echo MSKODA_TestConnection($id) ? 'Connection successful - vehicle data received.' : 'Connection failed - check instance status and API data.';"
+          "caption": "Verbindung testen",
+          "onClick": "echo MSKODA_TestConnection($id) ? 'Verbindung erfolgreich - Fahrzeugdaten empfangen.' : 'Verbindung fehlgeschlagen - Instanzstatus und API-Daten prüfen.';"
         },
         {
           "type": "Button",
-          "caption": "Update now",
-          "onClick": "MSKODA_Update($id); echo 'Update executed';"
+          "caption": "Jetzt aktualisieren",
+          "onClick": "MSKODA_Update($id); echo 'Aktualisierung ausgeführt';"
         }
       ]
     },
@@ -143,22 +147,22 @@
       "items": [
         {
           "type": "Button",
-          "caption": "Test notification",
-          "onClick": "echo MSKODA_TestNotification($id) ? 'Notification sent.' : 'Notification could not be sent. Check the selected visualization and registered mobile devices.';"
+          "caption": "Mitteilung testen",
+          "onClick": "echo MSKODA_TestNotification($id) ? 'Mitteilung gesendet.' : 'Mitteilung konnte nicht gesendet werden. Ausgewählte Visualisierung und registrierte Mobilgeräte prüfen.';"
         },
         {
           "type": "Button",
-          "caption": "Reload API definition",
-          "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API definition updated' : 'API definition could not be loaded';"
+          "caption": "API-Definition neu laden",
+          "onClick": "echo MSKODA_RefreshApiDefinition($id) ? 'API-Definition aktualisiert' : 'API-Definition konnte nicht geladen werden';"
         }
       ]
     }
   ],
   "status": [
-    {"code": 102, "icon": "active", "caption": "Connected to MySkoda"},
-    {"code": 104, "icon": "inactive", "caption": "Inactive"},
-    {"code": 201, "icon": "error", "caption": "VIN or API token is missing or invalid"},
-    {"code": 202, "icon": "error", "caption": "Connection to MySkoda failed / API error"},
-    {"code": 203, "icon": "warning", "caption": "Rate limit / waiting period active"}
+    {"code": 102, "icon": "active", "caption": "Mit MySkoda verbunden"},
+    {"code": 104, "icon": "inactive", "caption": "Inaktiv"},
+    {"code": 201, "icon": "error", "caption": "FIN oder API-Token fehlt oder ist ungültig"},
+    {"code": 202, "icon": "error", "caption": "Verbindung zu MySkoda fehlgeschlagen / API-Fehler"},
+    {"code": 203, "icon": "warning", "caption": "Rate-Limit / Wartezeit aktiv"}
   ]
 }

@@ -8,6 +8,7 @@ trait MySkodaCoreTrait
     {
         parent::Create();
 
+        // Configuration
         $this->RegisterPropertyString('VIN', '');
         $this->RegisterPropertyString('APIToken', '');
         $this->RegisterPropertyInteger('Interval', 300);
@@ -15,13 +16,15 @@ trait MySkodaCoreTrait
         $this->RegisterPropertyBoolean('ClimateWithoutExternalPower', true);
         $this->RegisterPropertyString('SPIN', '');
         $this->RegisterPropertyBoolean('ShowDetails', false);
+        $this->RegisterPropertyBoolean('EnableChargingHistory', true);
         $this->RegisterPropertyBoolean('NotifyKeyExpiry', false);
         $this->RegisterPropertyInteger('NotificationInstanceID', 0);
 
+        // Runtime state
         $this->RegisterAttributeString('RawData', '');
         $this->RegisterAttributeString('OpenApiOperations', '');
         $this->RegisterAttributeInteger('OpenApiUpdatedAt', 0);
-        $this->RegisterAttributeString('ChargeModeMap', '{}');
+        $this->RegisterAttributeString('AvailableChargeModes', '[]');
         $this->RegisterAttributeInteger('RateLimitLimit', -1);
         $this->RegisterAttributeInteger('RateLimitRemaining', -1);
         $this->RegisterAttributeInteger('RateLimitResetAt', 0);
@@ -33,6 +36,7 @@ trait MySkodaCoreTrait
         $this->RegisterAttributeString('ConfigFingerprint', '');
         $this->RegisterAttributeInteger('KeyExpiryNotifiedFor', 0);
         $this->RegisterAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
+        $this->RegisterAttributeBoolean('ChargingHistoryInitialized', false);
 
         $this->RegisterTimer('UpdateTimer', 0, 'MSKODA_Update($_IPS[\'TARGET\']);');
         $this->SetVisualizationType(0);
@@ -43,16 +47,15 @@ trait MySkodaCoreTrait
         parent::ApplyChanges();
 
         $this->SetVisualizationType(0);
-        $this->removeObsoleteVisualizationObjects();
 
         $vin = strtoupper(trim($this->ReadPropertyString('VIN')));
         $token = trim($this->ReadPropertyString('APIToken'));
         $interval = max(180, $this->ReadPropertyInteger('Interval'));
 
         $this->SetSummary($vin);
-        $this->registerCoreVariables();
-        $this->registerOptionalVariables($this->ReadPropertyBoolean('ShowDetails'));
+        $this->registerVariables();
         $this->applyActions();
+        $this->initializeChargingHistory();
 
         if (!$this->isVinValid($vin) || $token === '') {
             $this->SetTimerInterval('UpdateTimer', 0);
@@ -60,7 +63,10 @@ trait MySkodaCoreTrait
             $this->WriteAttributeInteger('KeyExpiryNotifiedFor', 0);
             $this->WriteAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
             $this->updateKeyExpiryWarning();
-            $this->setConnectionFeedback('not_configured', $this->Translate('Enter VIN and API token, then apply the configuration.'));
+            $this->setConnectionFeedback(
+                'not_configured',
+                $this->Translate('Enter VIN and API token, then apply the configuration.')
+            );
             $this->SetStatus(201);
             return;
         }
@@ -70,16 +76,21 @@ trait MySkodaCoreTrait
         $fingerprint = hash('sha256', $vin . '|' . $token);
         $configurationChanged = $fingerprint !== $this->ReadAttributeString('ConfigFingerprint');
         $this->WriteAttributeString('ConfigFingerprint', $fingerprint);
+
         if ($configurationChanged) {
             $this->WriteAttributeInteger('ApiKeyExpiresAt', 0);
             $this->WriteAttributeInteger('KeyExpiryNotifiedFor', 0);
             $this->WriteAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
         }
+
         $this->updateKeyExpiryWarning();
         $this->validateNotificationTarget(false);
 
         if ($configurationChanged || $this->ReadAttributeString('RawData') === '') {
-            $this->setConnectionFeedback('checking', $this->Translate('Checking connection to MySkoda...'));
+            $this->setConnectionFeedback(
+                'checking',
+                $this->Translate('Checking connection to MySkoda...')
+            );
             $this->TestConnection();
             return;
         }
@@ -110,7 +121,12 @@ trait MySkodaCoreTrait
         $validVisualizationModules = $this->getVisualizationModuleIds();
 
         if (isset($form['elements']) && is_array($form['elements'])) {
-            $this->prepareConfigurationElements($form['elements'], $connectionCaption, $notificationCaption, $validVisualizationModules);
+            $this->prepareConfigurationElements(
+                $form['elements'],
+                $connectionCaption,
+                $notificationCaption,
+                $validVisualizationModules
+            );
         }
 
         return json_encode($form, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -119,11 +135,16 @@ trait MySkodaCoreTrait
     public function RequestAction(string $Ident, mixed $Value): void
     {
         if (!$this->ReadPropertyBoolean('EnableRemote')) {
-            throw new RuntimeException($this->Translate('Remote control is disabled in this instance.'));
+            throw new RuntimeException(
+                $this->Translate('Remote control is disabled in this instance.')
+            );
         }
+
         if (!$this->canRequest(true)) {
             $this->SetStatus(203);
-            throw new RuntimeException($this->Translate('MySkoda rate limit / waiting period is active.'));
+            throw new RuntimeException(
+                $this->Translate('MySkoda rate limit / waiting period is active.')
+            );
         }
 
         switch ($Ident) {
@@ -132,7 +153,7 @@ trait MySkodaCoreTrait
                 if ($ok) {
                     $this->SetValue('Charging', (bool) $Value);
                 }
-                break;
+                return;
 
             case 'TargetSOC':
                 $percent = max(50, min(100, (int) $Value));
@@ -140,40 +161,43 @@ trait MySkodaCoreTrait
                 if ($ok) {
                     $this->SetValue('TargetSOC', $percent);
                 }
-                break;
+                return;
 
             case 'ChargeMode':
-                $map = json_decode($this->ReadAttributeString('ChargeModeMap'), true);
-                $mode = is_array($map) ? ($map[(string) ((int) $Value)] ?? null) : null;
-                if (!is_string($mode) || $mode === '') {
-                    throw new RuntimeException($this->Translate('Unknown charge mode. Please refresh vehicle data.'));
+                $mode = self::CHARGE_MODES[(int) $Value] ?? null;
+                if (!is_string($mode) || !$this->isChargeModeAvailable($mode)) {
+                    throw new RuntimeException(
+                        $this->Translate('The selected charging mode is not supported by this vehicle.')
+                    );
                 }
+
                 $ok = $this->sendDiscoveredScalarCommand('mode', $mode);
                 if ($ok) {
                     $this->SetValue('ChargeMode', (int) $Value);
                 }
-                break;
+                return;
 
             case 'Climate':
                 $ok = (bool) $Value
                     ? $this->startClimateInternal((float) $this->GetValue('TargetTemperature'))
                     : $this->sendSimpleCommand('air-conditioning/stop');
+
                 if ($ok) {
                     $this->SetValue('Climate', (bool) $Value);
                 }
-                break;
+                return;
 
             case 'TargetTemperature':
                 $temperature = max(16.0, min(30.0, (float) $Value));
                 $this->SetValue('TargetTemperature', $temperature);
+
                 if ((bool) $this->GetValue('Climate')) {
                     $this->startClimateInternal($temperature);
                 }
-                break;
-
-            default:
-                throw new InvalidArgumentException('Unknown action: ' . $Ident);
+                return;
         }
+
+        throw new InvalidArgumentException('Unknown action: ' . $Ident);
     }
 
     public function GetRawData(): string
@@ -185,14 +209,22 @@ trait MySkodaCoreTrait
     {
         $raw = json_decode($this->ReadAttributeString('RawData'), true);
         $profiles = $this->path($raw, 'vehicle.chargingProfiles', []);
-        return json_encode($profiles, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        return json_encode(
+            $profiles,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
     }
 
     public function GetRemoteOperations(): string
     {
         $raw = json_decode($this->ReadAttributeString('RawData'), true);
         $operations = $this->path($raw, 'vehicle.remoteOperations', []);
-        return json_encode($operations, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+
+        return json_encode(
+            $operations,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+        );
     }
 
     public function RefreshApiDefinition(): bool
@@ -208,7 +240,16 @@ trait MySkodaCoreTrait
 
     public function SetChargeMode(string $Mode): bool
     {
-        return $this->sendDiscoveredScalarCommand('mode', strtoupper(trim($Mode)));
+        $Mode = strtoupper(trim($Mode));
+        if ($Mode === '' || !$this->isChargeModeAvailable($Mode)) {
+            $this->WriteAttributeString(
+                'LastError',
+                $this->Translate('The selected charging mode is not supported by this vehicle.')
+            );
+            return false;
+        }
+
+        return $this->sendDiscoveredScalarCommand('mode', $Mode);
     }
 
     public function UpdateChargingProfile(int $ProfileID, string $ProfileJSON): bool
@@ -216,30 +257,44 @@ trait MySkodaCoreTrait
         if (!$this->ReadPropertyBoolean('EnableRemote')) {
             return false;
         }
+
         $profile = json_decode($ProfileJSON, true);
         if (!is_array($profile)) {
-            $this->WriteAttributeString('LastError', $this->Translate('Invalid charging profile JSON'));
+            $this->WriteAttributeString(
+                'LastError',
+                $this->Translate('Invalid charging profile JSON')
+            );
             return false;
         }
 
         $operation = $this->findOperation($this->refreshOpenApi(false), 'profile');
         if ($operation === null) {
-            $this->WriteAttributeString('LastError', $this->Translate('Charging profile operation was not found in the OpenAPI definition.'));
+            $this->WriteAttributeString(
+                'LastError',
+                $this->Translate(
+                    'Charging profile operation was not found in the OpenAPI definition.'
+                )
+            );
             return false;
         }
 
         $path = $this->replacePathParameters((string) $operation['path'], $ProfileID);
         $body = $this->buildProfilePayload($operation, $profile);
+
         return $this->sendCommand((string) $operation['method'], $path, $body);
     }
 
-    public function StartAuxiliaryHeating(float $TargetTemperature = 22.0, int $DurationMinutes = 30, string $Mode = 'HEATING'): bool
-    {
+    public function StartAuxiliaryHeating(
+        float $TargetTemperature = 22.0,
+        int $DurationMinutes = 30,
+        string $Mode = 'HEATING'
+    ): bool {
         $spin = trim($this->ReadPropertyString('SPIN'));
         if ($spin === '') {
             $this->WriteAttributeString('LastError', $this->Translate('S-PIN is missing'));
             return false;
         }
+
         $body = [
             'spin' => $spin,
             'targetTemperature' => [
@@ -249,9 +304,12 @@ trait MySkodaCoreTrait
             'durationInSeconds' => max(60, $DurationMinutes * 60),
             'startMode' => strtoupper($Mode) === 'VENTILATION' ? 'VENTILATION' : 'HEATING'
         ];
+
         return $this->sendCommand(
             'POST',
-            '/api/v1/vehicles/' . rawurlencode(strtoupper($this->ReadPropertyString('VIN'))) . '/auxiliary-heating/start',
+            '/api/v1/vehicles/'
+                . rawurlencode(strtoupper($this->ReadPropertyString('VIN')))
+                . '/auxiliary-heating/start',
             $body
         );
     }
@@ -274,7 +332,10 @@ trait MySkodaCoreTrait
     private function fetchVehicle(bool $userAction): bool
     {
         if (!$this->configurationValid()) {
-            $this->setConnectionFeedback('not_configured', $this->Translate('Enter VIN and API token, then apply the configuration.'));
+            $this->setConnectionFeedback(
+                'not_configured',
+                $this->Translate('Enter VIN and API token, then apply the configuration.')
+            );
             $this->SetStatus(201);
             return false;
         }
@@ -287,7 +348,10 @@ trait MySkodaCoreTrait
         }
 
         $vin = strtoupper(trim($this->ReadPropertyString('VIN')));
-        $response = $this->request('GET', '/api/v1/vehicles/' . rawurlencode($vin));
+        $response = $this->request(
+            'GET',
+            '/api/v1/vehicles/' . rawurlencode($vin)
+        );
         $this->absorbHeaders($response['headers']);
 
         if (!$response['ok'] || !is_array($response['json'])) {
@@ -297,7 +361,10 @@ trait MySkodaCoreTrait
         }
 
         $envelope = $response['json'];
-        $vehicle = isset($envelope['vehicle']) && is_array($envelope['vehicle']) ? $envelope['vehicle'] : [];
+        $vehicle = isset($envelope['vehicle']) && is_array($envelope['vehicle'])
+            ? $envelope['vehicle']
+            : [];
+
         if ($vehicle === []) {
             $message = $this->Translate('Vehicle data is missing in the API response.');
             $this->WriteAttributeString('LastError', $message);
@@ -306,20 +373,31 @@ trait MySkodaCoreTrait
             return false;
         }
 
-        $this->WriteAttributeString('RawData', json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-        $this->updateChargeModePresentation($vehicle);
+        $this->WriteAttributeString(
+            'RawData',
+            json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        );
+
         $this->updateCoreValues($vehicle);
-        $this->updateOptionalValues($vehicle, $envelope);
+        $this->updateDetailValues($vehicle, $envelope);
         $this->WriteAttributeString('LastError', '');
         $this->SetValue('LastUpdate', time());
         $this->updateKeyExpiryWarning();
-        $this->setConnectionFeedback('success', $this->Translate('Connection successful. Vehicle data was received from MySkoda.'));
+        $this->setConnectionFeedback(
+            'success',
+            $this->Translate('Connection successful. Vehicle data was received from MySkoda.')
+        );
         $this->SetStatus(102);
+
         return true;
     }
 
-    private function prepareConfigurationElements(array &$elements, string $connectionCaption, string $notificationCaption, array $validVisualizationModules): void
-    {
+    private function prepareConfigurationElements(
+        array &$elements,
+        string $connectionCaption,
+        string $notificationCaption,
+        array $validVisualizationModules
+    ): void {
         foreach ($elements as &$element) {
             if (!is_array($element)) {
                 continue;
@@ -335,7 +413,12 @@ trait MySkodaCoreTrait
             }
 
             if (isset($element['items']) && is_array($element['items'])) {
-                $this->prepareConfigurationElements($element['items'], $connectionCaption, $notificationCaption, $validVisualizationModules);
+                $this->prepareConfigurationElements(
+                    $element['items'],
+                    $connectionCaption,
+                    $notificationCaption,
+                    $validVisualizationModules
+                );
             }
         }
         unset($element);
@@ -351,7 +434,11 @@ trait MySkodaCoreTrait
     private function refreshConnectionForm(): void
     {
         try {
-            $this->UpdateFormField('ConnectionFeedback', 'caption', $this->connectionFeedbackCaption());
+            $this->UpdateFormField(
+                'ConnectionFeedback',
+                'caption',
+                $this->connectionFeedbackCaption()
+            );
         } catch (Throwable) {
         }
     }
@@ -360,6 +447,7 @@ trait MySkodaCoreTrait
     {
         $state = $this->ReadAttributeString('ConnectionState');
         $message = trim($this->ReadAttributeString('ConnectionMessage'));
+
         if ($message === '') {
             $message = $this->Translate('Connection has not been tested yet.');
         }
@@ -370,16 +458,5 @@ trait MySkodaCoreTrait
             'checking' => '⏳ ' . $message,
             default => 'ℹ️ ' . $message
         };
-    }
-
-    private function removeObsoleteVisualizationObjects(): void
-    {
-        $this->dropVariable('VehicleTile');
-        $this->dropVariable('LastUpdateAge');
-
-        $timerId = @IPS_GetObjectIDByIdent('VisualTimer', $this->InstanceID);
-        if ($timerId !== false && @IPS_EventExists($timerId)) {
-            @IPS_DeleteEvent($timerId);
-        }
     }
 }
