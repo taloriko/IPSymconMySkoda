@@ -10,7 +10,7 @@ require_once __DIR__ . '/src/OpenApiTrait.php';
 require_once __DIR__ . '/src/NotificationTrait.php';
 require_once __DIR__ . '/src/HelpersTrait.php';
 
-final class MySkoda extends IPSModule
+final class MySkoda extends IPSModuleStrict
 {
     use MySkodaCoreTrait;
     use MySkodaVariablesTrait;
