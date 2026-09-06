@@ -13,6 +13,7 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 - Klimatisierung sowie unterstützte Remote-Funktionen
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
+- automatische Prüfung der OpenAPI-Definition auf neue, von Version 1.0 noch nicht integrierte API-Funktionen
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
 - optional und nur nach ausdrücklicher Aktivierung: Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
 - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
@@ -70,14 +71,28 @@ MySkoda
 ├─ Klimatisierung
 ├─ Solltemperatur
 ├─ API-Key Warnung
+├─ Neue API-Funktionen
 └─ Letzte Aktualisierung
 ```
 
-Die fachliche Gruppierung und Darstellung übernimmt der User oder es wird das [IPSymconEVTile](https://github.com/taloriko/IPSymconEVTile) genutz.
+Die fachliche Gruppierung und Darstellung übernimmt der User oder es wird das [IPSymconEVTile](https://github.com/taloriko/IPSymconEVTile) genutzt.
 
 Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charging`, `TargetSOC` oder `Climate` bleiben stabil und bilden die Schnittstelle für Skripte und weitere Module.
 
 Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden deshalb nur bei der Erstanlage gesetzt und danach nicht durch ein Update überschrieben.
+
+## Neue API-Funktionen
+
+Nach einer erfolgreichen Fahrzeugabfrage prüft das Modul zusätzlich die öffentliche OpenAPI-Definition der MyŠkoda Public API. Die Definition wird höchstens einmal innerhalb von 24 Stunden neu geladen und belastet nicht das fahrzeugbezogene API-Kontingent.
+
+Die Variable `NewApiFeatures` wird als **Neue API-Funktionen** angezeigt:
+
+- `0` – die aktuell veröffentlichten API-Operationen sind dem Modul bekannt.
+- `> 0` – die API enthält zusätzliche Operationen, die Version 1.0 noch nicht integriert.
+
+Neue API-Funktionen werden **nicht automatisch als IP-Symcon-Variablen angelegt**. Die Variable ist nur ein Hinweis darauf, dass sich die API erweitert hat. Neue Datenpunkte, Datentypen und Darstellungen werden weiterhin ausschließlich über ein definiertes Modulupdate ergänzt.
+
+Für Entwickler werden unbekannte OpenAPI-Operationen beim Neuladen der API-Definition zusätzlich im Debug ausgegeben. Über **API-Definition neu laden** kann die Prüfung manuell angestoßen werden.
 
 ## Deutsche Statusdarstellung
 
