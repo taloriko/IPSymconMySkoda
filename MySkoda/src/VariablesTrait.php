@@ -4,268 +4,218 @@ declare(strict_types=1);
 
 trait MySkodaVariablesTrait
 {
-    private function registerCoreVariables(): void
+    private const CHARGE_MODES = [
+        0 => 'MANUAL',
+        1 => 'TIMER',
+        2 => 'TIMER_CHARGING_WITH_CLIMATISATION',
+        3 => 'PREFERRED_CHARGING_TIMES',
+        4 => 'ONLY_OWN_CURRENT',
+        5 => 'IMMEDIATE_DISCHARGING',
+        6 => 'HOME_STORAGE_CHARGING'
+    ];
+
+    private function registerVariables(): void
     {
-        // Fahrzeug
-        $this->RegisterVariableInteger('StateOfCharge', $this->Translate('State of charge'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_BATTERY
-        ], 30);
+        foreach ($this->coreVariableDefinitions() as $definition) {
+            $this->registerVariableOnce($definition);
+        }
 
-        $this->RegisterVariableInteger('Range', $this->Translate('Range'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'route',
-            'SUFFIX' => ' km',
-            'DIGITS' => 0
-        ], 40);
-
-        $this->RegisterVariableInteger('Mileage', $this->Translate('Mileage'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'gauge-high',
-            'SUFFIX' => ' km',
-            'DIGITS' => 0,
-            'THOUSANDS_SEPARATOR' => '.'
-        ], 50);
-
-        // Fahrzeugstatus
-        $this->RegisterVariableBoolean(
-            'Locked',
-            $this->Translate('Locked'),
-            $this->booleanYesNoPresentation(true, 'lock', 'lock-open', 'lock'),
-            100
-        );
-        $this->RegisterVariableBoolean(
-            'DoorsOpen',
-            $this->Translate('Doors open'),
-            $this->booleanYesNoPresentation(false, 'door-closed', 'door-closed', 'door-open'),
-            110
-        );
-        $this->RegisterVariableBoolean(
-            'WindowsOpen',
-            $this->Translate('Windows open'),
-            $this->booleanYesNoPresentation(false, 'window-maximize'),
-            120
-        );
-
-        // Laden
-        $this->RegisterVariableBoolean('Charging', $this->Translate('Charging'), $this->booleanActivePresentation('plug'), 200);
-
-        $this->RegisterVariableFloat('ChargePower', $this->Translate('Charging power'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_POWER
-        ], 230);
-
-        $this->RegisterVariableInteger('TargetSOC', $this->Translate('Charging limit'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'ICON' => 'battery-half',
-            'MIN' => 50,
-            'MAX' => 100,
-            'STEP_SIZE' => 5,
-            'SUFFIX' => ' %',
-            'PERCENTAGE' => false,
-            'USAGE_TYPE' => 5
-        ], 240);
-
-        $this->RegisterVariableInteger('ChargeMode', $this->Translate('Charging mode'), $this->chargeModePresentation([]), 250);
-
-        // Klimatisierung
-        $this->RegisterVariableBoolean('Climate', $this->Translate('Air conditioning'), $this->booleanActivePresentation('fan'), 300);
-
-        $this->RegisterVariableFloat('TargetTemperature', $this->Translate('Target temperature'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
-            'ICON' => 'temperature-half',
-            'MIN' => 16,
-            'MAX' => 30,
-            'STEP_SIZE' => 0.5,
-            'GRADIENT_TYPE' => 1,
-            'USAGE_TYPE' => 0,
-            'SUFFIX' => ' °C',
-            'PERCENTAGE' => false,
-            'DIGITS' => 1
-        ], 310);
-
-        // API & Diagnose
-        $this->RegisterVariableBoolean(
-            'ApiKeyWarning',
-            $this->Translate('API key warning'),
-            $this->booleanYesNoPresentation(false, 'key'),
-            900
-        );
-        $this->RegisterVariableInteger('LastUpdate', $this->Translate('Last update'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
-            'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
-            'ICON' => 'clock'
-        ], 990);
-
-        if ((float) $this->GetValue('TargetTemperature') === 0.0) {
-            $this->SetValue('TargetTemperature', 22.0);
+        if ($this->ReadPropertyBoolean('ShowDetails')) {
+            foreach ($this->detailVariableDefinitions() as $definition) {
+                $this->registerVariableOnce($definition);
+            }
         }
     }
 
-    private function registerOptionalVariables(bool $show): void
+    private function coreVariableDefinitions(): array
     {
-        $idents = [
-            'VehicleName', 'LicensePlate', 'ChargingState', 'ChargeType', 'FullyChargedAt',
-            'TrunkOpen', 'BonnetOpen', 'SunroofOpen', 'LightsOn', 'ParkingState', 'Latitude', 'Longitude',
-            'ApiKeyExpiresAtVar', 'RequestsRemaining', 'PartialErrors'
+        return [
+            $this->variable('StateOfCharge', 'Ladezustand', VARIABLETYPE_INTEGER, 30, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_BATTERY
+            ]),
+            $this->variable('Range', 'Reichweite', VARIABLETYPE_INTEGER, 40, $this->valuePresentation('route', ' km', 0)),
+            $this->variable('Mileage', 'Kilometerstand', VARIABLETYPE_INTEGER, 50, array_merge(
+                $this->valuePresentation('gauge-high', ' km', 0),
+                ['THOUSANDS_SEPARATOR' => '.']
+            )),
+            $this->variable('Locked', 'Verriegelt', VARIABLETYPE_BOOLEAN, 100, $this->booleanYesNoPresentation(true, 'lock', 'lock-open', 'lock')),
+            $this->variable('DoorsOpen', 'Türen offen', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(false, 'door-closed', 'door-closed', 'door-open')),
+            $this->variable('WindowsOpen', 'Fenster offen', VARIABLETYPE_BOOLEAN, 120, $this->booleanYesNoPresentation(false, 'window-maximize')),
+            $this->variable('Charging', 'Laden', VARIABLETYPE_BOOLEAN, 200, $this->booleanActionPresentation('plug')),
+            $this->variable('ChargePower', 'Ladeleistung', VARIABLETYPE_FLOAT, 230, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_POWER
+            ]),
+            $this->variable('TargetSOC', 'Ladelimit', VARIABLETYPE_INTEGER, 240, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+                'ICON' => 'battery-half',
+                'MIN' => 50,
+                'MAX' => 100,
+                'STEP_SIZE' => 5,
+                'SUFFIX' => ' %',
+                'PERCENTAGE' => false,
+                'USAGE_TYPE' => 5
+            ]),
+            $this->variable('ChargeMode', 'Lademodus', VARIABLETYPE_INTEGER, 250, $this->chargeModePresentation()),
+            $this->variable('Climate', 'Klimatisierung', VARIABLETYPE_BOOLEAN, 300, $this->booleanActionPresentation('fan')),
+            $this->variable('TargetTemperature', 'Solltemperatur', VARIABLETYPE_FLOAT, 310, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
+                'ICON' => 'temperature-half',
+                'MIN' => 16,
+                'MAX' => 30,
+                'STEP_SIZE' => 0.5,
+                'GRADIENT_TYPE' => 1,
+                'USAGE_TYPE' => 0,
+                'SUFFIX' => ' °C',
+                'PERCENTAGE' => false,
+                'DIGITS' => 1
+            ], 22.0),
+            $this->variable('ApiKeyWarning', 'API-Key Warnung', VARIABLETYPE_BOOLEAN, 900, $this->booleanYesNoPresentation(false, 'key')),
+            $this->variable('LastUpdate', 'Letzte Aktualisierung', VARIABLETYPE_INTEGER, 990, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
+                'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
+                'ICON' => 'clock'
+            ])
         ];
+    }
 
-        if (!$show) {
-            foreach ($idents as $ident) {
-                $this->dropVariable($ident);
+    private function detailVariableDefinitions(): array
+    {
+        return [
+            $this->variable('VehicleName', 'Fahrzeugname', VARIABLETYPE_STRING, 10, $this->valuePresentation('car')),
+            $this->variable('LicensePlate', 'Kennzeichen', VARIABLETYPE_STRING, 20, $this->valuePresentation('id-card')),
+            $this->variable('TrunkOpen', 'Kofferraum offen', VARIABLETYPE_BOOLEAN, 130, $this->booleanYesNoPresentation(false, 'car-rear')),
+            $this->variable('BonnetOpen', 'Motorhaube offen', VARIABLETYPE_BOOLEAN, 140, $this->booleanYesNoPresentation(false, 'car')),
+            $this->variable('SunroofOpen', 'Schiebedach offen', VARIABLETYPE_BOOLEAN, 150, $this->booleanYesNoPresentation(false, 'car-side')),
+            $this->variable('LightsOn', 'Licht an', VARIABLETYPE_BOOLEAN, 160, $this->booleanYesNoPresentation(false, 'lightbulb')),
+            $this->variable('ParkingState', 'Parkstatus', VARIABLETYPE_STRING, 170, $this->valuePresentation('square-parking')),
+            $this->variable('ChargingState', 'Ladestatus', VARIABLETYPE_STRING, 210, $this->chargingStatePresentation()),
+            $this->variable('ChargeType', 'Ladeart', VARIABLETYPE_STRING, 220, $this->valuePresentation('plug')),
+            $this->variable('FullyChargedAt', 'Vollgeladen um', VARIABLETYPE_INTEGER, 260, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
+                'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
+                'ICON' => 'clock'
+            ]),
+            $this->variable('Latitude', 'Breitengrad', VARIABLETYPE_FLOAT, 400, $this->valuePresentation('location-dot', '', 6)),
+            $this->variable('Longitude', 'Längengrad', VARIABLETYPE_FLOAT, 410, $this->valuePresentation('location-dot', '', 6)),
+            $this->variable('ApiKeyExpiresAtVar', 'API-Key gültig bis', VARIABLETYPE_INTEGER, 910, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
+                'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
+                'ICON' => 'key'
+            ]),
+            $this->variable('RequestsRemaining', 'Verbleibende API-Anfragen', VARIABLETYPE_INTEGER, 920, $this->valuePresentation('gauge')),
+            $this->variable('PartialErrors', 'API-Teilfehler', VARIABLETYPE_STRING, 930, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'ICON' => 'triangle-exclamation',
+                'MULTILINE' => true
+            ])
+        ];
+    }
+
+    private function variable(
+        string $ident,
+        string $name,
+        int $type,
+        int $position,
+        array $presentation,
+        mixed $initialValue = null
+    ): array {
+        return compact('ident', 'name', 'type', 'position', 'presentation', 'initialValue');
+    }
+
+    /**
+     * Legt eine Variable nur an, solange ihr Ident noch nicht existiert.
+     * Vorhandene Namen, Positionen und Darstellungen werden nicht überschrieben.
+     */
+    private function registerVariableOnce(array $definition): void
+    {
+        $ident = (string) $definition['ident'];
+        $existingId = @$this->GetIDForIdent($ident);
+        if ($existingId !== false) {
+            if (!IPS_VariableExists($existingId)) {
+                $this->LogMessage(sprintf('MySkoda: Ident "%s" wird bereits von einem anderen Objekt verwendet.', $ident), KL_WARNING);
+                return;
+            }
+
+            $variable = IPS_GetVariable($existingId);
+            if ((int) ($variable['VariableType'] ?? -1) !== (int) $definition['type']) {
+                $this->LogMessage(sprintf('MySkoda: Variable "%s" hat einen unerwarteten Datentyp.', $ident), KL_ERROR);
             }
             return;
         }
 
-        // Fahrzeug
-        $this->RegisterVariableString('VehicleName', $this->Translate('Vehicle name'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'car'
-        ], 10);
-        $this->RegisterVariableString('LicensePlate', $this->Translate('License plate'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'id-card'
-        ], 20);
+        $name = (string) $definition['name'];
+        $presentation = (array) $definition['presentation'];
+        $position = (int) $definition['position'];
 
-        // Fahrzeugstatus
-        $this->RegisterVariableBoolean(
-            'TrunkOpen',
-            $this->Translate('Trunk open'),
-            $this->booleanYesNoPresentation(false, 'car-rear'),
-            130
-        );
-        $this->RegisterVariableBoolean(
-            'BonnetOpen',
-            $this->Translate('Bonnet open'),
-            $this->booleanYesNoPresentation(false, 'car'),
-            140
-        );
-        $this->RegisterVariableBoolean(
-            'SunroofOpen',
-            $this->Translate('Sunroof open'),
-            $this->booleanYesNoPresentation(false, 'car-side'),
-            150
-        );
-        $this->RegisterVariableBoolean(
-            'LightsOn',
-            $this->Translate('Lights on'),
-            $this->booleanYesNoPresentation(false, 'lightbulb'),
-            160
-        );
-        $this->RegisterVariableString('ParkingState', $this->Translate('Parking state'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'square-parking'
-        ], 170);
+        match ((int) $definition['type']) {
+            VARIABLETYPE_BOOLEAN => $this->RegisterVariableBoolean($ident, $name, $presentation, $position),
+            VARIABLETYPE_INTEGER => $this->RegisterVariableInteger($ident, $name, $presentation, $position),
+            VARIABLETYPE_FLOAT => $this->RegisterVariableFloat($ident, $name, $presentation, $position),
+            VARIABLETYPE_STRING => $this->RegisterVariableString($ident, $name, $presentation, $position),
+            default => throw new InvalidArgumentException('Nicht unterstützter Variablentyp')
+        };
 
-        // Laden
-        $this->RegisterVariableString('ChargingState', $this->Translate('Charging state'), $this->chargingStatePresentation(), 210);
-        $this->RegisterVariableString('ChargeType', $this->Translate('Charge type'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'plug'
-        ], 220);
-        $this->RegisterVariableInteger('FullyChargedAt', $this->Translate('Fully charged at'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
-            'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
-            'ICON' => 'clock'
-        ], 260);
-
-        // Standort
-        $this->RegisterVariableFloat('Latitude', $this->Translate('Latitude'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'location-dot',
-            'DIGITS' => 6
-        ], 400);
-        $this->RegisterVariableFloat('Longitude', $this->Translate('Longitude'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'location-dot',
-            'DIGITS' => 6
-        ], 410);
-
-        // API & Diagnose
-        $this->RegisterVariableInteger('ApiKeyExpiresAtVar', $this->Translate('API key valid until'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
-            'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
-            'ICON' => 'key'
-        ], 910);
-        $this->RegisterVariableInteger('RequestsRemaining', $this->Translate('API requests remaining'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'gauge'
-        ], 920);
-        $this->RegisterVariableString('PartialErrors', $this->Translate('API partial errors'), [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'triangle-exclamation'
-        ], 930);
+        if ($definition['initialValue'] !== null && @$this->GetIDForIdent($ident) !== false) {
+            $this->SetValue($ident, $definition['initialValue']);
+        }
     }
 
     private function applyActions(): void
     {
-        $active = $this->ReadPropertyBoolean('EnableRemote');
+        $enabled = $this->ReadPropertyBoolean('EnableRemote');
         foreach (['Charging', 'TargetSOC', 'ChargeMode', 'Climate', 'TargetTemperature'] as $ident) {
-            $this->MaintainAction($ident, $active);
+            $this->MaintainAction($ident, $enabled);
         }
     }
 
     private function updateCoreValues(array $vehicle): void
     {
-        $soc = $this->path($vehicle, 'charging.status.battery.stateOfChargeInPercent', null);
-        if ($soc !== null) {
-            $this->SetValue('StateOfCharge', (int) $soc);
+        $this->setPathValue('StateOfCharge', $vehicle, 'charging.status.battery.stateOfChargeInPercent', static fn (mixed $v): int => (int) $v);
+        $this->setPathValue('Range', $vehicle, 'charging.status.battery.remainingCruisingRangeInMeters', static fn (mixed $v): int => (int) round((float) $v / 1000));
+
+        $mileage = (int) round((float) $this->path($vehicle, 'odometer.mileageInKm', 0));
+        if ($mileage > 0) {
+            $this->SetValue('Mileage', $mileage);
         }
 
-        $rangeMeters = $this->path($vehicle, 'charging.status.battery.remainingCruisingRangeInMeters', null);
-        if ($rangeMeters !== null) {
-            $this->SetValue('Range', (int) round(((float) $rangeMeters) / 1000));
-        }
-
-        $mileage = $this->path($vehicle, 'odometer.mileageInKm', null);
-        if ($mileage !== null) {
-            $this->SetValue('Mileage', (int) round((float) $mileage));
-        }
-
-        $lock = strtoupper((string) ($this->path($vehicle, 'status.overall.doorsLocked', $this->path($vehicle, 'status.overall.locked', 'UNKNOWN'))));
-        $this->SetValue('Locked', $lock === 'YES' || $lock === 'LOCKED');
+        $lock = strtoupper((string) $this->path($vehicle, 'status.overall.doorsLocked', $this->path($vehicle, 'status.overall.locked', 'UNKNOWN')));
+        $this->SetValue('Locked', in_array($lock, ['YES', 'LOCKED'], true));
         $this->SetValue('DoorsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.doors', 'CLOSED')) === 'OPEN');
         $this->SetValue('WindowsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.windows', 'CLOSED')) === 'OPEN');
 
         $chargeState = strtoupper((string) $this->path($vehicle, 'charging.status.state', ''));
         $this->SetValue('Charging', in_array($chargeState, ['CHARGING', 'CONSERVING'], true));
+        $this->setPathValue('ChargePower', $vehicle, 'charging.status.chargePowerInKw', static fn (mixed $v): float => (float) $v * 1000.0);
+        $this->setPathValue('TargetSOC', $vehicle, 'charging.settings.targetStateOfChargeInPercent', static fn (mixed $v): int => (int) $v);
 
-        $chargePowerKw = $this->path($vehicle, 'charging.status.chargePowerInKw', null);
-        if ($chargePowerKw !== null) {
-            $this->SetValue('ChargePower', ((float) $chargePowerKw) * 1000.0);
-        }
-
-        $targetSoc = $this->path($vehicle, 'charging.settings.targetStateOfChargeInPercent', null);
-        if ($targetSoc !== null) {
-            $this->SetValue('TargetSOC', (int) $targetSoc);
-        }
-
-        $mode = $this->path($vehicle, 'charging.settings.preferredChargeMode', null);
-        if (is_string($mode) && $mode !== '') {
-            $map = json_decode($this->ReadAttributeString('ChargeModeMap'), true);
-            if (is_array($map)) {
-                $index = array_search($mode, $map, true);
-                if ($index !== false) {
-                    $this->SetValue('ChargeMode', (int) $index);
-                }
+        $this->updateAvailableChargeModes($vehicle);
+        $mode = strtoupper((string) $this->path($vehicle, 'charging.settings.preferredChargeMode', ''));
+        if ($mode !== '') {
+            $index = array_search($mode, self::CHARGE_MODES, true);
+            if ($index !== false) {
+                $this->SetValue('ChargeMode', (int) $index);
+            } else {
+                $this->SendDebug('Lademodus', 'Unbekannter API-Wert: ' . $mode, 0);
             }
         }
 
         $climateState = strtoupper((string) $this->path($vehicle, 'airConditioning.state', 'OFF'));
         $this->SetValue('Climate', in_array($climateState, ['COOLING', 'HEATING', 'HEATING_AUXILIARY', 'VENTILATION'], true));
+        $this->setPathValue('TargetTemperature', $vehicle, 'airConditioning.targetTemperature.value', static fn (mixed $v): float => (float) $v);
+    }
 
-        $temperature = $this->path($vehicle, 'airConditioning.targetTemperature.value', null);
-        if ($temperature !== null) {
-            $this->SetValue('TargetTemperature', (float) $temperature);
+    private function setPathValue(string $ident, array $source, string $path, Closure $convert): void
+    {
+        $value = $this->path($source, $path, null);
+        if ($value !== null) {
+            $this->SetValue($ident, $convert($value));
         }
     }
 
-    private function updateOptionalValues(array $vehicle, array $envelope): void
+    private function updateDetailValues(array $vehicle, array $envelope): void
     {
-        if (!$this->ReadPropertyBoolean('ShowDetails')) {
-            return;
-        }
-
         $this->setIfExists('VehicleName', (string) $this->path($vehicle, 'name', ''));
         $this->setIfExists('LicensePlate', (string) $this->path($vehicle, 'licensePlate', ''));
         $this->setIfExists('ChargingState', (string) $this->path($vehicle, 'charging.status.state', ''));
@@ -277,10 +227,10 @@ trait MySkodaVariablesTrait
         $this->setIfExists('LightsOn', strtoupper((string) $this->path($vehicle, 'status.overall.lights', 'OFF')) === 'ON');
         $this->setIfExists('ParkingState', (string) $this->path($vehicle, 'parkingPosition.state', ''));
 
-        $lat = $this->firstPath($vehicle, ['parkingPosition.latitude', 'parkingPosition.gpsCoordinates.latitude', 'parkingPosition.gpsCoordinates.lat']);
-        $lon = $this->firstPath($vehicle, ['parkingPosition.longitude', 'parkingPosition.gpsCoordinates.longitude', 'parkingPosition.gpsCoordinates.lon', 'parkingPosition.gpsCoordinates.lng']);
-        $this->setIfExists('Latitude', $lat !== null ? (float) $lat : 0.0);
-        $this->setIfExists('Longitude', $lon !== null ? (float) $lon : 0.0);
+        $latitude = $this->firstPath($vehicle, ['parkingPosition.latitude', 'parkingPosition.gpsCoordinates.latitude', 'parkingPosition.gpsCoordinates.lat']);
+        $longitude = $this->firstPath($vehicle, ['parkingPosition.longitude', 'parkingPosition.gpsCoordinates.longitude', 'parkingPosition.gpsCoordinates.lon', 'parkingPosition.gpsCoordinates.lng']);
+        $this->setIfExists('Latitude', $latitude !== null ? (float) $latitude : 0.0);
+        $this->setIfExists('Longitude', $longitude !== null ? (float) $longitude : 0.0);
         $this->setIfExists('ApiKeyExpiresAtVar', $this->ReadAttributeInteger('ApiKeyExpiresAt'));
         $this->setIfExists('RequestsRemaining', $this->ReadAttributeInteger('RateLimitRemaining'));
 
@@ -288,12 +238,49 @@ trait MySkodaVariablesTrait
         $this->setIfExists('PartialErrors', $errors === [] ? '' : json_encode($errors, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
     }
 
-    private function booleanYesNoPresentation(
-        bool $goodValue,
-        string $icon = '',
-        string $falseIcon = '',
-        string $trueIcon = ''
-    ): array {
+    private function updateAvailableChargeModes(array $vehicle): void
+    {
+        $modes = $this->path($vehicle, 'charging.settings.availableChargeModes', []);
+        $modes = is_array($modes) ? $modes : [];
+
+        $current = $this->path($vehicle, 'charging.settings.preferredChargeMode', null);
+        if (is_string($current) && trim($current) !== '') {
+            $modes[] = $current;
+        }
+
+        $clean = [];
+        foreach ($modes as $mode) {
+            if (is_string($mode) && trim($mode) !== '') {
+                $clean[] = strtoupper(trim($mode));
+            }
+        }
+
+        $this->WriteAttributeString('AvailableChargeModes', json_encode(array_values(array_unique($clean)), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    }
+
+    private function isChargeModeAvailable(string $mode): bool
+    {
+        $available = json_decode($this->ReadAttributeString('AvailableChargeModes'), true);
+        return !is_array($available) || $available === [] || in_array($mode, $available, true);
+    }
+
+    private function valuePresentation(string $icon = '', string $suffix = '', ?int $digits = null): array
+    {
+        $presentation = ['PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION];
+        if ($icon !== '') {
+            $presentation['ICON'] = $icon;
+        }
+        if ($suffix !== '') {
+            $presentation['SUFFIX'] = $suffix;
+        }
+        if ($digits !== null) {
+            $presentation['DIGITS'] = $digits;
+        }
+        return $presentation;
+    }
+
+    private function booleanYesNoPresentation(bool $goodValue, string $icon = '', string $falseIcon = '', string $trueIcon = ''): array
+    {
         $green = 0x22C55E;
         $orange = 0xF59E0B;
         return $this->booleanValuePresentation(
@@ -305,50 +292,28 @@ trait MySkodaVariablesTrait
         );
     }
 
-    private function booleanActivePresentation(string $icon = ''): array
+    private function booleanActionPresentation(string $icon): array
     {
-        if ($this->ReadPropertyBoolean('EnableRemote')) {
-            return [
-                'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
-                'USE_ICON_FALSE' => $icon !== '',
-                'ICON_TRUE' => $icon,
-                'ICON_FALSE' => $icon,
-                'GLOW_COLOR' => 0x22C55E,
-                'GLOW_INTENSITY' => 35,
-                'USAGE_TYPE' => 2
-            ];
-        }
-        return $this->booleanValuePresentation(0x22C55E, 0x22C55E, $icon, $icon, $icon);
+        return [
+            'PRESENTATION' => VARIABLE_PRESENTATION_SWITCH,
+            'USE_ICON_FALSE' => true,
+            'ICON_TRUE' => $icon,
+            'ICON_FALSE' => $icon,
+            'GLOW_COLOR' => 0x22C55E,
+            'GLOW_INTENSITY' => 35,
+            'USAGE_TYPE' => 2
+        ];
     }
 
-    private function booleanValuePresentation(
-        int $falseColor,
-        int $trueColor,
-        string $icon = '',
-        string $falseIcon = '',
-        string $trueIcon = ''
-    ): array {
+    private function booleanValuePresentation(int $falseColor, int $trueColor, string $icon, string $falseIcon, string $trueIcon): array
+    {
         return [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
             'ICON' => $icon,
             'COLOR' => -1,
             'OPTIONS' => json_encode([
-                [
-                    'Value' => false,
-                    'Caption' => $this->Translate('No'),
-                    'IconActive' => $falseIcon !== '',
-                    'IconValue' => $falseIcon,
-                    'ColorActive' => true,
-                    'ColorValue' => $falseColor
-                ],
-                [
-                    'Value' => true,
-                    'Caption' => $this->Translate('Yes'),
-                    'IconActive' => $trueIcon !== '',
-                    'IconValue' => $trueIcon,
-                    'ColorActive' => true,
-                    'ColorValue' => $trueColor
-                ]
+                ['Value' => false, 'Caption' => 'Nein', 'IconActive' => $falseIcon !== '', 'IconValue' => $falseIcon, 'ColorActive' => true, 'ColorValue' => $falseColor],
+                ['Value' => true, 'Caption' => 'Ja', 'IconActive' => $trueIcon !== '', 'IconValue' => $trueIcon, 'ColorActive' => true, 'ColorValue' => $trueColor]
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ];
     }
@@ -358,26 +323,19 @@ trait MySkodaVariablesTrait
         $green = 0x22C55E;
         $orange = 0xF59E0B;
         $states = [
-            ['CONNECT_CABLE', 'Connect charging cable', 'plug', $orange],
-            ['CHARGING', 'Charging active', 'bolt', $green],
-            ['CONSERVING', 'Charge conservation', 'battery-full', $green],
-            ['READY_FOR_CHARGING', 'Ready for charging', 'plug-circle-check', $green],
-            ['DISCHARGING', 'Discharging', 'battery-half', $orange],
-            ['CHARGING_INTERRUPTED', 'Charging interrupted', 'triangle-exclamation', $orange],
-            ['OFF', 'Off', 'plug', -1],
-            ['UNKNOWN', 'Unknown', 'circle-question', -1]
+            ['CONNECT_CABLE', 'Ladekabel anschließen', 'plug', $orange],
+            ['CHARGING', 'Laden aktiv', 'bolt', $green],
+            ['CONSERVING', 'Ladeerhaltung', 'battery-full', $green],
+            ['READY_FOR_CHARGING', 'Ladebereit', 'plug-circle-check', $green],
+            ['DISCHARGING', 'Entladen', 'battery-half', $orange],
+            ['CHARGING_INTERRUPTED', 'Laden unterbrochen', 'triangle-exclamation', $orange],
+            ['OFF', 'Aus', 'plug', -1],
+            ['UNKNOWN', 'Unbekannt', 'circle-question', -1]
         ];
 
         $options = [];
         foreach ($states as [$value, $caption, $icon, $color]) {
-            $options[] = [
-                'Value' => $value,
-                'Caption' => $this->Translate($caption),
-                'IconActive' => true,
-                'IconValue' => $icon,
-                'ColorActive' => $color >= 0,
-                'ColorValue' => $color
-            ];
+            $options[] = ['Value' => $value, 'Caption' => $caption, 'IconActive' => true, 'IconValue' => $icon, 'ColorActive' => $color >= 0, 'ColorValue' => $color];
         }
 
         return [
@@ -388,51 +346,13 @@ trait MySkodaVariablesTrait
         ];
     }
 
-    private function updateChargeModePresentation(array $vehicle): void
-    {
-        $modes = $this->path($vehicle, 'charging.settings.availableChargeModes', []);
-        if (!is_array($modes)) {
-            $modes = [];
-        }
-        $current = $this->path($vehicle, 'charging.settings.preferredChargeMode', null);
-        if (is_string($current) && $current !== '' && !in_array($current, $modes, true)) {
-            $modes[] = $current;
-        }
-
-        $clean = [];
-        foreach ($modes as $mode) {
-            if (is_string($mode) && $mode !== '' && !in_array($mode, $clean, true)) {
-                $clean[] = $mode;
-            }
-        }
-
-        $map = [];
-        foreach (array_values($clean) as $index => $mode) {
-            $map[(string) $index] = $mode;
-        }
-
-        $this->WriteAttributeString('ChargeModeMap', json_encode($map, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
-
-        // Dynamic presentation updates still use RegisterVariable*/MaintainAction,
-        // therefore temporarily place only this variable at the instance root.
-        $this->moveManagedVariableToRegistrationRoot('ChargeMode');
-        $this->RegisterVariableInteger('ChargeMode', $this->Translate('Charging mode'), $this->chargeModePresentation($map), 250);
-        $this->MaintainAction('ChargeMode', $this->ReadPropertyBoolean('EnableRemote') && $map !== []);
-        $this->placeManagedVariable('ChargeMode');
-    }
-
-    private function chargeModePresentation(array $map): array
+    private function chargeModePresentation(): array
     {
         $options = [];
-        foreach ($map as $index => $mode) {
-            $options[] = [
-                'Value' => (int) $index,
-                'Caption' => $this->humanizeMode((string) $mode),
-                'IconActive' => false,
-                'IconValue' => '',
-                'Color' => -1
-            ];
+        foreach (self::CHARGE_MODES as $index => $mode) {
+            $options[] = ['Value' => $index, 'Caption' => $this->humanizeMode($mode), 'IconActive' => false, 'IconValue' => '', 'Color' => -1];
         }
+
         return [
             'PRESENTATION' => VARIABLE_PRESENTATION_ENUMERATION,
             'ICON' => 'gear',
@@ -444,20 +364,13 @@ trait MySkodaVariablesTrait
     private function humanizeMode(string $mode): string
     {
         $known = [
-            'MANUAL' => $this->Translate('Manual'),
-            'TIMER' => $this->Translate('Timer'),
-            'TIMER_CHARGING_WITH_CLIMATISATION' => $this->Translate('Timer + climate'),
-            'PREFERRED_CHARGING_TIMES' => $this->Translate('Preferred charging times'),
-            'ONLY_OWN_CURRENT' => $this->Translate('Only own current'),
-            'IMMEDIATE_DISCHARGING' => $this->Translate('Immediate discharging'),
-            'HOME_STORAGE_CHARGING' => $this->Translate('Home storage charging'),
-            'AC' => 'AC',
-            'DC' => 'DC',
-            'OFF' => $this->Translate('Off'),
-            'COOLING' => $this->Translate('Cooling'),
-            'HEATING' => $this->Translate('Heating'),
-            'HEATING_AUXILIARY' => $this->Translate('Auxiliary heating'),
-            'VENTILATION' => $this->Translate('Ventilation')
+            'MANUAL' => 'Manuell',
+            'TIMER' => 'Timer',
+            'TIMER_CHARGING_WITH_CLIMATISATION' => 'Timer + Klimatisierung',
+            'PREFERRED_CHARGING_TIMES' => 'Bevorzugte Ladezeiten',
+            'ONLY_OWN_CURRENT' => 'Nur eigener Strom',
+            'IMMEDIATE_DISCHARGING' => 'Sofort entladen',
+            'HOME_STORAGE_CHARGING' => 'Heimspeicher laden'
         ];
         return $known[$mode] ?? ucwords(strtolower(str_replace('_', ' ', $mode)));
     }

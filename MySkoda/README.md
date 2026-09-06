@@ -2,140 +2,126 @@
 
 Gerätemodul für IP-Symcon zur Anbindung eines Fahrzeugs an die offizielle MySkoda Public API. Eine Instanz repräsentiert genau eine FIN/VIN.
 
-## 1. Funktionsumfang
+## Funktionsumfang
 
-- Fahrzeugstatus über die offizielle MySkoda Public API
-- thematisch gruppierte Datenpunkte unter Dummy-Instanzen
-- stabile Variablen-Idents für Skripte und externe Visualisierungen
-- optionale Detail- und Diagnosevariablen
+- Fahrzeugstatus und Fahrzeugdaten über die MySkoda Public API
+- stabile Variablen-Idents für Skripte und weitere Module
 - Laden und Klimatisierung über Variablenaktionen
-- Ladelimit und Lademodus, sofern Fahrzeug und API dies unterstützen
-- kombinierter Ladeverlauf aus Ladezustand, Ladelimit und Ladeleistung
-- automatische Aktivierung der benötigten Archivierung, sofern noch kein Logging besteht
-- PHP-Befehle für Standheizung, aktive Lüftung und Ladeprofil-Updates
-- vollständige API-Antwort über `MSKODA_GetRawData()`
-- Rate-Limit- und `Retry-After`-Behandlung
-- Verbindungstest nach der Ersteinrichtung
+- Ladelimit und Lademodus, sofern vom Fahrzeug unterstützt
+- Standheizung und aktive Lüftung über öffentliche Modulmethoden
+- optionale Detail-, Standort- und Diagnosevariablen
+- Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
 - API-Key-Ablaufwarnung 30 Tage vor Ablauf
-- optionale Push-Mitteilung über eine ausgewählte Symcon-Visualisierungsinstanz
+- optionale Symcon-Mitteilung über eine ausgewählte Visualisierungsinstanz
 
-## 2. Voraussetzungen
+## Voraussetzungen
 
 - IP-Symcon **8.1 oder neuer**
 - 17-stellige FIN/VIN
 - MySkoda API-Key
 - optional S-PIN für Standheizung
-- für die gewünschte Funktion aktive MySkoda/Škoda-Connect-Dienste
-- Archive Control für den optionalen Ladeverlauf
+- Archive Control für die optionale Archivierung
 
-### API-Key erstellen
+## Konfiguration
 
-In der **MySkoda App**:
-
-**Profil → Smart Home → Create Key → beliebigen Namen vergeben → FIN/VIN und API-Token in die Symcon-Instanz übernehmen.**
-
-Nach dem Übernehmen prüft das Modul die Verbindung und zeigt das Ergebnis im Instanzformular.
-
-## 3. Installation
-
-Im **Module Control** folgendes Repository hinzufügen:
-
-```text
-https://github.com/taloriko/IPSymconMySkoda
-```
-
-Anschließend eine Instanz **MySkoda** anlegen.
-
-## 4. Konfiguration
-
-| Einstellung | Beschreibung | Standard |
+| Einstellung | Funktion | Standard |
 |---|---|---:|
 | FIN / VIN | 17-stellige Fahrzeug-Identifikationsnummer | leer |
 | API-Token | MySkoda Public API-Key | leer |
-| Abrufintervall | automatischer Abruf in Sekunden | 300 |
-| Remote-Steuerung | aktiviert Lade- und Klimafunktionen | an |
+| Abfrageintervall | automatischer Abruf in Sekunden | 300 |
+| Remote-Steuerung | erlaubt Lade- und Klimabefehle | an |
 | Klima ohne externe Stromversorgung | Übergabe an die MySkoda-Klimafunktion | an |
-| S-PIN | optional, für Standheizung | leer |
-| API-Key Ablaufwarnung | Push bei höchstens 30 Tagen Restlaufzeit | aus |
-| Visualisierung für Mitteilungen | ausgewählte Symcon-Visualisierungsinstanz | keine |
-| Detail-/Diagnosevariablen | zusätzliche Fahrzeug- und API-Daten | aus |
-| Lade-Diagramm und Aufzeichnung | stellt den kombinierten Ladeverlauf bereit | an |
+| S-PIN | optional für Standheizung | leer |
+| API-Key-Ablaufwarnung | Mitteilung bei höchstens 30 Tagen Restlaufzeit | aus |
+| Visualisierung für Mitteilungen | Ziel für Symcon-Mitteilungen | keine |
+| Detail-/Diagnosevariablen | legt zusätzliche Datenpunkte an | aus |
+| Archivierung | archiviert Lade- und Kilometerdaten | an |
 
-### Ladeverlauf und Archivierung
+## Objektstruktur
 
-Für den Ladeverlauf werden genau diese drei Variablen verwendet:
+Das Modul legt **keine Dummy-Instanzen, Kategorien oder Links** an. Unter der MySkoda-Instanz befinden sich ausschließlich die echten Modulvariablen.
 
-- `StateOfCharge` – Ladezustand, linke Y-Achse in %
-- `TargetSOC` – Ladelimit, linke Y-Achse in %
-- `ChargePower` – Ladeleistung, rechte Y-Achse in W/kW
+Die fachliche Gruppierung erfolgt in einem separaten Visualisierungsmodul. Dadurch bleibt das Datenmodul klein und die Visualisierung kann die Darstellung unabhängig aufbauen.
 
-Beim Anwenden der Instanz prüft das Modul für jede dieser Variablen den Logging-Status im Archive Control. **Nur wenn eine Variable noch nicht geloggt wird, wird das Logging aktiviert.**
-
-Ist Logging bereits aktiv, verändert MySkoda daran nichts. Insbesondere werden keine Aggregationsart, Kompaktierung, Graph-Einstellung oder sonstige benutzerspezifische Archiveinstellungen überschrieben. Vorhandene Archivdaten werden weder verändert noch gelöscht.
-
-Das Lade-Diagramm wird nur angelegt, wenn noch keines mit dem Modul-Ident vorhanden ist. Eine bestehende Diagrammkonfiguration wird bei späteren Updates nicht überschrieben und kann vom Benutzer angepasst werden.
-
-Wird die Option später deaktiviert, löscht das Modul weder Archivdaten noch eine bereits angelegte Diagrammkonfiguration.
-
-### Standortfreigabe
-
-Standortdaten werden von der MySkoda API nur geliefert, wenn im verwendeten **MySkoda-Profil die Standortfreigabe** erteilt wurde. Die Freigabe ist profilbezogen. Wird dasselbe Fahrzeug mit mehreren MySkoda-Profilen verwendet, muss sie in **jedem Profil separat** aktiviert werden.
-
-Fehlen Standortdaten, schreibt das Modul `0.0` für Breitengrad und `0.0` für Längengrad. Dadurch bleiben keine veralteten Koordinaten aus einem früheren Abruf stehen.
-
-## 5. Objektstruktur und Datenpunkte
-
-Die Statusvariablen werden thematisch unter Dummy-Instanzen einsortiert:
-
-```text
-MySkoda
-├─ Fahrzeug
-├─ Fahrzeugstatus
-├─ Laden
-├─ Klimatisierung
-├─ Standort
-├─ API & Diagnose
-├─ Diagramme
-│  └─ Ladeverlauf
-└─ Letzte Aktualisierung
-```
-
-Die Gruppierung ändert weder die Objekt-ID noch den Ident einer bestehenden Statusvariable. Externe Skripte und Visualisierungen können daher weiterhin mit den stabilen Idents arbeiten. Die herstellerunabhängige EV-Tile-Visualisierung kann die Variablen rekursiv unterhalb der MySkoda-Instanz erkennen.
+Die sichtbaren Namen der Variablen sind deutsch. Die technischen Idents bleiben stabil, damit Skripte und Visualisierungsmodule zuverlässig darauf zugreifen können.
 
 ### Standard-Datenpunkte
 
-| Ident | Bedeutung | Bedienbar |
-|---|---|---:|
-| `StateOfCharge` | Ladezustand | Nein |
-| `Range` | Restreichweite | Nein |
-| `Mileage` | Kilometerstand | Nein |
-| `Locked` | Fahrzeug verriegelt | Nein |
-| `DoorsOpen` | Türen offen | Nein |
-| `WindowsOpen` | Fenster offen | Nein |
-| `Charging` | Laden | Ja |
-| `ChargePower` | Ladeleistung | Nein |
-| `TargetSOC` | Ladelimit | Ja |
-| `ChargeMode` | Lademodus | Ja |
-| `Climate` | Klimatisierung | Ja |
-| `TargetTemperature` | Klima-Solltemperatur | Ja |
-| `ApiKeyWarning` | API-Key läuft in höchstens 30 Tagen ab | Nein |
-| `LastUpdate` | Zeitpunkt der letzten erfolgreichen Abfrage | Nein |
+| Ident | Sichtbarer Name | Datentyp | Bedienbar |
+|---|---|---|---:|
+| `StateOfCharge` | Ladezustand | Integer | Nein |
+| `Range` | Reichweite | Integer | Nein |
+| `Mileage` | Kilometerstand | Integer | Nein |
+| `Locked` | Verriegelt | Boolean | Nein |
+| `DoorsOpen` | Türen offen | Boolean | Nein |
+| `WindowsOpen` | Fenster offen | Boolean | Nein |
+| `Charging` | Laden | Boolean | Ja |
+| `ChargePower` | Ladeleistung | Float | Nein |
+| `TargetSOC` | Ladelimit | Integer | Ja |
+| `ChargeMode` | Lademodus | Integer | Ja |
+| `Climate` | Klimatisierung | Boolean | Ja |
+| `TargetTemperature` | Solltemperatur | Float | Ja |
+| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein |
+| `LastUpdate` | Letzte Aktualisierung | Integer | Nein |
 
-Bei aktivierten Detailvariablen werden zusätzlich unter anderem Fahrzeugname, Kennzeichen, Ladestatus, Ladeart, erwarteter Voll-Ladezeitpunkt, Kofferraum, Motorhaube, Schiebedach, Licht, Parkstatus, Standort, API-Key-Ablauf und API-Diagnose bereitgestellt.
+### Optionale Datenpunkte
 
-### Darstellungen
+Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden fehlende zusätzliche Variablen erstellt:
 
-Das Modul legt keine Legacy-Variablenprofile und keine globalen eigenen Darstellungs-Vorlagen an. Die Darstellungen werden direkt über native Symcon-8.x-Darstellungen an den moduleigenen Variablen registriert.
+| Ident | Sichtbarer Name |
+|---|---|
+| `VehicleName` | Fahrzeugname |
+| `LicensePlate` | Kennzeichen |
+| `TrunkOpen` | Kofferraum offen |
+| `BonnetOpen` | Motorhaube offen |
+| `SunroofOpen` | Schiebedach offen |
+| `LightsOn` | Licht an |
+| `ParkingState` | Parkstatus |
+| `ChargingState` | Ladestatus |
+| `ChargeType` | Ladeart |
+| `FullyChargedAt` | Vollgeladen um |
+| `Latitude` | Breitengrad |
+| `Longitude` | Längengrad |
+| `ApiKeyExpiresAtVar` | API-Key gültig bis |
+| `RequestsRemaining` | Verbleibende API-Anfragen |
+| `PartialErrors` | API-Teilfehler |
 
-Für Hinweiszustände gilt: erwarteter Zustand grün, Hinweis/Aufmerksamkeit orange. Rot wird für normale Statushinweise nicht verwendet.
+Einmal angelegte Detailvariablen bleiben bestehen und werden weiter mit aktuellen Werten versorgt. Das Deaktivieren der Option löscht keine Variablen.
 
-Der API-Rohwert von `ChargingState` bleibt als Variablenwert erhalten. Bekannte Zustände werden über die native Wertanzeige lesbar lokalisiert, beispielsweise `CONNECT_CABLE` als **Ladekabel anschließen** und `CHARGING` als **Lädt**.
+## Lademodus
 
-## 6. Mitteilungen
+`ChargeMode` verwendet feste Integerwerte:
 
-Das Mitteilungsziel wird über einen Symcon-Instanzauswahldialog gewählt. Vor dem Versand prüft das Modul, ob die gewählte Instanz ein Visualisierungsmodul ist.
+| Wert | Modus | Anzeige |
+|---:|---|---|
+| 0 | `MANUAL` | Manuell |
+| 1 | `TIMER` | Timer |
+| 2 | `TIMER_CHARGING_WITH_CLIMATISATION` | Timer + Klimatisierung |
+| 3 | `PREFERRED_CHARGING_TIMES` | Bevorzugte Ladezeiten |
+| 4 | `ONLY_OWN_CURRENT` | Nur eigener Strom |
+| 5 | `IMMEDIATE_DISCHARGING` | Sofort entladen |
+| 6 | `HOME_STORAGE_CHARGING` | Heimspeicher laden |
 
-## 7. PHP-Befehle
+Vor dem Senden prüft das Modul die vom Fahrzeug gemeldeten verfügbaren Lademodi.
+
+## Archivierung
+
+Bei aktivierter Archivierung werden folgende Variablen im Archive Control geloggt:
+
+- `StateOfCharge` – Ladezustand
+- `TargetSOC` – Ladelimit
+- `ChargePower` – Ladeleistung
+- `Mileage` – Kilometerstand
+
+Der Kilometerstand wird mit Aggregationstyp **Zähler** eingerichtet. Werte `<= 0` werden bereits beim Einlesen verworfen und deshalb nicht in die Kilometerstandsvariable geschrieben. Zusätzlich wird für den Zähler das Ignorieren von Null- und negativen Werten im Archive Control aktiviert.
+
+Es wird kein eigenes Diagramm und kein zusätzliches Medienobjekt angelegt. Die Darstellung der Archivdaten ist Aufgabe der Visualisierung.
+
+## Standortdaten
+
+Standortdaten werden nur bereitgestellt, wenn die MySkoda API sie für das verwendete Profil liefert. Fehlen Koordinaten in einer Antwort, werden vorhandene optionale Standortvariablen auf `0.0` gesetzt.
+
+## PHP-Befehle
 
 ```php
 MSKODA_Update(12345);
@@ -154,21 +140,19 @@ $ok = MSKODA_RefreshApiDefinition(12345);
 $ok = MSKODA_TestNotification(12345);
 ```
 
-## 8. Rate-Limit und Fehler
+## Instanzstatus
 
-Das Modul wertet die von MySkoda gelieferten Rate-Limit-Header und `Retry-After` aus. Für automatische Abfragen wird eine Reserve für Bedienaktionen freigehalten.
+| Code | Bedeutung |
+|---:|---|
+| `102` | verbunden / bereit |
+| `201` | FIN oder API-Token fehlt oder ist ungültig |
+| `202` | API- oder Verbindungsfehler |
+| `203` | Rate-Limit / Wartezeit aktiv |
 
-Instanzstatus:
-
-- `102` verbunden / bereit
-- `201` FIN oder API-Token ungültig
-- `202` API- oder Verbindungsfehler
-- `203` Rate-Limit / Wartezeit
-
-## 9. Lizenz und Markenhinweis
+## Lizenz und Markenhinweis
 
 Copyright © 2026 **taloriko**.
 
-Dieses Projekt wird unter der **MIT-Lizenz** veröffentlicht. Der vollständige Lizenztext befindet sich in [../LICENSE](../LICENSE).
+Dieses Projekt wird unter der [MIT-Lizenz](../LICENSE) veröffentlicht.
 
 Dieses Projekt ist eine unabhängige Community-Integration und nicht mit Škoda Auto a.s. verbunden oder von Škoda Auto a.s. unterstützt.
