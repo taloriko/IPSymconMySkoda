@@ -6,22 +6,31 @@ trait MySkodaOpenApiTrait
 {
     private function refreshOpenApi(bool $force): array
     {
+        $this->ensureApiDiscoveryVariable();
+
         $cached = $this->ReadAttributeString('OpenApiOperations');
         $updated = $this->ReadAttributeInteger('OpenApiUpdatedAt');
         if (!$force && $cached !== '' && (time() - $updated) < 86400) {
             $ops = json_decode($cached, true);
-            return is_array($ops) ? $ops : [];
+            $ops = is_array($ops) ? $ops : [];
+            $this->updateApiDiscoveryStatus($ops, false);
+            return $ops;
         }
 
         $response = $this->request('GET', self::OPENAPI_URL, null, false);
         if (!$response['ok'] || !is_array($response['json'])) {
             $ops = json_decode($cached, true);
-            return is_array($ops) ? $ops : [];
+            $ops = is_array($ops) ? $ops : [];
+            if ($ops !== []) {
+                $this->updateApiDiscoveryStatus($ops, false);
+            }
+            return $ops;
         }
 
         $ops = $this->extractOpenApiOperations($response['json']);
         $this->WriteAttributeString('OpenApiOperations', json_encode($ops, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
         $this->WriteAttributeInteger('OpenApiUpdatedAt', time());
+        $this->updateApiDiscoveryStatus($ops, true);
         return $ops;
     }
 
@@ -54,6 +63,102 @@ trait MySkodaOpenApiTrait
             }
         }
         return $operations;
+    }
+
+    private function ensureApiDiscoveryVariable(): void
+    {
+        $this->registerVariableOnce([
+            'ident' => 'NewApiFeatures',
+            'name' => 'New API functions',
+            'type' => VARIABLETYPE_INTEGER,
+            'position' => 940,
+            'presentation' => [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'ICON' => 'circle-plus'
+            ],
+            'initialValue' => 0
+        ]);
+    }
+
+    private function updateApiDiscoveryStatus(array $operations, bool $reportDebug): void
+    {
+        $unknown = [];
+        foreach ($operations as $operation) {
+            if (!is_array($operation) || $this->isKnownModuleOperation($operation)) {
+                continue;
+            }
+
+            $method = strtoupper(trim((string) ($operation['method'] ?? '')));
+            $path = trim((string) ($operation['path'] ?? ''));
+            if ($method === '' || $path === '') {
+                continue;
+            }
+            $unknown[$method . ' ' . $path] = true;
+        }
+
+        $this->setIfExists('NewApiFeatures', count($unknown));
+
+        if ($reportDebug && $unknown !== []) {
+            $this->SendDebug(
+                'API discovery',
+                'Unknown OpenAPI operations: ' . implode(' | ', array_keys($unknown)),
+                0
+            );
+        }
+    }
+
+    private function isKnownModuleOperation(array $operation): bool
+    {
+        $method = strtoupper((string) ($operation['method'] ?? ''));
+        $path = strtolower(trim((string) ($operation['path'] ?? '')));
+        $haystack = strtolower(
+            (string) ($operation['operationId'] ?? '') . ' '
+            . (string) ($operation['summary'] ?? '') . ' '
+            . $path
+        );
+
+        if ($method === 'GET' && preg_match('#/api/v1/vehicles/\{[^}]+\}/?$#', $path) === 1) {
+            return true;
+        }
+
+        if (str_contains($haystack, 'charg')) {
+            foreach ([
+                'start',
+                'stop',
+                'limit',
+                'targetstateofcharge',
+                'target state of charge',
+                'state-of-charge',
+                'state of charge',
+                'soc',
+                'mode',
+                'profile'
+            ] as $knownChargingPurpose) {
+                if (str_contains($haystack, $knownChargingPurpose)) {
+                    return true;
+                }
+            }
+        }
+
+        $knownClimateAreas = [
+            ['air-conditioning', 'air conditioning'],
+            ['auxiliary-heating', 'auxiliary heating'],
+            ['active-ventilation', 'active ventilation']
+        ];
+        foreach ($knownClimateAreas as $aliases) {
+            $matchesArea = false;
+            foreach ($aliases as $alias) {
+                if (str_contains($haystack, $alias)) {
+                    $matchesArea = true;
+                    break;
+                }
+            }
+            if ($matchesArea && (str_contains($haystack, 'start') || str_contains($haystack, 'stop'))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function resolveSchema(array $spec, array $schema, int $depth = 0): array
@@ -268,5 +373,4 @@ trait MySkodaOpenApiTrait
         }
         return $result;
     }
-
 }
