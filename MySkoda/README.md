@@ -11,7 +11,7 @@ Gerätemodul für IP-Symcon zur Anbindung eines Škoda-Fahrzeugs an die offiziel
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
 - deutsche Darstellung von Lade- und Parkstatus bei unveränderten API-Rohwerten
-- Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
+- optionale Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nach ausdrücklicher Aktivierung
 - API-Key-Ablaufwarnung 30 Tage vor Ablauf
 - optionale Symcon-Mitteilung über eine ausgewählte Visualisierungsinstanz
 
@@ -51,7 +51,7 @@ Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul berücksichtigt d
 | API-Key-Ablaufwarnung | Mitteilung bei höchstens 30 Tagen Restlaufzeit | aus |
 | Visualisierung für Mitteilungen | Ziel für Symcon-Mitteilungen | keine |
 | Detail-/Diagnosevariablen | legt zusätzliche Datenpunkte an | aus |
-| Archivierung | archiviert Lade- und Kilometerdaten | an |
+| Archivierung einrichten | richtet das Logging nach ausdrücklicher Aktivierung einmalig ein | aus |
 
 ## Objektstruktur
 
@@ -150,7 +150,7 @@ Vor dem Senden prüft das Modul die vom Fahrzeug gemeldeten verfügbaren Lademod
 
 ## Archivierung
 
-Bei aktivierter Archivierung werden folgende Variablen im Archive Control geloggt:
+Die Archivierung ist standardmäßig **aus**. Erst wenn **Archivierung einrichten** vom Benutzer bewusst aktiviert und die Konfiguration übernommen wird, konfiguriert das Modul einmalig folgende Variablen im Archive Control:
 
 - `StateOfCharge` – Ladezustand
 - `TargetSOC` – Ladelimit
@@ -158,6 +158,8 @@ Bei aktivierter Archivierung werden folgende Variablen im Archive Control gelogg
 - `Mileage` – Kilometerstand
 
 Der Kilometerstand wird mit Aggregationstyp **Zähler** eingerichtet. Werte `<= 0` werden bereits beim Einlesen verworfen und nicht in die Kilometerstandsvariable geschrieben. Zusätzlich wird für den Zähler das Ignorieren von Null- und negativen Werten im Archive Control aktiviert.
+
+Nach erfolgreicher erstmaliger Einrichtung greift das Modul nicht erneut in die Archive-Control-Konfiguration ein. Spätere Benutzeranpassungen bleiben erhalten.
 
 Es wird kein eigenes Diagramm und kein zusätzliches Medienobjekt angelegt. Die Darstellung der Archivdaten ist Aufgabe der Visualisierung.
 
