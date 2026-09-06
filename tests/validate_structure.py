@@ -113,13 +113,31 @@ def main() -> None:
     for required_translation, expected in {
         "Connection": "Verbindung",
         "Polling and control": "Abfrage und Steuerung",
+        "Archiving": "Archivierung",
+        "Archive vehicle data": "Fahrzeugdaten archivieren",
         "Notifications": "Mitteilungen",
         "Additional data": "Zusätzliche Daten",
-        "Set up archiving": "Archivierung einrichten",
         "Test connection": "Verbindung testen",
         "Update now": "Jetzt aktualisieren",
     }.items():
         assert translations.get(required_translation) == expected
+
+    archive_panels = [
+        element
+        for element in form.get("elements", [])
+        if isinstance(element, dict) and element.get("caption") == "Archiving"
+    ]
+    assert len(archive_panels) == 1
+    assert archive_panels[0].get("expanded") is True
+    archive_items = list(walk(archive_panels[0].get("items", [])))
+    archive_checkbox = [
+        item
+        for item in archive_items
+        if item.get("name") == "EnableChargingHistory"
+    ]
+    assert len(archive_checkbox) == 1
+    assert archive_checkbox[0].get("type") == "CheckBox"
+    assert archive_checkbox[0].get("caption") == "Archive vehicle data"
 
     module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
     assert "final class MySkoda extends IPSModuleStrict" in module_php
