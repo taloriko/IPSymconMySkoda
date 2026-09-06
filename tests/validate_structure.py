@@ -72,7 +72,8 @@ def main() -> None:
     assert GUID.match(module["id"])
     assert module["name"] == "MySkoda"
     assert module["type"] == 3
-    assert module["vendor"] == "taloriko"
+    assert module["vendor"] == "Škoda"
+    assert module["aliases"] == ["MySkoda Fahrzeug", "Škoda Fahrzeug"]
     assert module["prefix"] == "MSKODA"
     assert module["url"].startswith("https://github.com/taloriko/IPSymconMySkoda/")
     assert (ROOT / module["name"]).is_dir()
@@ -84,7 +85,7 @@ def main() -> None:
     assert (ROOT / "MySkoda" / "README.md").is_file()
     assert (ROOT / "LICENSE").is_file()
 
-    # Configuration form: all visible static captions are localizable to German.
+    # Configuration form: every static caption has a German localization.
     assert isinstance(translations, dict) and translations
     all_form_captions = set()
     all_form_captions |= captions(form.get("elements", []))
@@ -114,7 +115,7 @@ def main() -> None:
         "Polling and control": "Abfrage und Steuerung",
         "Notifications": "Mitteilungen",
         "Additional data": "Zusätzliche Daten",
-        "Enable archiving": "Archivierung aktivieren",
+        "Set up archiving": "Archivierung einrichten",
         "Test connection": "Verbindung testen",
         "Update now": "Jetzt aktualisieren",
     }.items():
@@ -134,12 +135,20 @@ def main() -> None:
     history = (ROOT / "MySkoda" / "src" / "HistoryTrait.php").read_text(encoding="utf-8")
     core = (ROOT / "MySkoda" / "src" / "CoreTrait.php").read_text(encoding="utf-8")
 
-    # Clean data module: no grouping/helper objects are created.
+    # Store review: no short PHP tags and instance-associated logging only.
+    assert re.search(r"<\?(?!php)", php_sources) is None
+    assert "IPS_LogMessage" not in php_sources
+
+    # Clean data module: no grouping/helper objects or media are created.
     for forbidden in [
         "IPS_CreateInstance",
         "IPS_CreateCategory",
         "IPS_CreateLink",
         "IPS_CreateMedia",
+        "IPS_SetName",
+        "IPS_SetHidden",
+        "IPS_SetIcon",
+        "IPS_SetPosition",
         "MSKODA_Group",
         "MSKODA_Link_",
         "getGroupId(",
@@ -205,13 +214,17 @@ def main() -> None:
     for forbidden in [
         "IPS_SetVariableCustomPresentation",
         "IPS_SetVariableCustomProfile",
+        "IPS_SetVariableCustomAction",
         "IPS_CreateVariableProfile",
         "IPS_CreateTemplate",
         "IPS_SetTemplate",
     ]:
         assert forbidden not in php_sources
 
-    # Archive: SoC, target SoC, charging power and mileage counter.
+    # Archive logging requires explicit opt-in and is initialized only once.
+    assert "RegisterPropertyBoolean('EnableChargingHistory', false)" in core
+    assert "ReadPropertyBoolean('EnableChargingHistory')" in history
+    assert "ReadAttributeBoolean('ChargingHistoryInitialized')" in history
     for ident in ["StateOfCharge", "TargetSOC", "ChargePower", "Mileage"]:
         assert f"'{ident}'" in history
     assert "AC_GetLoggingStatus" in history
@@ -221,6 +234,7 @@ def main() -> None:
     assert "AC_GetCounterIgnoreZeros" in history
     assert "AC_SetCounterIgnoreZeros($archiveId, $mileageId, true)" in history
     assert "AC_ReAggregateVariable" in history
+    assert "WriteAttributeBoolean('ChargingHistoryInitialized', true)" in history
     assert "MSKODA_ChargingHistory" not in php_sources
 
     # Invalid mileage never reaches the variable/archive as a normal update.
@@ -228,8 +242,10 @@ def main() -> None:
     assert "$this->SetValue('Mileage', $mileage);" in variables
     assert "setPathValue('Mileage'" not in variables
 
-    assert "ChargingHistoryInitialized" in core
-    assert "WriteAttributeBoolean('ChargingHistoryInitialized', true)" in history
+    # User-owned instance properties are never written/applied behind the user's back.
+    assert "IPS_SetProperty" not in php_sources
+    assert "IPS_ApplyChanges" not in php_sources
+
     for forbidden in [
         "AC_DeleteVariableData",
         "AC_SetCompaction",
@@ -237,9 +253,6 @@ def main() -> None:
         "IPS_DeleteMedia",
     ]:
         assert forbidden not in php_sources
-
-    assert "IPS_SetProperty" not in php_sources
-    assert "IPS_ApplyChanges" not in php_sources
 
     expected_sources = {
         "ApiTrait.php",
@@ -253,7 +266,7 @@ def main() -> None:
     source_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
     assert source_names == expected_sources
 
-    # Documentation required for a useful Store review and safe setup.
+    # Documentation for Store review and safe setup.
     root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
     module_readme = (ROOT / "MySkoda" / "README.md").read_text(encoding="utf-8")
     for text in [
@@ -263,6 +276,8 @@ def main() -> None:
         "Erste Einrichtung",
         "keine Dummy-Instanzen",
         "stabile Variablen-Idents",
+        "standardmäßig deaktiviert",
+        "ausdrücklicher Aktivierung",
         "Kilometerstand",
         "Zähler",
         "Geparkt",
@@ -279,6 +294,7 @@ def main() -> None:
         "Parkstatus",
         "Ladestatus",
         "Archivierung",
+        "standardmäßig **aus**",
         "Fehlersuche",
         "Datenschutz und externe Dienste",
         "Öffentliche PHP-Befehle",
