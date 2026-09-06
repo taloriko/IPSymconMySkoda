@@ -7,13 +7,12 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 ## Funktionen
 
 - Fahrzeugdaten über FIN/VIN und MySkoda API-Key
-- zyklischer Abruf mit Berücksichtigung von Rate-Limit und `Retry-After`
+- zyklischer Abruf mit Berücksichtigung von Rate-Limit (20 Abfragen/Stunde)
 - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
 - Ladeleistung, Ladelimit und Lademodus
 - Klimatisierung sowie unterstützte Remote-Funktionen
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
-- deutsche Darstellung von Lade- und Parkstatus bei unveränderten API-Rohwerten
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
 - optional und nur nach ausdrücklicher Aktivierung: Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
 - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
@@ -31,10 +30,6 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 Die offizielle MyŠkoda Public API ist unter <https://public.api.connect.skoda-auto.cz/docs> dokumentiert.
 
 ## Installation
-
-### Über den Module Store
-
-Nach Veröffentlichung im IP-Symcon Module Store kann **MySkoda** direkt dort installiert werden.
 
 ### Manuell über Git
 
@@ -78,7 +73,7 @@ MySkoda
 └─ Letzte Aktualisierung
 ```
 
-Es werden **keine Dummy-Instanzen, Kategorien oder Links** angelegt. Die fachliche Gruppierung und Darstellung übernimmt die Visualisierung.
+Die fachliche Gruppierung und Darstellung übernimmt der User oder es wird das [IPSymconEVTile](https://github.com/taloriko/IPSymconEVTile) genutz.
 
 Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charging`, `TargetSOC` oder `Climate` bleiben stabil und bilden die Schnittstelle für Skripte und weitere Module.
 
@@ -112,7 +107,7 @@ Dabei werden einmalig folgende Variablen für das Logging konfiguriert:
 
 Der Kilometerstand wird als **Zähler** archiviert. Ein von der API gelieferter Kilometerstand `<= 0` wird nicht in die Variable geschrieben. Zusätzlich ist für den Archiv-Zähler das Ignorieren von Null- und negativen Werten aktiviert.
 
-Nach der erstmaligen Einrichtung verändert das Modul die Archive-Control-Einstellungen nicht erneut. Benutzeranpassungen bleiben damit erhalten. Das Modul erzeugt bewusst kein eigenes Diagramm.
+Nach der erstmaligen Einrichtung verändert das Modul die Archive-Control-Einstellungen nicht erneut. Benutzeranpassungen bleiben damit erhalten.
 
 ## Dokumentation
 
