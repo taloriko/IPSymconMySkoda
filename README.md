@@ -90,18 +90,25 @@ Schreibbare Werte wie Ladelimit, Lademodus, Laden, Klimatisierung und – bei ak
 
 Jeder schreibbare Datenpunkt besitzt intern einen eigenen Pending-Zustand. Mehrere Befehle können deshalb gleichzeitig auf Bestätigung warten, beispielsweise ein neues Ladelimit und das Starten der Klimatisierung.
 
-Das Verhalten richtet sich nach dem Ergebnis des HTTP-Aufrufs:
+Das Verhalten richtet sich nach dem Ergebnis des Befehlsaufrufs:
 
-- **2xx / angenommen:** gewünschter Wert bleibt sichtbar und wartet auf Bestätigung durch die Fahrzeugdaten.
-- **klare Ablehnung, z. B. 4xx:** der Wert wird sofort auf den vorherigen Zustand zurückgesetzt.
-- **5xx, HTTP 408 oder Transportfehler:** der Übertragungszustand ist unklar; der gewünschte Wert bleibt vorerst sichtbar und wird durch eine spätere Fahrzeugabfrage geklärt.
+- **2xx / angenommen:** gewünschter Wert bleibt sichtbar und wartet auf die nächste erfolgreiche Fahrzeugabfrage.
+- **HTTP-Fehlerantwort:** der Befehl gilt als abgelehnt; Pending wird beendet und der vorherige lokale Wert wird sofort wiederhergestellt.
+- **kein verwertbarer HTTP-Status / Transportfehler:** der Übertragungszustand ist unklar; der gewünschte Wert bleibt zunächst Pending und wird durch die nächste erfolgreiche Fahrzeugabfrage geklärt.
 
-Nach einem angenommenen oder unklar übertragenen Befehl wird einmalig nach ungefähr **60 Sekunden** eine zusätzliche Fahrzeugabfrage zur Bestätigung eingeplant. Ist der neue Zustand dort noch nicht angekommen, bleibt das Pending bestehen und die regulären zyklischen Abfragen übernehmen die weitere Bestätigung. Ein Pending wird spätestens nach mindestens 10 Minuten beziehungsweise nach zwei normalen Abfrageintervallen durch den dann gemeldeten API-Zustand aufgelöst.
+Nach einem angenommenen oder unklar übertragenen Befehl wird einmalig nach ungefähr **60 Sekunden** eine zusätzliche Fahrzeugabfrage zur Bestätigung eingeplant. Die normale zyklische Abfrage darf dieselbe Bestätigung ebenfalls übernehmen.
+
+Die **erste erfolgreiche Fahrzeugantwort nach dem Befehl ist maßgeblich**:
+
+- meldet das Portal den gewünschten Wert, bleibt dieser bestehen und das Pending wird beendet;
+- meldet das Portal einen anderen Wert, wird dieser Portalwert sofort übernommen und das Pending ebenfalls beendet.
+
+Damit ist immer der tatsächlich vom Portal gelieferte Fahrzeugzustand die endgültige Wahrheit.
 
 Bei aktivierten **Detail- und Diagnosevariablen** stehen zusätzlich zur Verfügung:
 
 - `PendingCommands` – **Ausstehende Befehle**, Anzahl aktuell offener Bestätigungen
-- `CommandStatus` – **Befehlsstatus**, z. B. `Warte auf Bestätigung: Ladelimit, Klimatisierung`, `Übertragung unklar: Ladelimit`, `Bestätigt: Ladelimit` oder `Befehl abgelehnt: Ladelimit`
+- `CommandStatus` – **Befehlsstatus**, z. B. `Warte auf Bestätigung: Ladelimit`, `Übertragung unklar: Ladelimit`, `Bestätigt: Ladelimit`, `Nicht bestätigt: Ladelimit` oder `Befehl abgelehnt: Ladelimit`
 
 ## Neue API-Funktionen
 
