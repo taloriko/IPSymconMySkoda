@@ -135,6 +135,32 @@ Nicht bestätigt: Ladelimit
 Befehl abgelehnt: Klimatisierung
 ```
 
+## Geprüfte Funktionen der MySkoda-App und Grenzen der Public API
+
+Stand **14.09.2026** verwendet das Modul ausschließlich die offiziell veröffentlichte **MyŠkoda Public API**. Die MySkoda-App und interne Škoda-Schnittstellen können zusätzliche Funktionen besitzen, die im aktuell veröffentlichten Public-API-Vertrag **1.0.0** nicht freigegeben sind.
+
+Folgende Funktionen wurden für Version 1.1 ausdrücklich geprüft:
+
+| Funktion aus der MySkoda-App | Offizielle Public API 1.0.0 | Status im Modul |
+|---|---|---|
+| Camping Mode | Nein | Nicht integrierbar über die offizielle Public API |
+| Klimatisierungspläne / Klima-Timer / Abfahrtszeiten | Nein | Nicht integrierbar über die offizielle Public API |
+| Intelligentes Heizen / Smart Heating | Nein | Nicht integrierbar über die offizielle Public API |
+| Scheibenheizung im Zusammenhang mit Klimatisierung | Nein | Nicht integrierbar über die offizielle Public API |
+| Sitzheizung Fahrer im Zusammenhang mit Klimatisierung | Nein | Nicht integrierbar über die offizielle Public API |
+| Sitzheizung Beifahrer im Zusammenhang mit Klimatisierung | Nein | Nicht integrierbar über die offizielle Public API |
+| Intelligentes Klimatisieren / Smart-Climate-Einstellungen | Nein | Nicht integrierbar über die offizielle Public API |
+| Grundlegendes Klimatisieren Start/Stop | **Ja** | Unterstützt |
+| Solltemperatur der Klimatisierung | **Ja** | Unterstützt |
+| Battery Care Mode | Nein | Nicht integrierbar über die offizielle Public API |
+| Begrenzung / Reduzierung des AC-Ladestroms | Nein | Nicht integrierbar über die offizielle Public API |
+| AC-Ladekabel nach Ladeende automatisch entriegeln | Nein | Nicht integrierbar über die offizielle Public API |
+| Ladeprofile / gespeicherte Ladeorte | **Ja** | API-Funktion vorhanden; nicht mit Klima-Timern verwechseln |
+
+Die offizielle Public API bietet derzeit unter anderem Fahrzeugdaten, Laden Start/Stop, Ladelimit, Lademodus, Ladeprofile sowie Klimatisierung, Standheizung und aktive Lüftung. App-Funktionen außerhalb dieses öffentlichen Vertrags werden **nicht über inoffizielle oder private Endpunkte nachgebaut**, damit das Modul stabil, nachvollziehbar und Store-tauglich bleibt.
+
+Wenn Škoda eine der oben genannten Funktionen später in die offizielle Public API aufnimmt, kann `NewApiFeatures` auf neue Operationen hinweisen. Die Funktion wird anschließend bewusst in einer neuen Modulversion ergänzt.
+
 ## Neue API-Funktionen erkennen
 
 Nach einer erfolgreichen Fahrzeugabfrage prüft das Modul zusätzlich die öffentliche OpenAPI-Definition der MyŠkoda Public API. Die Definition wird intern für 24 Stunden zwischengespeichert und verbraucht kein fahrzeugbezogenes API-Kontingent.
@@ -196,6 +222,7 @@ $ok = MSKODA_TestNotification(12345);
 - **Pending bleibt bis zur nächsten Abfrage:** Das ist nach einer angenommenen Befehlsantwort beabsichtigt. Die nächste erfolgreiche Fahrzeugantwort löst es auf.
 - **Nicht bestätigt:** Das Portal hat bei der Bestätigungsabfrage einen anderen Wert geliefert; dieser Portalwert wurde übernommen.
 - **Neue API-Funktionen > 0:** Prüfen, ob eine neuere Modulversion verfügbar ist.
+- **Funktion ist in der MySkoda-App vorhanden, aber nicht im Modul:** Abschnitt **Geprüfte Funktionen der MySkoda-App und Grenzen der Public API** prüfen. Das Modul verwendet ausschließlich die offizielle Public API.
 
 Bei Fehlermeldungen niemals API-Key, S-PIN oder vollständige FIN öffentlich posten.
 
