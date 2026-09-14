@@ -1,4 +1,4 @@
-# MySkoda für IP-Symcon
+# MySkoda für IP-Symcon 
 
 MySkoda ist ein IP-Symcon-Modul zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**.
 
