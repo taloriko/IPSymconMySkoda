@@ -92,6 +92,34 @@ Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden fehlende
 
 Einmal angelegte Detailvariablen bleiben bestehen. Das Deaktivieren der Option löscht keine Variablen.
 
+## Lademodi
+
+Die Public API stellt einen Befehl zum Ändern des Lademodus bereit. Die aktuell öffentlich zugängliche Dokumentation benennt jedoch nicht eindeutig die fachliche Bedeutung jedes einzelnen möglichen Enum-Werts. Deshalb sind die folgenden Erläuterungen dort, wo keine eindeutige offizielle Beschreibung vorliegt, ausdrücklich als **Vermutung** markiert.
+
+| API-Wert | Deutsche Anzeige | Status der Erklärung | Bedeutung |
+|---|---|---|---|
+| `MANUAL` | Manuell | 🟡 Vermutung | Direktes bzw. manuelles Laden ohne aktive Zeitsteuerung. |
+| `TIMER` | Timer | 🟡 Vermutung | Laden nach einem im Fahrzeug oder Ladeprofil hinterlegten Zeitplan. |
+| `TIMER_CHARGING_WITH_CLIMATISATION` | Timer + Klimatisierung | 🟡 Vermutung | Zeitgesteuertes Laden zusammen mit vorbereitender Klimatisierung. Die Public API 1.0.0 bietet keine separate Bearbeitung von Klima-Zeitplänen; vermutlich wird ein bereits im Fahrzeug bzw. in der App vorhandener Plan genutzt. |
+| `PREFERRED_CHARGING_TIMES` | Bevorzugte Ladezeiten | 🟡 Vermutung | Laden innerhalb bevorzugter Zeitfenster eines Ladeprofils bzw. gespeicherten Ladeorts. |
+| `ONLY_OWN_CURRENT` | Nur eigener Strom | 🟡 Vermutung | Vermutlich Laden nur mit eigener Energieerzeugung, z. B. PV-Überschuss, sofern das verwendete Fahrzeug und Energiesystem diese Betriebsart unterstützen. |
+| `IMMEDIATE_DISCHARGING` | Sofort entladen | 🟡 Vermutung | Vermutlich sofortiges Entladen bei einem bidirektionalen bzw. Home-Energy-fähigen System. Für Fahrzeuge ohne solche Funktionen nicht relevant. |
+| `HOME_STORAGE_CHARGING` | Heimspeicher laden | 🟡 Vermutung | Vermutlich ein Modus für die Kopplung mit einem Heimspeicher. Die genaue Energieflussrichtung und das konkrete Verhalten sind in der öffentlich zugänglichen Dokumentation nicht eindeutig beschrieben. |
+
+**Gesichert** ist: Die API bietet die Operation zum Ändern des Lademodus, und Fahrzeugdaten können verfügbare Lademodi melden. **Nicht gesichert** sind die obigen Detailbeschreibungen der einzelnen Enum-Werte, solange Škoda diese nicht öffentlich genauer dokumentiert.
+
+Nicht jeder in IP-Symcon sichtbare Enum-Wert muss vom konkreten Fahrzeug unterstützt werden. Das Modul liest, sofern vorhanden, `charging.settings.availableChargeModes` und prüft den gewünschten Modus vor dem Senden.
+
+Zur Kontrolle der vom eigenen Fahrzeug gemeldeten Modi:
+
+```php
+$raw = json_decode(MSKODA_GetRawData(12345), true);
+echo json_encode(
+    $raw['vehicle']['charging']['settings']['availableChargeModes'] ?? null,
+    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+);
+```
+
 ## Befehlslogik für Remote-Befehle
 
 Version 1.1 verwendet für folgende schreibbare Werte eine sofortige lokale Anzeige:
