@@ -2,15 +2,17 @@
 
 ## 1.1 - 2026-09-14
 
-- optimistische Anzeige für schreibbare Lade- und Klimawerte
-- getrennte Pending-Zustände für mehrere gleichzeitig ausstehende Befehle
-- angenommene Befehle bleiben sichtbar, bis der neue Fahrzeugzustand über die API bestätigt wurde
-- HTTP-Fehlerantworten rollen sofort auf den vorherigen Wert zurück und beenden das Pending
-- Transportfehler ohne verwertbaren HTTP-Status bleiben zunächst als unklare Übertragung Pending
-- einmalige vorgezogene Bestätigungsabfrage etwa 60 Sekunden nach einem angenommenen oder unklaren Befehl
-- die erste erfolgreiche Fahrzeugabfrage nach dem Befehl löst das Pending immer auf; bei abweichendem Wert wird sofort der Portalwert übernommen
+- schreibbare Lade- und Klimawerte werden beim Absenden sofort lokal gesetzt
+- Pending besteht nur noch während der laufenden HTTP-Befehlsanfrage
+- die **Serverantwort** des Befehls entscheidet direkt über Erfolg oder Fehler; eine verzögerte Fahrzeugrückmeldung wird nicht mehr für die Befehlsbestätigung verwendet
+- bei erfolgreicher 2xx-Antwort bleibt der gewünschte Wert gesetzt und Pending wird sofort beendet
+- bei Fehlerantwort oder Übertragungsfehler wird sofort auf den vorherigen Wert zurückgerollt und Pending ebenfalls beendet
+- `CommandStatus` zeigt bei Fehlern zusätzlich den tatsächlichen API-/Transportfehler aus `LastError`
+- die zusätzliche Bestätigungsabfrage nach 60 Sekunden wurde entfernt
 - zusätzliche Diagnosevariablen `PendingCommands` und `CommandStatus`
-- `SetChargingLimit()` und `SetChargeMode()` verwenden dieselbe Pending-/Bestätigungslogik wie die Variablenaktionen
+- `SetChargingLimit()` und `SetChargeMode()` verwenden dieselbe direkte Befehlslogik wie die Variablenaktionen
+- Ladelimit-Darstellung auf 50 bis 100 % in 10-%-Schritten korrigiert
+- `MSKODA_GetRemoteOperations()` liest die aktuelle API-Liste aus `vehicle.operations` und verwendet `vehicle.remoteOperations` nur noch als Fallback
 - dokumentierte Prüfung von App-Funktionen, die im offiziellen Public-API-Vertrag 1.0.0 derzeit nicht verfügbar sind: Camping Mode, Klima-Timer/Abfahrtszeiten, intelligentes Heizen/Klimatisieren, Scheiben- und Sitzheizung mit Klima, Battery Care Mode, reduzierte AC-Ladeleistung und automatisches Entriegeln des AC-Ladekabels
 
 ## 1.0 - 2026-09-06
