@@ -11,6 +11,7 @@
 - die erste erfolgreiche Fahrzeugabfrage nach dem Befehl löst das Pending immer auf; bei abweichendem Wert wird sofort der Portalwert übernommen
 - zusätzliche Diagnosevariablen `PendingCommands` und `CommandStatus`
 - `SetChargingLimit()` und `SetChargeMode()` verwenden dieselbe Pending-/Bestätigungslogik wie die Variablenaktionen
+- dokumentierte Prüfung von App-Funktionen, die im offiziellen Public-API-Vertrag 1.0.0 derzeit nicht verfügbar sind: Camping Mode, Klima-Timer/Abfahrtszeiten, intelligentes Heizen/Klimatisieren, Scheiben- und Sitzheizung mit Klima, Battery Care Mode, reduzierte AC-Ladeleistung und automatisches Entriegeln des AC-Ladekabels
 
 ## 1.0 - 2026-09-06
 
