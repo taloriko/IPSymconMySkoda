@@ -125,8 +125,9 @@ trait MySkodaVariablesTrait
     }
 
     /**
-     * Creates a variable only while its ident is missing.
-     * Existing names, positions and presentations remain user-owned.
+     * Creates variables only while their ident is missing. Existing names and positions
+     * remain user-owned. TargetSOC is re-registered to refresh the module-provided
+     * charging-limit presentation; a user-defined custom presentation remains untouched.
      */
     private function registerVariableOnce(array $definition): void
     {
@@ -141,6 +142,16 @@ trait MySkodaVariablesTrait
             $variable = IPS_GetVariable($existingId);
             if ((int) ($variable['VariableType'] ?? -1) !== (int) $definition['type']) {
                 $this->LogMessage(sprintf('MySkoda: variable "%s" has an unexpected type.', $ident), KL_ERROR);
+                return;
+            }
+
+            if ($ident === 'TargetSOC') {
+                $this->RegisterVariableInteger(
+                    $ident,
+                    $this->Translate((string) $definition['name']),
+                    (array) $definition['presentation'],
+                    (int) $definition['position']
+                );
             }
             return;
         }
