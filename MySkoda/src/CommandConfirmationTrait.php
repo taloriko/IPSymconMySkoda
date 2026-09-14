@@ -39,7 +39,7 @@ trait MySkodaCommandConfirmationTrait
 
         $this->WriteAttributeString(
             'CommandStatusText',
-            sprintf($this->Translate('Portal value applied: %s'), $this->Translate($label))
+            sprintf($this->Translate('Not confirmed: %s'), $this->Translate($label))
         );
         $this->SendDebug(
             'Pending command',
