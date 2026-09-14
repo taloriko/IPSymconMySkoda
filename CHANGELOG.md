@@ -8,6 +8,7 @@
 - klare Ablehnungen rollen sofort auf den vorherigen Wert zurück
 - Transportfehler, HTTP 408 und 5xx werden als unklar behandelt und nicht vorschnell zurückgerollt
 - einmalige vorgezogene Bestätigungsabfrage etwa 60 Sekunden nach einem angenommenen oder unklaren Befehl
+- bei zwei erfolgreichen Fahrzeugantworten mit weiterhin abweichendem Wert wird das Pending beendet und der tatsächliche API-Wert wiederhergestellt
 - zusätzliche Diagnosevariablen `PendingCommands` und `CommandStatus`
 - `SetChargingLimit()` und `SetChargeMode()` verwenden dieselbe Pending-/Bestätigungslogik wie die Variablenaktionen
 
