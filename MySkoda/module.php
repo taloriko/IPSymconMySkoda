@@ -10,7 +10,6 @@ require_once __DIR__ . '/src/OpenApiTrait.php';
 require_once __DIR__ . '/src/NotificationTrait.php';
 require_once __DIR__ . '/src/HelpersTrait.php';
 require_once __DIR__ . '/src/CommandTrait.php';
-require_once __DIR__ . '/src/CommandConfirmationTrait.php';
 
 final class MySkoda extends IPSModuleStrict
 {
@@ -21,8 +20,7 @@ final class MySkoda extends IPSModuleStrict
         MySkodaOpenApiTrait,
         MySkodaNotificationTrait,
         MySkodaHelpersTrait,
-        MySkodaCommandTrait,
-        MySkodaCommandConfirmationTrait {
+        MySkodaCommandTrait {
         MySkodaCoreTrait::Create as private coreCreate;
         MySkodaCoreTrait::ApplyChanges as private coreApplyChanges;
         MySkodaVariablesTrait::registerVariables as private baseRegisterVariables;
@@ -33,9 +31,6 @@ final class MySkoda extends IPSModuleStrict
         MySkodaCommandTrait::RequestAction insteadof MySkodaCoreTrait;
         MySkodaCommandTrait::SetChargingLimit insteadof MySkodaCoreTrait;
         MySkodaCommandTrait::SetChargeMode insteadof MySkodaCoreTrait;
-        MySkodaCommandTrait::updateCoreValues insteadof MySkodaVariablesTrait;
-        MySkodaCommandConfirmationTrait::applyApiValue insteadof MySkodaCommandTrait;
-        MySkodaCommandConfirmationTrait::sendCommand insteadof MySkodaCommandTrait, MySkodaApiTrait;
     }
 
     private const API_ROOT = 'https://public.api.connect.skoda-auto.cz';
