@@ -10,7 +10,7 @@ Gerätemodul für IP-Symcon zur Anbindung eines Škoda-Fahrzeugs an die offiziel
 - Ladelimit und Lademodus, sofern vom Fahrzeug unterstützt
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
-- optimistische Anzeige mit Pending-Bestätigung für Remote-Befehle
+- sofortige lokale Anzeige schreibbarer Werte mit direkter Auswertung der Befehlsantwort
 - automatische Erkennung zusätzlicher, noch nicht integrierter OpenAPI-Funktionen
 - optionale Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nach ausdrücklicher Aktivierung
 - API-Key-Ablaufwarnung 30 Tage vor Ablauf
@@ -59,7 +59,7 @@ Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul berücksichtigt d
 
 Das Modul legt **keine Dummy-Instanzen, Kategorien oder Links** an. Unter der MySkoda-Instanz befinden sich ausschließlich die echten Modulvariablen.
 
-Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut registriert. Vom Benutzer geänderte Namen, Positionen und Darstellungen werden daher nicht bei jedem `ApplyChanges()` überschrieben.
+Vorhandene Variablen werden bei späteren Modulaktualisierungen grundsätzlich nicht neu angelegt. Das vom Modul gelieferte Ladelimit-Profil wird in Version 1.1 gezielt auf 10-%-Schritte aktualisiert; eine vom Benutzer selbst gesetzte Custom-Darstellung bleibt unberührt.
 
 ### Standard-Datenpunkte
 
@@ -73,7 +73,7 @@ Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut reg
 | `WindowsOpen` | Fenster offen | Boolean | Nein |
 | `Charging` | Laden | Boolean | Ja |
 | `ChargePower` | Ladeleistung | Float | Nein |
-| `TargetSOC` | Ladelimit | Integer | Ja |
+| `TargetSOC` | Ladelimit | Integer | Ja, 50 bis 100 % in 10-%-Schritten |
 | `ChargeMode` | Lademodus | Integer | Ja |
 | `Climate` | Klimatisierung | Boolean | Ja |
 | `TargetTemperature` | Solltemperatur | Float | Ja |
@@ -92,9 +92,9 @@ Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden fehlende
 
 Einmal angelegte Detailvariablen bleiben bestehen. Das Deaktivieren der Option löscht keine Variablen.
 
-## Pending- und Bestätigungslogik für Remote-Befehle
+## Befehlslogik für Remote-Befehle
 
-Version 1.1 verwendet für folgende schreibbare Werte eine optimistische Anzeige:
+Version 1.1 verwendet für folgende schreibbare Werte eine sofortige lokale Anzeige:
 
 - `Charging`
 - `TargetSOC`
@@ -107,33 +107,28 @@ Zusätzlich verwenden `MSKODA_SetChargingLimit()` und `MSKODA_SetChargeMode()` d
 ### Ablauf
 
 1. Vor dem Senden wird der bisherige lokale Wert gespeichert.
-2. Der gewünschte neue Wert wird sofort lokal gesetzt und als Pending markiert.
+2. Der gewünschte neue Wert wird sofort lokal gesetzt und während der laufenden HTTP-Anfrage kurz als Pending markiert.
 3. Der Befehl wird an die MyŠkoda Public API gesendet.
-4. Kommt eine erfolgreiche **2xx-Antwort**, bleibt das Pending bestehen.
-5. Kommt eine **HTTP-Fehlerantwort**, wird das Pending sofort beendet und der vorherige lokale Wert wiederhergestellt.
-6. Gibt es keinen verwertbaren HTTP-Status, beispielsweise bei einem Transport-/cURL-Fehler, bleibt der Zustand als **Übertragung unklar** zunächst Pending.
-7. Nach einem angenommenen oder unklar übertragenen Befehl wird einmalig nach etwa **60 Sekunden** eine zusätzliche Fahrzeugabfrage geplant. Eine vorher stattfindende reguläre zyklische Abfrage darf die Bestätigung ebenfalls übernehmen.
-8. Die **erste erfolgreiche Fahrzeugabfrage** nach dem Befehl entscheidet endgültig über diesen Datenpunkt.
-9. Meldet das Portal den gewünschten Wert, bleibt er gesetzt und das Pending wird beendet.
-10. Meldet das Portal einen anderen Wert, gilt **immer der Portalwert**: Er wird sofort in IP-Symcon übernommen und das Pending wird beendet.
+4. Kommt eine erfolgreiche **2xx-Antwort**, gilt der Befehl serverseitig als angenommen. Der gewünschte Wert bleibt gesetzt und Pending wird sofort beendet.
+5. Kommt eine Fehlerantwort oder schlägt die Übertragung fehl, wird der vorherige lokale Wert sofort wiederhergestellt und Pending ebenfalls beendet.
+6. Eine zusätzliche Bestätigungsabfrage des Fahrzeugzustands wird nicht mehr ausgelöst.
 
-Es gibt damit nach einer erfolgreichen Fahrzeugantwort kein langes Festhalten an einem optimistischen Wert. Das Portal ist die maßgebliche Quelle für den tatsächlichen Fahrzeugzustand.
-
-Jeder Datenpunkt besitzt einen eigenen Pending-Eintrag. Ein Ladelimit und gleichzeitig gestartete Klimatisierung können dadurch unabhängig voneinander bestätigt werden.
+Der normale zyklische Fahrzeugabruf bleibt davon unabhängig. Liefert das Portal bei einem späteren regulären Abruf einen anderen Fahrzeugzustand, wird dieser wie gewohnt übernommen.
 
 ### Diagnose
 
-`PendingCommands` zeigt die Anzahl offener Bestätigungen.
+`PendingCommands` zeigt die Anzahl gerade laufender Befehlsanfragen. Da die API-Anfrage synchron ausgeführt wird, ist der Wert normalerweise nur sehr kurz ungleich `0`.
 
-`CommandStatus` fasst den Zustand zusammen, zum Beispiel:
+`CommandStatus` zeigt das Ergebnis des letzten Befehls. Beispiele:
 
 ```text
-Warte auf Bestätigung: Ladelimit
-Übertragung unklar: Ladelimit
 Bestätigt: Ladelimit
-Nicht bestätigt: Ladelimit
-Befehl abgelehnt: Klimatisierung
+Bestätigt: Klimatisierung
+Befehl abgelehnt: Ladelimit - HTTP 400: ...
+Befehl abgelehnt: Klimatisierung - cURL: ...
 ```
+
+Bei einem Fehler wird damit nicht nur der vorherige Wert wiederhergestellt, sondern im Befehlsstatus zusätzlich der von der API bzw. vom Transport gelieferte **Fehlertext** angezeigt.
 
 ## Geprüfte Funktionen der MySkoda-App und Grenzen der Public API
 
@@ -157,7 +152,9 @@ Folgende Funktionen wurden für Version 1.1 ausdrücklich geprüft:
 | AC-Ladekabel nach Ladeende automatisch entriegeln | Nein | Nicht integrierbar über die offizielle Public API |
 | Ladeprofile / gespeicherte Ladeorte | **Ja** | API-Funktion vorhanden; nicht mit Klima-Timern verwechseln |
 
-Die offizielle Public API bietet derzeit unter anderem Fahrzeugdaten, Laden Start/Stop, Ladelimit, Lademodus, Ladeprofile sowie Klimatisierung, Standheizung und aktive Lüftung. App-Funktionen außerhalb dieses öffentlichen Vertrags werden **nicht über inoffizielle oder private Endpunkte nachgebaut**, damit das Modul stabil, nachvollziehbar und Store-tauglich bleibt.
+Die offizielle Public API bietet derzeit unter anderem Fahrzeugdaten, Laden Start/Stop, Ladelimit, Lademodus, Ladeprofile sowie Klimatisierung, Standheizung und aktive Lüftung. Ob eine konkrete Remote-Funktion für ein Fahrzeug freigegeben ist, kann über `MSKODA_GetRemoteOperations()` geprüft werden. Das Modul liest dafür primär `vehicle.operations` und hält aus Kompatibilitätsgründen einen Fallback auf `vehicle.remoteOperations` vor.
+
+App-Funktionen außerhalb dieses öffentlichen Vertrags werden **nicht über inoffizielle oder private Endpunkte nachgebaut**, damit das Modul stabil, nachvollziehbar und Store-tauglich bleibt.
 
 Wenn Škoda eine der oben genannten Funktionen später in die offizielle Public API aufnimmt, kann `NewApiFeatures` auf neue Operationen hinweisen. Die Funktion wird anschließend bewusst in einer neuen Modulversion ergänzt.
 
@@ -219,8 +216,8 @@ $ok = MSKODA_TestNotification(12345);
 
 - **Keine Verbindung:** FIN/VIN und API-Token prüfen und anschließend **Verbindung testen** ausführen.
 - **Status 203:** Das API-Rate-Limit oder eine von der API vorgegebene Wartezeit ist aktiv.
-- **Pending bleibt bis zur nächsten Abfrage:** Das ist nach einer angenommenen Befehlsantwort beabsichtigt. Die nächste erfolgreiche Fahrzeugantwort löst es auf.
-- **Nicht bestätigt:** Das Portal hat bei der Bestätigungsabfrage einen anderen Wert geliefert; dieser Portalwert wurde übernommen.
+- **Befehl springt sofort zurück:** Der Befehlsaufruf wurde nicht erfolgreich bestätigt; den genauen Grund in `CommandStatus` bzw. `LastError` prüfen.
+- **Befehl war erfolgreich, später zeigt die Variable einen anderen Wert:** Ein späterer regulärer Fahrzeugabruf hat einen anderen Portalzustand geliefert.
 - **Neue API-Funktionen > 0:** Prüfen, ob eine neuere Modulversion verfügbar ist.
 - **Funktion ist in der MySkoda-App vorhanden, aber nicht im Modul:** Abschnitt **Geprüfte Funktionen der MySkoda-App und Grenzen der Public API** prüfen. Das Modul verwendet ausschließlich die offizielle Public API.
 
