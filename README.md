@@ -11,9 +11,12 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
 - Ladeleistung, Ladelimit und Lademodus
 - Klimatisierung sowie unterstützte Remote-Funktionen
+- optimistische Anzeige und serverseitige Bestätigung für schreibbare Lade- und Klimawerte
+- paralleles Pending-Handling für mehrere gleichzeitig ausstehende Befehle
+- einmalige vorgezogene Bestätigungsabfrage etwa 60 Sekunden nach einem angenommenen oder unklar übertragenen Befehl
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
-- automatische Prüfung der OpenAPI-Definition auf neue, von Version 1.0 noch nicht integrierte API-Funktionen
+- automatische Prüfung der OpenAPI-Definition auf neue, noch nicht integrierte API-Funktionen
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
 - optional und nur nach ausdrücklicher Aktivierung: Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
 - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
@@ -81,6 +84,25 @@ Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charg
 
 Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden deshalb nur bei der Erstanlage gesetzt und danach nicht durch ein Update überschrieben.
 
+## Befehlsbestätigung ab Version 1.1
+
+Schreibbare Werte wie Ladelimit, Lademodus, Laden, Klimatisierung und – bei aktiver Klimatisierung – die Solltemperatur werden nach einer Benutzeraktion sofort lokal auf den gewünschten Wert gesetzt. Dadurch springt ein Schieberegler nicht wieder auf den Stand der letzten Fahrzeugabfrage zurück.
+
+Jeder schreibbare Datenpunkt besitzt intern einen eigenen Pending-Zustand. Mehrere Befehle können deshalb gleichzeitig auf Bestätigung warten, beispielsweise ein neues Ladelimit und das Starten der Klimatisierung.
+
+Das Verhalten richtet sich nach dem Ergebnis des HTTP-Aufrufs:
+
+- **2xx / angenommen:** gewünschter Wert bleibt sichtbar und wartet auf Bestätigung durch die Fahrzeugdaten.
+- **klare Ablehnung, z. B. 4xx:** der Wert wird sofort auf den vorherigen Zustand zurückgesetzt.
+- **5xx, HTTP 408 oder Transportfehler:** der Übertragungszustand ist unklar; der gewünschte Wert bleibt vorerst sichtbar und wird durch eine spätere Fahrzeugabfrage geklärt.
+
+Nach einem angenommenen oder unklar übertragenen Befehl wird einmalig nach ungefähr **60 Sekunden** eine zusätzliche Fahrzeugabfrage zur Bestätigung eingeplant. Ist der neue Zustand dort noch nicht angekommen, bleibt das Pending bestehen und die regulären zyklischen Abfragen übernehmen die weitere Bestätigung. Ein Pending wird spätestens nach mindestens 10 Minuten beziehungsweise nach zwei normalen Abfrageintervallen durch den dann gemeldeten API-Zustand aufgelöst.
+
+Bei aktivierten **Detail- und Diagnosevariablen** stehen zusätzlich zur Verfügung:
+
+- `PendingCommands` – **Ausstehende Befehle**, Anzahl aktuell offener Bestätigungen
+- `CommandStatus` – **Befehlsstatus**, z. B. `Warte auf Bestätigung: Ladelimit, Klimatisierung`, `Übertragung unklar: Ladelimit`, `Bestätigt: Ladelimit` oder `Befehl abgelehnt: Ladelimit`
+
 ## Neue API-Funktionen
 
 Nach einer erfolgreichen Fahrzeugabfrage prüft das Modul zusätzlich die öffentliche OpenAPI-Definition der MyŠkoda Public API. Die Definition wird höchstens einmal innerhalb von 24 Stunden neu geladen und belastet nicht das fahrzeugbezogene API-Kontingent.
@@ -88,7 +110,7 @@ Nach einer erfolgreichen Fahrzeugabfrage prüft das Modul zusätzlich die öffen
 Die Variable `NewApiFeatures` wird als **Neue API-Funktionen** angezeigt:
 
 - `0` – die aktuell veröffentlichten API-Operationen sind dem Modul bekannt.
-- `> 0` – die API enthält zusätzliche Operationen, die Version 1.0 noch nicht integriert.
+- `> 0` – die API enthält zusätzliche Operationen, die die aktuelle Modulversion noch nicht integriert.
 
 Neue API-Funktionen werden **nicht automatisch als IP-Symcon-Variablen angelegt**. Die Variable ist nur ein Hinweis darauf, dass sich die API erweitert hat. Neue Datenpunkte, Datentypen und Darstellungen werden weiterhin ausschließlich über ein definiertes Modulupdate ergänzt.
 
