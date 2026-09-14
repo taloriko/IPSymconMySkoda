@@ -5,10 +5,10 @@
 - optimistische Anzeige für schreibbare Lade- und Klimawerte
 - getrennte Pending-Zustände für mehrere gleichzeitig ausstehende Befehle
 - angenommene Befehle bleiben sichtbar, bis der neue Fahrzeugzustand über die API bestätigt wurde
-- klare Ablehnungen rollen sofort auf den vorherigen Wert zurück
-- Transportfehler, HTTP 408 und 5xx werden als unklar behandelt und nicht vorschnell zurückgerollt
+- HTTP-Fehlerantworten rollen sofort auf den vorherigen Wert zurück und beenden das Pending
+- Transportfehler ohne verwertbaren HTTP-Status bleiben zunächst als unklare Übertragung Pending
 - einmalige vorgezogene Bestätigungsabfrage etwa 60 Sekunden nach einem angenommenen oder unklaren Befehl
-- bei zwei erfolgreichen Fahrzeugantworten mit weiterhin abweichendem Wert wird das Pending beendet und der tatsächliche API-Wert wiederhergestellt
+- die erste erfolgreiche Fahrzeugabfrage nach dem Befehl löst das Pending immer auf; bei abweichendem Wert wird sofort der Portalwert übernommen
 - zusätzliche Diagnosevariablen `PendingCommands` und `CommandStatus`
 - `SetChargingLimit()` und `SetChargeMode()` verwenden dieselbe Pending-/Bestätigungslogik wie die Variablenaktionen
 
