@@ -219,7 +219,11 @@ trait MySkodaCoreTrait
     public function GetRemoteOperations(): string
     {
         $raw = json_decode($this->ReadAttributeString('RawData'), true);
-        $operations = $this->path($raw, 'vehicle.remoteOperations', []);
+        $operations = $this->path(
+            $raw,
+            'vehicle.operations',
+            $this->path($raw, 'vehicle.remoteOperations', [])
+        );
 
         return json_encode(
             $operations,
