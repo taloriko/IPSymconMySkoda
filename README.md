@@ -85,6 +85,34 @@ Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charg
 
 Vorhandene Variablen werden bei späteren Modulaktualisierungen grundsätzlich nicht neu angelegt. Für das vom Modul gelieferte Ladelimit-Profil wird in Version 1.1 die Darstellung gezielt auf 10-%-Schritte aktualisiert; eine vom Benutzer selbst gesetzte Custom-Darstellung bleibt unberührt.
 
+## Lademodi
+
+Die offizielle MyŠkoda Public API bestätigt, dass der **Lademodus geändert** werden kann. Die öffentlich zugängliche Dokumentation beschreibt jedoch derzeit **nicht eindeutig die fachliche Bedeutung jedes einzelnen Enum-Werts**. Deshalb werden die folgenden Erklärungen ausdrücklich als **Vermutung anhand der API-Bezeichnungen** gekennzeichnet.
+
+| API-Wert | Anzeige in IP-Symcon | Einordnung | Erklärung |
+|---|---|---|---|
+| `MANUAL` | Manuell | 🟡 Vermutung | Direktes bzw. manuelles Laden ohne aktive Zeitsteuerung. |
+| `TIMER` | Timer | 🟡 Vermutung | Laden nach einem im Fahrzeug bzw. Ladeprofil hinterlegten Zeitplan. |
+| `TIMER_CHARGING_WITH_CLIMATISATION` | Timer + Klimatisierung | 🟡 Vermutung | Zeitgesteuertes Laden zusammen mit einer vorbereitenden Klimatisierung. Die Public API 1.0.0 stellt keine eigene Bearbeitung von Klima-Zeitplänen bereit; wahrscheinlich wird ein bereits im Fahrzeug bzw. in der App konfigurierter Plan verwendet. |
+| `PREFERRED_CHARGING_TIMES` | Bevorzugte Ladezeiten | 🟡 Vermutung | Laden innerhalb bevorzugter Zeitfenster eines Ladeprofils bzw. gespeicherten Ladeorts. |
+| `ONLY_OWN_CURRENT` | Nur eigener Strom | 🟡 Vermutung | Vermutlich Laden nur mit eigener Energieerzeugung, z. B. PV-Überschuss, sofern Fahrzeug und Energiesystem dies unterstützen. |
+| `IMMEDIATE_DISCHARGING` | Sofort entladen | 🟡 Vermutung | Vermutlich sofortiges Entladen bei einem bidirektionalen bzw. Home-Energy-fähigen System. Für normale Fahrzeuge ohne diese Funktion nicht relevant. |
+| `HOME_STORAGE_CHARGING` | Heimspeicher laden | 🟡 Vermutung | Vermutlich ein Modus für die Kopplung mit einem Heimspeicher. Richtung und genaues Verhalten sind in der öffentlich zugänglichen API-Dokumentation nicht eindeutig beschrieben. |
+
+Wichtig: Die Liste oben enthält die dem Modul bekannten API-Werte. **Nicht jeder Modus muss von jedem Fahrzeug unterstützt werden.** Das Modul liest – sofern vom Portal geliefert – `charging.settings.availableChargeModes` und prüft den gewünschten Modus vor dem Senden.
+
+Welche Modi ein konkretes Fahrzeug aktuell meldet, lässt sich aus den Rohdaten prüfen, z. B.:
+
+```php
+$raw = json_decode(MSKODA_GetRawData(12345), true);
+echo json_encode(
+    $raw['vehicle']['charging']['settings']['availableChargeModes'] ?? null,
+    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
+);
+```
+
+Damit ist klar getrennt zwischen **gesichertem API-Wert** und **nur vermuteter fachlicher Bedeutung**.
+
 ## Befehlsausführung ab Version 1.1
 
 Schreibbare Werte wie Ladelimit, Lademodus, Laden, Klimatisierung und – bei aktiver Klimatisierung – die Solltemperatur werden beim Absenden sofort lokal auf den gewünschten Wert gesetzt.
