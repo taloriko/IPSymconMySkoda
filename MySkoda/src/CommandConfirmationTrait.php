@@ -4,9 +4,6 @@ declare(strict_types=1);
 
 trait MySkodaCommandConfirmationTrait
 {
-    private const COMMAND_MAX_MISMATCH_RESPONSES = 2;
-    private const COMMAND_MIN_MISMATCH_ROLLBACK_SECONDS = 60;
-
     private function applyApiValue(string $ident, mixed $apiValue): void
     {
         $pending = $this->readPendingCommands();
@@ -18,14 +15,16 @@ trait MySkodaCommandConfirmationTrait
         $entry = $pending[$ident];
         $expected = $entry['expected'] ?? null;
         $label = (string) ($entry['label'] ?? $ident);
+        $matches = $this->commandValuesEqual($expected, $apiValue);
 
-        if ($this->commandValuesEqual($expected, $apiValue)) {
-            $this->SetValue($ident, $apiValue);
-            unset($pending[$ident]);
-            $this->writePendingCommands($pending);
-            if ($pending === []) {
-                $this->SetTimerInterval('CommandConfirmTimer', 0);
-            }
+        $this->SetValue($ident, $apiValue);
+        unset($pending[$ident]);
+        $this->writePendingCommands($pending);
+        if ($pending === []) {
+            $this->SetTimerInterval('CommandConfirmTimer', 0);
+        }
+
+        if ($matches) {
             $this->WriteAttributeString(
                 'CommandStatusText',
                 sprintf($this->Translate('Confirmed: %s'), $this->Translate($label))
@@ -38,51 +37,55 @@ trait MySkodaCommandConfirmationTrait
             return;
         }
 
-        $mismatchCount = max(0, (int) ($entry['mismatchCount'] ?? 0)) + 1;
-        $pending[$ident]['mismatchCount'] = $mismatchCount;
-        $pending[$ident]['lastMismatchAt'] = time();
-        $pending[$ident]['lastApiValue'] = $apiValue;
-
-        $createdAt = (int) ($entry['createdAt'] ?? 0);
-        $elapsed = $createdAt > 0 ? max(0, time() - $createdAt) : 0;
-        $timedOut = $createdAt > 0 && $elapsed >= $this->commandPendingTimeoutSeconds();
-        $enoughMismatches = $mismatchCount >= self::COMMAND_MAX_MISMATCH_RESPONSES
-            && $elapsed >= self::COMMAND_MIN_MISMATCH_ROLLBACK_SECONDS;
-
-        if (!$timedOut && !$enoughMismatches) {
-            $this->writePendingCommands($pending);
-            $this->SendDebug(
-                'Pending command',
-                sprintf(
-                    '%s: API still reports a different value (%d/%d confirmations); optimistic value is kept.',
-                    $ident,
-                    $mismatchCount,
-                    self::COMMAND_MAX_MISMATCH_RESPONSES
-                ),
-                0
-            );
-            return;
-        }
-
-        $this->SetValue($ident, $apiValue);
-        unset($pending[$ident]);
-        $this->writePendingCommands($pending);
-        if ($pending === []) {
-            $this->SetTimerInterval('CommandConfirmTimer', 0);
-        }
-
         $this->WriteAttributeString(
             'CommandStatusText',
-            sprintf($this->Translate('Not confirmed: %s'), $this->Translate($label))
+            sprintf($this->Translate('Portal value applied: %s'), $this->Translate($label))
         );
         $this->SendDebug(
             'Pending command',
-            sprintf(
-                '%s: command not confirmed after %d mismatching vehicle responses; API value restored.',
-                $ident,
-                $mismatchCount
-            ),
+            $ident . ': API returned a different value; portal value is authoritative and was restored.',
             0
         );
+    }
+
+    private function sendCommand(string $method, string $path, ?array $body): bool
+    {
+        $this->WriteAttributeString('LastCommandResult', 'sending');
+
+        if (!$this->ReadPropertyBoolean('EnableRemote')) {
+            $this->WriteAttributeString(
+                'LastError',
+                $this->Translate('Remote control is disabled in this instance.')
+            );
+            $this->WriteAttributeString('LastCommandResult', 'rejected');
+            return false;
+        }
+
+        if (!$this->canRequest(true)) {
+            $this->WriteAttributeString(
+                'LastError',
+                $this->Translate('MySkoda rate limit / waiting period is active.')
+            );
+            $this->WriteAttributeString('LastCommandResult', 'rejected');
+            $this->SetStatus(203);
+            return false;
+        }
+
+        $response = $this->request($method, $path, $body);
+        $this->absorbHeaders($response['headers']);
+
+        if (!$response['ok']) {
+            $status = (int) ($response['status'] ?? 0);
+            $curlError = (string) ($response['curlError'] ?? '');
+            $uncertain = $curlError !== '' || $status === 0;
+            $this->WriteAttributeString('LastCommandResult', $uncertain ? 'uncertain' : 'rejected');
+            $this->setApiError($response);
+            return false;
+        }
+
+        $this->WriteAttributeString('LastCommandResult', 'accepted');
+        $this->WriteAttributeString('LastError', '');
+        $this->SetStatus(102);
+        return true;
     }
 }
