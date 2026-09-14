@@ -52,7 +52,7 @@ trait MySkodaVariablesTrait
                 'ICON' => 'battery-half',
                 'MIN' => 50,
                 'MAX' => 100,
-                'STEP_SIZE' => 5,
+                'STEP_SIZE' => 10,
                 'SUFFIX' => ' %',
                 'PERCENTAGE' => false,
                 'USAGE_TYPE' => 5
