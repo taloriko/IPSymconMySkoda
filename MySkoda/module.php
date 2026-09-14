@@ -9,20 +9,35 @@ require_once __DIR__ . '/src/ApiTrait.php';
 require_once __DIR__ . '/src/OpenApiTrait.php';
 require_once __DIR__ . '/src/NotificationTrait.php';
 require_once __DIR__ . '/src/HelpersTrait.php';
+require_once __DIR__ . '/src/CommandTrait.php';
 
 final class MySkoda extends IPSModuleStrict
 {
-    use MySkodaCoreTrait;
-    use MySkodaVariablesTrait;
-    use MySkodaHistoryTrait;
-    use MySkodaApiTrait;
-    use MySkodaOpenApiTrait;
-    use MySkodaNotificationTrait;
-    use MySkodaHelpersTrait;
+    use MySkodaCoreTrait,
+        MySkodaVariablesTrait,
+        MySkodaHistoryTrait,
+        MySkodaApiTrait,
+        MySkodaOpenApiTrait,
+        MySkodaNotificationTrait,
+        MySkodaHelpersTrait,
+        MySkodaCommandTrait {
+        MySkodaCoreTrait::Create as private coreCreate;
+        MySkodaCoreTrait::ApplyChanges as private coreApplyChanges;
+        MySkodaVariablesTrait::registerVariables as private baseRegisterVariables;
+
+        MySkodaCommandTrait::Create insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::ApplyChanges insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::registerVariables insteadof MySkodaVariablesTrait;
+        MySkodaCommandTrait::RequestAction insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::SetChargingLimit insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::SetChargeMode insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::updateCoreValues insteadof MySkodaVariablesTrait;
+        MySkodaCommandTrait::sendCommand insteadof MySkodaApiTrait;
+    }
 
     private const API_ROOT = 'https://public.api.connect.skoda-auto.cz';
     private const OPENAPI_URL = self::API_ROOT . '/v3/api-docs';
-    private const USER_AGENT = 'IP-Symcon-MySkoda/1.0';
+    private const USER_AGENT = 'IP-Symcon-MySkoda/1.1';
     private const QUOTA_RESERVE = 2;
 
     public function Update(): void
