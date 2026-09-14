@@ -8,6 +8,9 @@ Gerätemodul für IP-Symcon zur Anbindung eines Škoda-Fahrzeugs an die offiziel
 - stabile Variablen-Idents für Skripte und weitere Module
 - Laden und Klimatisierung über Variablenaktionen
 - Ladelimit und Lademodus, sofern vom Fahrzeug unterstützt
+- optimistische Anzeige und Bestätigungslogik für schreibbare Lade- und Klimawerte
+- getrennte Pending-Zustände für mehrere gleichzeitig ausstehende Befehle
+- einmalige vorgezogene Bestätigungsabfrage etwa 60 Sekunden nach einem angenommenen oder unklar übertragenen Befehl
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
 - automatische Erkennung zusätzlicher, noch nicht integrierter OpenAPI-Funktionen
@@ -103,14 +106,59 @@ Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden fehlende
 | `ApiKeyExpiresAtVar` | API-Key gültig bis |
 | `RequestsRemaining` | Verbleibende API-Anfragen |
 | `PartialErrors` | API-Teilfehler |
+| `PendingCommands` | Ausstehende Befehle |
+| `CommandStatus` | Befehlsstatus |
 
 Einmal angelegte Detailvariablen bleiben bestehen. Das Deaktivieren der Option löscht keine Variablen.
+
+## Pending- und Bestätigungslogik für Remote-Befehle
+
+Version 1.1 behandelt schreibbare Fahrzeugwerte bewusst optimistisch. Damit bleibt die Oberfläche reaktionsschnell, obwohl die Fahrzeug-API einen angenommenen Befehl nicht zwingend sofort im nächsten gelesenen Fahrzeugzustand widerspiegelt.
+
+Betroffen sind die Variablenaktionen für:
+
+- `Charging`
+- `TargetSOC`
+- `ChargeMode`
+- `Climate`
+- `TargetTemperature`, wenn die Klimatisierung aktiv ist
+
+Zusätzlich verwenden die öffentlichen Methoden `MSKODA_SetChargingLimit()` und `MSKODA_SetChargeMode()` dieselbe Logik.
+
+### Ablauf
+
+1. Vor dem Senden wird der bisherige lokale Wert gespeichert.
+2. Der gewünschte neue Wert wird sofort lokal gesetzt.
+3. Der Befehl wird an die MyŠkoda Public API gesendet.
+4. Bei **2xx** bleibt der Wert als Pending sichtbar und wartet auf Bestätigung durch eine Fahrzeugabfrage.
+5. Bei einer eindeutigen Ablehnung, typischerweise **4xx**, wird sofort auf den vorherigen lokalen Wert zurückgerollt.
+6. Bei **5xx**, HTTP `408` oder einem Transport-/cURL-Fehler ist unklar, ob der Befehl das Backend erreicht hat. Der gewünschte Wert bleibt deshalb zunächst bestehen.
+7. Nach einem angenommenen oder unklar übertragenen Befehl wird einmalig nach etwa **60 Sekunden** eine zusätzliche Fahrzeugabfrage geplant.
+8. Meldet die API den gewünschten Wert zurück, wird das Pending für diesen Datenpunkt beendet.
+9. Meldet die API zunächst noch den alten Wert, überschreibt dieser während des Pending-Zeitraums nicht die optimistische Anzeige.
+10. Spätestens nach mindestens 600 Sekunden beziehungsweise zwei regulären Abfrageintervallen wird der dann gelesene API-Wert wieder als maßgeblich übernommen.
+
+Jeder Datenpunkt besitzt einen eigenen Pending-Eintrag. Ein Ladelimit von 90 % und gleichzeitig gestartete Klimatisierung können dadurch unabhängig voneinander bestätigt werden.
+
+### Diagnose
+
+Bei aktivierten Detail-/Diagnosevariablen zeigt `PendingCommands` die Anzahl offener Bestätigungen.
+
+`CommandStatus` fasst den Zustand lesbar zusammen, zum Beispiel:
+
+```text
+Warte auf Bestätigung: Ladelimit, Klimatisierung
+Übertragung unklar: Ladelimit
+Bestätigt: Ladelimit
+Befehl abgelehnt: Klimatisierung
+Bestätigung abgelaufen: Ladelimit
+```
 
 ## Neue API-Funktionen erkennen
 
 Nach einer erfolgreichen Fahrzeugabfrage prüft das Modul zusätzlich die öffentliche OpenAPI-Definition der MyŠkoda Public API. Die Definition wird intern für 24 Stunden zwischengespeichert. Dadurch wird die Prüfung nicht bei jedem Fahrzeugabruf erneut aus dem Internet geladen und sie verbraucht kein fahrzeugbezogenes API-Kontingent.
 
-Die Variable `NewApiFeatures` zeigt an, ob die API Operationen enthält, die Version 1.0 noch nicht als Modul-Funktion kennt:
+Die Variable `NewApiFeatures` zeigt an, ob die API Operationen enthält, die die aktuelle Modulversion noch nicht als Modul-Funktion kennt:
 
 | Wert | Bedeutung |
 |---:|---|
@@ -203,6 +251,8 @@ $ok = MSKODA_RefreshApiDefinition(12345);
 $ok = MSKODA_TestNotification(12345);
 ```
 
+`SetChargingLimit()` und `SetChargeMode()` verwenden in Version 1.1 ebenfalls die optimistische Pending-/Bestätigungslogik. Die übrigen öffentlichen Remote-Befehle behalten ihre boolesche Rückmeldung des unmittelbaren HTTP-Aufrufs.
+
 ## Instanzstatus
 
 | Code | Bedeutung |
@@ -219,6 +269,8 @@ $ok = MSKODA_TestNotification(12345);
 - **Status 203:** Das API-Rate-Limit oder eine von der API vorgegebene Wartezeit ist aktiv. Das Modul wartet automatisch.
 - **Einzelne Werte fehlen:** Nicht jedes Fahrzeug bzw. jeder MySkoda-Dienst liefert alle API-Funktionen. Optionale Werte werden nur dargestellt, wenn die API sie bereitstellt.
 - **Neue API-Funktionen > 0:** Die öffentliche API enthält neue Operationen. Prüfen, ob eine neuere Modulversion verfügbar ist; Entwickler können die unbekannten Operationen im Debug unter `API discovery` sehen.
+- **Ausstehende Befehle > 0:** Mindestens ein optimistisch gesetzter Remote-Wert wartet noch auf Bestätigung aus den Fahrzeugdaten.
+- **Übertragung unklar:** Der HTTP-Aufruf endete mit Transportfehler, HTTP 408 oder 5xx. Der Wert wird nicht vorschnell zurückgesetzt, sondern durch einen späteren Fahrzeugabruf geklärt.
 - **Remote-Befehl nicht verfügbar:** Fahrzeugfähigkeiten, MySkoda-Dienste und ggf. S-PIN prüfen.
 - **Breiten-/Längengrad zeigen 0:** Ein Fahrzeug kann mehrere Benutzer haben. Standortdaten sind nur sichtbar, wenn der jeweilige Benutzer die Standortfreigabe erteilt hat.
 
