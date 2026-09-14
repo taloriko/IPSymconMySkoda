@@ -67,15 +67,13 @@ def main() -> None:
     core = (ROOT / "MySkoda" / "src" / "CoreTrait.php").read_text(encoding="utf-8")
     openapi = (ROOT / "MySkoda" / "src" / "OpenApiTrait.php").read_text(encoding="utf-8")
     command = (ROOT / "MySkoda" / "src" / "CommandTrait.php").read_text(encoding="utf-8")
-    confirmation = (ROOT / "MySkoda" / "src" / "CommandConfirmationTrait.php").read_text(encoding="utf-8")
+    api = (ROOT / "MySkoda" / "src" / "ApiTrait.php").read_text(encoding="utf-8")
     php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
 
     assert "final class MySkoda extends IPSModuleStrict" in module_php
     assert "IP-Symcon-MySkoda/1.1" in module_php
     assert "CommandTrait.php" in module_php
-    assert "CommandConfirmationTrait.php" in module_php
-    assert "MySkodaCommandConfirmationTrait::applyApiValue insteadof MySkodaCommandTrait" in module_php
-    assert "MySkodaCommandConfirmationTrait::sendCommand insteadof MySkodaCommandTrait, MySkodaApiTrait" in module_php
+    assert "CommandConfirmationTrait.php" not in module_php
 
     assert re.search(r"<\?(?!php)", php_sources) is None
     assert "IPS_LogMessage" not in php_sources
@@ -98,56 +96,53 @@ def main() -> None:
     assert "'NewApiFeatures'" in openapi
     assert "RegisterPropertyBoolean('EnableChargingHistory', false)" in core
     assert "AC_SetLoggingStatus" in history
+    assert "'STEP_SIZE' => 10" in variables
+    assert "'vehicle.operations'" in core
 
-    # Version 1.1 optimistic command handling.
+    # Version 1.1 command handling: pending exists only while the synchronous
+    # HTTP command request is running. The server response resolves it directly.
     for required in [
         "RegisterAttributeString('PendingCommands', '{}')",
         "RegisterAttributeString('LastCommandResult', '')",
         "RegisterTimer('CommandConfirmTimer', 0",
-        "COMMAND_CONFIRM_DELAY_MS = 60000",
         "executeOptimisticCommand",
         "ConfirmPending",
-        "scheduleCommandConfirmation",
         "PendingCommands",
         "CommandStatus",
+        "unset($pending[$ident]);",
+        "$this->SetValue($ident, $desiredValue);",
+        "$this->SetValue($ident, $previousValue);",
+        "$error = trim($this->ReadAttributeString('LastError'));",
+        "$status .= ' - ' . $error;",
     ]:
         assert required in command
+
+    assert "scheduleCommandConfirmation" not in command
+    assert "COMMAND_CONFIRM_DELAY_MS" not in command
+    assert "commandPendingTimeoutSeconds" not in command
+    assert "fetchVehicle(false)" not in command
 
     for ident in ["Charging", "TargetSOC", "ChargeMode", "Climate", "TargetTemperature"]:
         assert f"'{ident}'" in command
 
-    # The next successful portal response is authoritative.
-    assert "private function applyApiValue" in confirmation
-    assert "$matches = $this->commandValuesEqual($expected, $apiValue);" in confirmation
-    assert "$this->SetValue($ident, $apiValue);" in confirmation
-    assert "unset($pending[$ident]);" in confirmation
-    assert "API returned a different value; portal value is authoritative and was restored." in confirmation
-    assert "mismatchCount" not in confirmation
-    assert "COMMAND_MAX_MISMATCH_RESPONSES" not in confirmation
-    assert "COMMAND_MIN_MISMATCH_ROLLBACK_SECONDS" not in confirmation
-
-    # HTTP error responses are definite rejections; only missing transport status stays uncertain.
-    assert "$uncertain = $curlError !== '' || $status === 0;" in confirmation
-    assert "status === 408" not in confirmation
-    assert "status >= 500" not in confirmation
-    assert "uncertain ? 'uncertain' : 'rejected'" in confirmation
+    # ApiTrait is the single source of truth for HTTP success/failure.
+    assert "private function sendCommand" in api
+    assert "if (!$response['ok'])" in api
+    assert "$this->setApiError($response);" in api
 
     for source, german in {
         "Pending commands": "Ausstehende Befehle",
         "Command status": "Befehlsstatus",
         "Ready": "Bereit",
         "Waiting for confirmation: %s": "Warte auf Bestätigung: %s",
-        "Transmission uncertain: %s": "Übertragung unklar: %s",
         "Command rejected: %s": "Befehl abgelehnt: %s",
         "Confirmed: %s": "Bestätigt: %s",
-        "Not confirmed: %s": "Nicht bestätigt: %s",
     }.items():
         assert translations.get(source) == german
 
     expected_sources = {
-        "ApiTrait.php", "CommandTrait.php", "CommandConfirmationTrait.php", "CoreTrait.php",
-        "HelpersTrait.php", "HistoryTrait.php", "NotificationTrait.php", "OpenApiTrait.php",
-        "VariablesTrait.php"
+        "ApiTrait.php", "CommandTrait.php", "CoreTrait.php", "HelpersTrait.php",
+        "HistoryTrait.php", "NotificationTrait.php", "OpenApiTrait.php", "VariablesTrait.php"
     }
     source_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
     assert source_names == expected_sources
@@ -155,22 +150,20 @@ def main() -> None:
     root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
     module_readme = (ROOT / "MySkoda" / "README.md").read_text(encoding="utf-8")
     for text in [
-        "Befehlsbestätigung ab Version 1.1",
-        "erste erfolgreiche Fahrzeugantwort",
-        "Portalwert sofort übernommen",
+        "Befehlsausführung ab Version 1.1",
+        "Serverantwort",
         "PendingCommands",
         "CommandStatus",
-        "60 Sekunden",
+        "vorherige Wert",
     ]:
         assert text in root_readme
 
     for text in [
-        "Pending- und Bestätigungslogik für Remote-Befehle",
-        "erste erfolgreiche Fahrzeugabfrage",
-        "gilt **immer der Portalwert**",
+        "Befehlslogik für Remote-Befehle",
+        "erfolgreiche **2xx-Antwort**",
         "PendingCommands",
         "CommandStatus",
-        "60 Sekunden",
+        "Fehlertext",
         "standardmäßig **aus**",
         "Datenschutz und externe Dienste",
     ]:
@@ -178,7 +171,7 @@ def main() -> None:
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## 1.1 - 2026-09-14" in changelog
-    assert "Portalwert" in changelog
+    assert "Serverantwort" in changelog
     assert "## 1.0 - 2026-09-06" in changelog
     assert "## 2." not in changelog
 
