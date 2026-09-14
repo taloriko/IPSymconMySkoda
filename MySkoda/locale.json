@@ -75,6 +75,7 @@
       "Command rejected: %s": "Befehl abgelehnt: %s",
       "Confirmed: %s": "Bestätigt: %s",
       "Confirmation timed out: %s": "Bestätigung abgelaufen: %s",
+      "Not confirmed: %s": "Nicht bestätigt: %s",
       "Last update": "Letzte Aktualisierung",
       "Vehicle name": "Fahrzeugname",
       "License plate": "Kennzeichen",
