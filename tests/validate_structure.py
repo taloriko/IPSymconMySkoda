@@ -122,6 +122,7 @@ def main() -> None:
     core = (ROOT / "MySkoda" / "src" / "CoreTrait.php").read_text(encoding="utf-8")
     openapi = (ROOT / "MySkoda" / "src" / "OpenApiTrait.php").read_text(encoding="utf-8")
     command = (ROOT / "MySkoda" / "src" / "CommandTrait.php").read_text(encoding="utf-8")
+    confirmation = (ROOT / "MySkoda" / "src" / "CommandConfirmationTrait.php").read_text(encoding="utf-8")
     php_sources = "\n".join(
         source.read_text(encoding="utf-8")
         for source in (ROOT / "MySkoda").rglob("*.php")
@@ -130,10 +131,13 @@ def main() -> None:
     assert "final class MySkoda extends IPSModuleStrict" in module_php
     assert "IP-Symcon-MySkoda/1.1" in module_php
     assert "CommandTrait.php" in module_php
+    assert "CommandConfirmationTrait.php" in module_php
     assert "MySkodaCommandTrait" in module_php
+    assert "MySkodaCommandConfirmationTrait" in module_php
     assert "CommandTrait::RequestAction insteadof MySkodaCoreTrait" in module_php
     assert "CommandTrait::updateCoreValues insteadof MySkodaVariablesTrait" in module_php
     assert "CommandTrait::sendCommand insteadof MySkodaApiTrait" in module_php
+    assert "CommandConfirmationTrait::applyApiValue insteadof MySkodaCommandTrait" in module_php
     assert "StructureTrait.php" not in module_php
     assert "$this->refreshOpenApi(false);" in module_php
 
@@ -185,6 +189,7 @@ def main() -> None:
         "Command rejected: %s": "Befehl abgelehnt: %s",
         "Confirmed: %s": "Bestätigt: %s",
         "Confirmation timed out: %s": "Bestätigung abgelaufen: %s",
+        "Not confirmed: %s": "Nicht bestätigt: %s",
     }.items():
         assert translations.get(source) == german
 
@@ -219,7 +224,6 @@ def main() -> None:
         "COMMAND_CONFIRM_DELAY_MS = 60000",
         "COMMAND_MIN_TIMEOUT_SECONDS = 600",
         "executeOptimisticCommand",
-        "applyApiValue",
         "ConfirmPending",
         "scheduleCommandConfirmation",
         "commandPendingTimeoutSeconds",
@@ -233,13 +237,23 @@ def main() -> None:
 
     assert "status === 408" in command
     assert "status >= 500" in command
-    assert "LastCommandResult', 'uncertain'" not in command  # written through ternary classification
     assert "uncertain ? 'uncertain' : 'rejected'" in command
-    assert "API still reports old value; optimistic value is kept." in command
     assert "SetTimerInterval('CommandConfirmTimer', self::COMMAND_CONFIRM_DELAY_MS)" in command
     assert "SetChargingLimit" in command
     assert "SetChargeMode" in command
     assert "ReadPropertyBoolean('ShowDetails')" in command
+
+    # Robust rollback is response-based as well as time-based.
+    assert "COMMAND_MAX_MISMATCH_RESPONSES = 2" in confirmation
+    assert "COMMAND_MIN_MISMATCH_ROLLBACK_SECONDS = 60" in confirmation
+    assert "mismatchCount" in confirmation
+    assert "lastMismatchAt" in confirmation
+    assert "lastApiValue" in confirmation
+    assert "commandValuesEqual" in confirmation
+    assert "commandPendingTimeoutSeconds" in confirmation
+    assert "Not confirmed: %s" in confirmation
+    assert "API value restored" in confirmation
+    assert "SetTimerInterval('CommandConfirmTimer', 0)" in confirmation
 
     # Pending diagnostics are module variables, not helper objects or archive settings.
     assert "'ident' => 'PendingCommands'" in command
@@ -257,8 +271,9 @@ def main() -> None:
         assert forbidden not in php_sources
 
     expected_sources = {
-        "ApiTrait.php", "CommandTrait.php", "CoreTrait.php", "HelpersTrait.php",
-        "HistoryTrait.php", "NotificationTrait.php", "OpenApiTrait.php", "VariablesTrait.php"
+        "ApiTrait.php", "CommandTrait.php", "CommandConfirmationTrait.php", "CoreTrait.php",
+        "HelpersTrait.php", "HistoryTrait.php", "NotificationTrait.php", "OpenApiTrait.php",
+        "VariablesTrait.php"
     }
     source_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
     assert source_names == expected_sources
