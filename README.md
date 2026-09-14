@@ -1,4 +1,4 @@
-# MySkoda für IP-Symcon 
+# MySkoda für IP-Symcon
 
 MySkoda ist ein IP-Symcon-Modul zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**.
 
@@ -11,9 +11,10 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
 - Ladeleistung, Ladelimit und Lademodus
 - Klimatisierung sowie unterstützte Remote-Funktionen
-- optimistische Anzeige und serverseitige Bestätigung für schreibbare Lade- und Klimawerte
-- paralleles Pending-Handling für mehrere gleichzeitig ausstehende Befehle
-- einmalige vorgezogene Bestätigungsabfrage etwa 60 Sekunden nach einem angenommenen oder unklar übertragenen Befehl
+- sofortige lokale Anzeige schreibbarer Lade- und Klimawerte
+- direkte Auswertung der Serverantwort für Remote-Befehle
+- automatischer Rollback auf den vorherigen Wert bei einem Befehlsfehler
+- technischer Fehlertext im Befehlsstatus
 - Standheizung und aktive Lüftung über öffentliche Modulmethoden
 - optionale Detail-, Standort- und Diagnosevariablen
 - automatische Prüfung der OpenAPI-Definition auf neue, noch nicht integrierte API-Funktionen
@@ -82,33 +83,23 @@ Die fachliche Gruppierung und Darstellung übernimmt der User oder es wird das [
 
 Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charging`, `TargetSOC` oder `Climate` bleiben stabil und bilden die Schnittstelle für Skripte und weitere Module.
 
-Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden deshalb nur bei der Erstanlage gesetzt und danach nicht durch ein Update überschrieben.
+Vorhandene Variablen werden bei späteren Modulaktualisierungen grundsätzlich nicht neu angelegt. Für das vom Modul gelieferte Ladelimit-Profil wird in Version 1.1 die Darstellung gezielt auf 10-%-Schritte aktualisiert; eine vom Benutzer selbst gesetzte Custom-Darstellung bleibt unberührt.
 
-## Befehlsbestätigung ab Version 1.1
+## Befehlsausführung ab Version 1.1
 
-Schreibbare Werte wie Ladelimit, Lademodus, Laden, Klimatisierung und – bei aktiver Klimatisierung – die Solltemperatur werden nach einer Benutzeraktion sofort lokal auf den gewünschten Wert gesetzt. Dadurch springt ein Schieberegler nicht wieder auf den Stand der letzten Fahrzeugabfrage zurück.
+Schreibbare Werte wie Ladelimit, Lademodus, Laden, Klimatisierung und – bei aktiver Klimatisierung – die Solltemperatur werden beim Absenden sofort lokal auf den gewünschten Wert gesetzt.
 
-Jeder schreibbare Datenpunkt besitzt intern einen eigenen Pending-Zustand. Mehrere Befehle können deshalb gleichzeitig auf Bestätigung warten, beispielsweise ein neues Ladelimit und das Starten der Klimatisierung.
+Während die HTTP-Anfrage läuft, wird der Datenpunkt intern kurz als Pending geführt. Danach entscheidet ausschließlich die **Serverantwort** des Befehlsaufrufs:
 
-Das Verhalten richtet sich nach dem Ergebnis des Befehlsaufrufs:
+- **erfolgreiche 2xx-Antwort:** Der gewünschte Wert bleibt gesetzt und Pending wird sofort beendet.
+- **Fehlerantwort oder Übertragungsfehler:** Der vorherige Wert wird sofort wiederhergestellt und Pending wird ebenfalls beendet.
 
-- **2xx / angenommen:** gewünschter Wert bleibt sichtbar und wartet auf die nächste erfolgreiche Fahrzeugabfrage.
-- **HTTP-Fehlerantwort:** der Befehl gilt als abgelehnt; Pending wird beendet und der vorherige lokale Wert wird sofort wiederhergestellt.
-- **kein verwertbarer HTTP-Status / Transportfehler:** der Übertragungszustand ist unklar; der gewünschte Wert bleibt zunächst Pending und wird durch die nächste erfolgreiche Fahrzeugabfrage geklärt.
-
-Nach einem angenommenen oder unklar übertragenen Befehl wird einmalig nach ungefähr **60 Sekunden** eine zusätzliche Fahrzeugabfrage zur Bestätigung eingeplant. Die normale zyklische Abfrage darf dieselbe Bestätigung ebenfalls übernehmen.
-
-Die **erste erfolgreiche Fahrzeugantwort nach dem Befehl ist maßgeblich**:
-
-- meldet das Portal den gewünschten Wert, bleibt dieser bestehen und das Pending wird beendet;
-- meldet das Portal einen anderen Wert, wird dieser Portalwert sofort übernommen und das Pending ebenfalls beendet.
-
-Damit ist immer der tatsächlich vom Portal gelieferte Fahrzeugzustand die endgültige Wahrheit.
+Es gibt keine zusätzliche Bestätigungsabfrage und es wird nicht mehr auf eine verzögerte Rückmeldung des Fahrzeugs gewartet. Der normale zyklische Fahrzeugabruf läuft unabhängig davon weiter und kann den Wert später wieder auf den dann vom Portal gemeldeten Fahrzeugzustand setzen.
 
 Bei aktivierten **Detail- und Diagnosevariablen** stehen zusätzlich zur Verfügung:
 
-- `PendingCommands` – **Ausstehende Befehle**, Anzahl aktuell offener Bestätigungen
-- `CommandStatus` – **Befehlsstatus**, z. B. `Warte auf Bestätigung: Ladelimit`, `Übertragung unklar: Ladelimit`, `Bestätigt: Ladelimit`, `Nicht bestätigt: Ladelimit` oder `Befehl abgelehnt: Ladelimit`
+- `PendingCommands` – **Ausstehende Befehle**; normalerweise nur während der laufenden Serveranfrage ungleich `0`
+- `CommandStatus` – **Befehlsstatus**; bei Erfolg z. B. `Bestätigt: Ladelimit`, bei Fehler zusätzlich mit dem tatsächlichen Fehlertext, z. B. `Befehl abgelehnt: Ladelimit - HTTP 400: ...`
 
 ## Neue API-Funktionen
 
