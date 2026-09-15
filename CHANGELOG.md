@@ -12,6 +12,9 @@
 - erste Bilddiagnose `MSKODA_DiagnoseVehicleImages()` bleibt für die weitere Untersuchung möglicher zukünftiger Bildvarianten erhalten
 - VIN wird in der Diagnoseausgabe maskiert
 - aktuell liefert das getestete Fahrzeug über die Public API genau ein `renderUrl`; weitere Varianten werden erst integriert, wenn sie tatsächlich über die API verfügbar sind
+- neue Diagnose `MSKODA_DiagnosePublicApiData()` listet alle Blattpfade der bereits empfangenen offiziellen Public-API-`RawData`
+- die Diagnose trennt bereits verwendete und noch ungenutzte Datenfelder, ohne zusätzliche API-Anfrage auszulösen
+- FIN wird maskiert; Kennzeichen und Standortwerte werden in der Diagnoseausgabe geschwärzt
 
 ## 1.1 - 2026-09-14
 
