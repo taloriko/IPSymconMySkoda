@@ -175,6 +175,11 @@
           "type": "Button",
           "caption": "Diagnose vehicle images",
           "onClick": "echo MSKODA_DiagnoseVehicleImages($id);"
+        },
+        {
+          "type": "Button",
+          "caption": "Refresh vehicle image",
+          "onClick": "echo MSKODA_RefreshVehicleImage($id) ? 'Fahrzeugbild aktualisiert.' : 'Fahrzeugbild konnte nicht aktualisiert werden.';"
         }
       ]
     }
