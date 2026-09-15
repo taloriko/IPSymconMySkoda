@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.2 - 2026-09-15
+
+- erster Entwicklungsstand für fahrzeugspezifische MySkoda-Bilder
+- neue Diagnose `MSKODA_DiagnoseVehicleImages()`
+- Diagnose durchsucht die bereits geladene Fahrzeugantwort nach Bild-/Render-Hinweisen
+- passende GET-Operationen aus der offiziellen Public-API-OpenAPI werden erkannt und mit maximal drei gezielten Probeabfragen getestet
+- VIN wird in der Diagnoseausgabe maskiert
+- noch keine Medienobjekte und keine fest verdrahteten Bildtypen; zunächst wird der reale API-Umfang des Fahrzeugs ermittelt
+
 ## 1.1 - 2026-09-14
 
 - schreibbare Lade- und Klimawerte werden beim Absenden sofort lokal gesetzt
