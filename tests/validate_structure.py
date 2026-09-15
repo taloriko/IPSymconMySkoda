@@ -82,9 +82,20 @@ def main() -> None:
 
     for forbidden in [
         "IPS_CreateInstance", "IPS_CreateCategory", "IPS_CreateLink", "IPS_CreateMedia",
-        "IPS_SetName", "IPS_SetHidden", "IPS_SetIcon", "IPS_SetPosition"
+        "IPS_SetName", "IPS_SetHidden", "IPS_SetPosition"
     ]:
         assert forbidden not in php_sources
+
+    # Object icons are allowed only for the date/time variables because the
+    # DATE_TIME presentation does not expose the icon in presentation settings.
+    assert "applyDefaultObjectIcons" in variables
+    assert "IPS_SetIcon($variableId, $icon);" in variables
+    for ident, icon in {
+        "LastUpdate": "clock-rotate-left",
+        "FullyChargedAt": "battery-full",
+        "ApiKeyExpiresAtVar": "arrow-right-to-line",
+    }.items():
+        assert f"'{ident}' => '{icon}'" in variables
 
     for ident in [
         "StateOfCharge", "Range", "Mileage", "Locked", "DoorsOpen", "WindowsOpen",
