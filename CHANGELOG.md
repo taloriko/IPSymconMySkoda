@@ -15,6 +15,10 @@
 - neue Diagnose `MSKODA_DiagnosePublicApiData()` listet alle Blattpfade der bereits empfangenen offiziellen Public-API-`RawData`
 - die Diagnose trennt bereits verwendete und noch ungenutzte Datenfelder, ohne zusätzliche API-Anfrage auszulösen
 - FIN wird maskiert; Kennzeichen und Standortwerte werden in der Diagnoseausgabe geschwärzt
+- zusätzliche offizielle Public-API-Daten werden als read-only Symcon-Variablen mit stabilen Idents bereitgestellt: `VIN`, `ReliableLockStatus`, `RemainingChargingTime`, `AtSavedChargingLocation`, `BatteryCareMode`, `BatteryCareTargetSOC`, `MaxChargeCurrentAC`, `AutoUnlockPlug`, `TargetTemperatureUnit`, `AirConditioningAtUnlock`, `WindowHeatingEnabled`, `WindowHeatingFront` und `WindowHeatingRear`
+- die neuen Datenpunkte verwenden passende native Symcon-Darstellungen, Icons und deutsch lokalisierte Zustände
+- `Locked` priorisiert künftig `status.overall.reliableLockStatus` und verwendet die bisherigen Verriegelungswerte weiterhin als Fallback
+- die von der API gelieferten `carCapturedTimestamp`-Felder werden bewusst nicht als Variablen angelegt
 
 ## 1.1 - 2026-09-14
 
