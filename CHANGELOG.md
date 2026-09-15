@@ -2,12 +2,16 @@
 
 ## 1.2 - 2026-09-15
 
-- erster Entwicklungsstand für fahrzeugspezifische MySkoda-Bilder
-- neue Diagnose `MSKODA_DiagnoseVehicleImages()`
-- Diagnose durchsucht die bereits geladene Fahrzeugantwort nach Bild-/Render-Hinweisen
-- passende GET-Operationen aus der offiziellen Public-API-OpenAPI werden erkannt und mit maximal drei gezielten Probeabfragen getestet
+- fahrzeugspezifisches Bild wird direkt aus `vehicle.renderUrl` der offiziellen MySkoda Public API übernommen
+- das Bild wird einmalig heruntergeladen und als lokales Symcon-Bildmedium unter der MySkoda-Instanz gespeichert
+- stabiler Medien-Ident `VehicleImage` für universelle Nutzung durch Visualisierungen und andere Module
+- vorhandenes `VehicleImage` bleibt erhalten und wird beim normalen Fahrzeug-Polling nicht erneut heruntergeladen
+- bei Wechsel der VIN wird das vorhandene Medium mit dem Bild des neuen Fahrzeugs aktualisiert, die Objekt-ID bleibt dabei erhalten
+- manuelle Aktualisierung über `MSKODA_RefreshVehicleImage()` bzw. den Konfigurationsbutton **Fahrzeugbild aktualisieren**
+- Download wird auf den von MySkoda gelieferten HTTPS-Renderhost `iprenders.blob.core.windows.net` begrenzt und der Bildinhalt vor dem Speichern geprüft
+- erste Bilddiagnose `MSKODA_DiagnoseVehicleImages()` bleibt für die weitere Untersuchung möglicher zukünftiger Bildvarianten erhalten
 - VIN wird in der Diagnoseausgabe maskiert
-- noch keine Medienobjekte und keine fest verdrahteten Bildtypen; zunächst wird der reale API-Umfang des Fahrzeugs ermittelt
+- aktuell liefert das getestete Fahrzeug über die Public API genau ein `renderUrl`; weitere Varianten werden erst integriert, wenn sie tatsächlich über die API verfügbar sind
 
 ## 1.1 - 2026-09-14
 
