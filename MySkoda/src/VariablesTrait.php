@@ -25,6 +25,8 @@ trait MySkodaVariablesTrait
                 $this->registerVariableOnce($definition);
             }
         }
+
+        $this->applyDefaultObjectIcons();
     }
 
     private function coreVariableDefinitions(): array
@@ -74,8 +76,7 @@ trait MySkodaVariablesTrait
             $this->variable('ApiKeyWarning', 'API key warning', VARIABLETYPE_BOOLEAN, 900, $this->booleanYesNoPresentation(false, 'key')),
             $this->variable('LastUpdate', 'Last update', VARIABLETYPE_INTEGER, 990, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
-                'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
-                'ICON' => 'clock-rotate-left'
+                'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
             ])
         ];
     }
@@ -94,15 +95,13 @@ trait MySkodaVariablesTrait
             $this->variable('ChargeType', 'Charge type', VARIABLETYPE_STRING, 220, $this->chargeTypePresentation()),
             $this->variable('FullyChargedAt', 'Fully charged at', VARIABLETYPE_INTEGER, 260, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
-                'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
-                'ICON' => 'battery-full'
+                'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
             ]),
             $this->variable('Latitude', 'Latitude', VARIABLETYPE_FLOAT, 400, $this->valuePresentation('location-dot', '', 6)),
             $this->variable('Longitude', 'Longitude', VARIABLETYPE_FLOAT, 410, $this->valuePresentation('location-dot', '', 6)),
             $this->variable('ApiKeyExpiresAtVar', 'API key valid until', VARIABLETYPE_INTEGER, 910, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
-                'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
-                'ICON' => 'arrow-right-to-line'
+                'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
             ]),
             $this->variable('RequestsRemaining', 'API requests remaining', VARIABLETYPE_INTEGER, 920, $this->valuePresentation('gauge')),
             $this->variable('PartialErrors', 'API partial errors', VARIABLETYPE_STRING, 930, [
@@ -186,6 +185,27 @@ trait MySkodaVariablesTrait
 
         if ($definition['initialValue'] !== null && @$this->GetIDForIdent($ident) !== false) {
             $this->SetValue($ident, $definition['initialValue']);
+        }
+    }
+
+    private function applyDefaultObjectIcons(): void
+    {
+        $icons = [
+            'LastUpdate' => 'clock-rotate-left',
+            'FullyChargedAt' => 'battery-full',
+            'ApiKeyExpiresAtVar' => 'arrow-right-to-line'
+        ];
+
+        foreach ($icons as $ident => $icon) {
+            $variableId = @$this->GetIDForIdent($ident);
+            if ($variableId === false || !IPS_VariableExists($variableId)) {
+                continue;
+            }
+
+            $object = IPS_GetObject($variableId);
+            if ((string) ($object['ObjectIcon'] ?? '') === '') {
+                IPS_SetIcon($variableId, $icon);
+            }
         }
     }
 
