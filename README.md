@@ -27,6 +27,21 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 - optional und nur nach ausdrücklicher Aktivierung: Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
     - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
 
+## In der App verfügbar, aber nicht in der Public API
+
+Folgende Funktionen sind in der MySkoda App verfügbar, aber im offiziellen **Public-API-Vertrag 1.0.0** derzeit nicht enthalten und können deshalb vom Modul nicht bereitgestellt werden:
+
+- Camping Mode
+- Klima-Timer / Abfahrtszeiten
+- intelligentes Heizen / intelligentes Klimatisieren
+- Scheibenheizung im Zusammenhang mit der Klimatisierung
+- Sitzheizung Fahrer und Beifahrer im Zusammenhang mit der Klimatisierung
+- Battery Care Mode
+- reduzierte AC-Ladeleistung / Begrenzung des AC-Ladestroms
+- automatisches Entriegeln des AC-Ladekabels
+
+Das Modul verwendet ausschließlich die offizielle MyŠkoda Public API. Private oder interne App-Schnittstellen werden nicht verwendet.
+
 ## Voraussetzungen
 
 - IP-Symcon **8.1 oder neuer**
