@@ -71,7 +71,7 @@ def main() -> None:
     php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
 
     assert "final class MySkoda extends IPSModuleStrict" in module_php
-    assert "IP-Symcon-MySkoda/1.1" in module_php
+    assert "Symcon-MySkoda/1.1" in module_php
     assert "CommandTrait.php" in module_php
     assert "CommandConfirmationTrait.php" not in module_php
 
@@ -174,6 +174,18 @@ def main() -> None:
     assert "Serverantwort" in changelog
     assert "## 1.0 - 2026-09-06" in changelog
     assert "## 2." not in changelog
+
+    # Current product branding is "Symcon". Keep technical repository names and
+    # API class/function prefixes unchanged, but do not reintroduce the old brand.
+    branded_text = "\n".join([
+        root_readme,
+        module_readme,
+        changelog,
+        module_php,
+        (ROOT / "MySkoda" / "form.json").read_text(encoding="utf-8"),
+        (ROOT / "MySkoda" / "locale.json").read_text(encoding="utf-8"),
+    ])
+    assert "IP-Symcon" not in branded_text
 
 
 if __name__ == "__main__":
