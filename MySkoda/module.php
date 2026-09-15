@@ -7,6 +7,7 @@ require_once __DIR__ . '/src/VariablesTrait.php';
 require_once __DIR__ . '/src/HistoryTrait.php';
 require_once __DIR__ . '/src/ApiTrait.php';
 require_once __DIR__ . '/src/OpenApiTrait.php';
+require_once __DIR__ . '/src/ImageTrait.php';
 require_once __DIR__ . '/src/NotificationTrait.php';
 require_once __DIR__ . '/src/HelpersTrait.php';
 require_once __DIR__ . '/src/CommandTrait.php';
@@ -18,6 +19,7 @@ final class MySkoda extends IPSModuleStrict
         MySkodaHistoryTrait,
         MySkodaApiTrait,
         MySkodaOpenApiTrait,
+        MySkodaImageTrait,
         MySkodaNotificationTrait,
         MySkodaHelpersTrait,
         MySkodaCommandTrait {
@@ -35,7 +37,7 @@ final class MySkoda extends IPSModuleStrict
 
     private const API_ROOT = 'https://public.api.connect.skoda-auto.cz';
     private const OPENAPI_URL = self::API_ROOT . '/v3/api-docs';
-    private const USER_AGENT = 'Symcon-MySkoda/1.1';
+    private const USER_AGENT = 'Symcon-MySkoda/1.2';
     private const QUOTA_RESERVE = 2;
 
     public function Update(): void
