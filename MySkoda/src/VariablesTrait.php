@@ -75,7 +75,7 @@ trait MySkodaVariablesTrait
             $this->variable('LastUpdate', 'Last update', VARIABLETYPE_INTEGER, 990, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
-                'ICON' => 'clock'
+                'ICON' => 'clock-rotate-left'
             ])
         ];
     }
@@ -91,18 +91,18 @@ trait MySkodaVariablesTrait
             $this->variable('LightsOn', 'Lights on', VARIABLETYPE_BOOLEAN, 160, $this->booleanYesNoPresentation(false, 'lightbulb')),
             $this->variable('ParkingState', 'Parking state', VARIABLETYPE_STRING, 170, $this->parkingStatePresentation()),
             $this->variable('ChargingState', 'Charging state', VARIABLETYPE_STRING, 210, $this->chargingStatePresentation()),
-            $this->variable('ChargeType', 'Charge type', VARIABLETYPE_STRING, 220, $this->valuePresentation('plug')),
+            $this->variable('ChargeType', 'Charge type', VARIABLETYPE_STRING, 220, $this->chargeTypePresentation()),
             $this->variable('FullyChargedAt', 'Fully charged at', VARIABLETYPE_INTEGER, 260, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
-                'ICON' => 'clock'
+                'ICON' => 'battery-full'
             ]),
             $this->variable('Latitude', 'Latitude', VARIABLETYPE_FLOAT, 400, $this->valuePresentation('location-dot', '', 6)),
             $this->variable('Longitude', 'Longitude', VARIABLETYPE_FLOAT, 410, $this->valuePresentation('location-dot', '', 6)),
             $this->variable('ApiKeyExpiresAtVar', 'API key valid until', VARIABLETYPE_INTEGER, 910, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME,
-                'ICON' => 'key'
+                'ICON' => 'arrow-right-to-line'
             ]),
             $this->variable('RequestsRemaining', 'API requests remaining', VARIABLETYPE_INTEGER, 920, $this->valuePresentation('gauge')),
             $this->variable('PartialErrors', 'API partial errors', VARIABLETYPE_STRING, 930, [
@@ -126,8 +126,8 @@ trait MySkodaVariablesTrait
 
     /**
      * Creates variables only while their ident is missing. Existing names and positions
-     * remain user-owned. TargetSOC and ParkingState are re-registered to refresh the
-     * module-provided presentations; a user-defined custom presentation remains untouched.
+     * remain user-owned. Selected variables are re-registered to refresh module-provided
+     * presentations; a user-defined custom presentation remains untouched.
      */
     private function registerVariableOnce(array $definition): void
     {
@@ -153,7 +153,15 @@ trait MySkodaVariablesTrait
                     (int) $definition['position']
                 );
             }
-            if ($ident === 'ParkingState') {
+            if (in_array($ident, ['LastUpdate', 'FullyChargedAt', 'ApiKeyExpiresAtVar'], true)) {
+                $this->RegisterVariableInteger(
+                    $ident,
+                    $this->Translate((string) $definition['name']),
+                    (array) $definition['presentation'],
+                    (int) $definition['position']
+                );
+            }
+            if (in_array($ident, ['ParkingState', 'ChargeType'], true)) {
                 $this->RegisterVariableString(
                     $ident,
                     $this->Translate((string) $definition['name']),
@@ -359,6 +367,19 @@ trait MySkodaVariablesTrait
             'ICON' => 'square-parking',
             'COLOR' => -1,
             'OPTIONS' => json_encode($options, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        ];
+    }
+
+    private function chargeTypePresentation(): array
+    {
+        return [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'plug',
+            'COLOR' => -1,
+            'OPTIONS' => json_encode([
+                ['Value' => 'AC', 'Caption' => 'AC', 'IconActive' => true, 'IconValue' => 'wave-sine', 'ColorActive' => false, 'ColorValue' => -1],
+                ['Value' => 'DC', 'Caption' => 'DC', 'IconActive' => true, 'IconValue' => 'wave-sine', 'ColorActive' => false, 'ColorValue' => -1]
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ];
     }
 
