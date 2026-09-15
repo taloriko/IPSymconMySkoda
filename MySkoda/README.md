@@ -46,6 +46,21 @@ Soweit vom Fahrzeug und der API unterstützt:
 
 Die Remote-Steuerung kann in der Instanz vollständig deaktiviert werden.
 
+### In der App verfügbar, aber nicht in der Public API
+
+Folgende Funktionen sind in der MySkoda App verfügbar, aber im offiziellen **Public-API-Vertrag 1.0.0** derzeit nicht enthalten und können deshalb vom Modul nicht bereitgestellt werden:
+
+- Camping Mode
+- Klima-Timer / Abfahrtszeiten
+- intelligentes Heizen / intelligentes Klimatisieren
+- Scheibenheizung im Zusammenhang mit der Klimatisierung
+- Sitzheizung Fahrer und Beifahrer im Zusammenhang mit der Klimatisierung
+- Battery Care Mode
+- reduzierte AC-Ladeleistung / Begrenzung des AC-Ladestroms
+- automatisches Entriegeln des AC-Ladekabels
+
+Das Modul verwendet ausschließlich die offizielle MyŠkoda Public API. Private oder interne App-Schnittstellen werden nicht verwendet.
+
 ## 2. Voraussetzungen
 
 - IP-Symcon **8.1 oder neuer**
