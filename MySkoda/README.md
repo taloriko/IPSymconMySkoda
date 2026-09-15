@@ -1,12 +1,12 @@
 # MySkoda
 
-MySkoda ist ein Gerätemodul für IP-Symcon zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**. Eine Instanz repräsentiert genau eine FIN/VIN.
+MySkoda ist ein Gerätemodul für Symcon zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**. Eine Instanz repräsentiert genau eine FIN/VIN.
 
 Der tatsächlich verfügbare Funktionsumfang hängt vom Fahrzeug, dessen Ausstattung und den für das Fahrzeug freigegebenen MyŠkoda-Diensten ab. Das Modul wurde praktisch mit einem **Škoda Enyaq 80** getestet.
 
 ## 1. Funktionsumfang
 
-- Fahrzeugdaten über FIN/VIN und MyŠkoda API-Key
+- Fahrzeugdaten über FIN/VIN und MySkoda API-Key
 - zyklischer Abruf mit einstellbarem Abfrageintervall
 - Berücksichtigung der von der API gelieferten Rate-Limit-Informationen und `Retry-After`
 - stabile Variablen-Idents als Schnittstelle für Skripte und weitere Module
@@ -63,11 +63,11 @@ Das Modul verwendet ausschließlich die offizielle MyŠkoda Public API. Private 
 
 ## 2. Voraussetzungen
 
-- IP-Symcon **8.1 oder neuer**
+- Symcon **8.1 oder neuer**
 - 17-stellige FIN/VIN
 - MyŠkoda API-Key
 - aktive MyŠkoda/Škoda-Connect-Dienste für die verwendeten Fahrzeugfunktionen
-- Internetzugang von IP-Symcon zur MyŠkoda Public API
+- Internetzugang von Symcon zur MyŠkoda Public API
 - optional S-PIN für die Standheizung
 - Archive Control nur bei Verwendung der optionalen Archivierung
 
@@ -178,7 +178,7 @@ Einmal angelegte Detailvariablen werden beim Deaktivieren der Option nicht gelö
 
 ### 6.3 Profile und Darstellungen
 
-Das Modul verwendet die nativen Darstellungen von IP-Symcon. Es werden keine benutzerdefinierten Variablenprofile angelegt.
+Das Modul verwendet die nativen Darstellungen von Symcon. Es werden keine benutzerdefinierten Variablenprofile angelegt.
 
 Der Lademodus wird nur gesendet, wenn er in der vom Fahrzeug gemeldeten Liste `charging.settings.availableChargeModes` enthalten ist. Die im Modul bekannten API-Werte sind:
 
@@ -242,7 +242,7 @@ Der Kilometerstand wird als Zähler eingerichtet. Werte `<= 0` werden nicht übe
 
 ## 10. Visualisierung
 
-Die vom Modul angelegten Variablen können direkt in den IP-Symcon-Visualisierungen verwendet werden.
+Die vom Modul angelegten Variablen können direkt in den Symcon-Visualisierungen verwendet werden.
 
 Für eine zusätzliche Fahrzeugdarstellung kann optional das separate Modul [IPSymconEVTile](https://github.com/taloriko/IPSymconEVTile) verwendet werden. MySkoda selbst legt keine zusätzliche Objektstruktur für die Visualisierung an.
 
@@ -302,7 +302,7 @@ Remote-Befehle werden ausschließlich durch eine Benutzeraktion, ein Benutzerskr
 
 Zusätzlich lädt das Modul die öffentliche OpenAPI-Definition von Škoda. Für diesen Abruf wird kein Fahrzeug-API-Key übertragen.
 
-FIN/VIN, API-Token und optional die S-PIN werden als Instanzkonfiguration in IP-Symcon gespeichert. Zugangsdaten sollten nicht in Fehlermeldungen, Screenshots oder öffentlichen Supportbeiträgen veröffentlicht werden.
+FIN/VIN, API-Token und optional die S-PIN werden als Instanzkonfiguration in Symcon gespeichert. Zugangsdaten sollten nicht in Fehlermeldungen, Screenshots oder öffentlichen Supportbeiträgen veröffentlicht werden.
 
 ## 14. Versionshistorie
 
