@@ -40,8 +40,9 @@ final class MySkoda extends IPSModuleStrict
 
     public function Update(): void
     {
-        $this->fetchVehicle(false);
-        $this->refreshOpenApi(false);
+        if ($this->fetchVehicle(false)) {
+            $this->refreshOpenApi(false);
+        }
     }
 
     public function TestConnection(): bool
