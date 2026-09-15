@@ -1,8 +1,8 @@
-# MySkoda für IP-Symcon
+# MySkoda für Symcon
 
-MySkoda ist ein IP-Symcon-Modul zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**.
+MySkoda ist ein Symcon-Modul zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**.
 
-Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als native IP-Symcon-Variablen bereit und unterstützt – soweit vom Fahrzeug und der API freigegeben – ausgewählte Remote-Funktionen.
+Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als native Symcon-Variablen bereit und unterstützt – soweit vom Fahrzeug und der API freigegeben – ausgewählte Remote-Funktionen.
 
 ## Funktionen
 
@@ -44,7 +44,7 @@ Das Modul verwendet ausschließlich die offizielle MyŠkoda Public API. Private 
 
 ## Voraussetzungen
 
-- IP-Symcon **8.1 oder neuer**
+- Symcon **8.1 oder neuer**
 - 17-stellige FIN/VIN
 - MySkoda API-Key
 - aktive MySkoda/Škoda-Connect-Dienste für die jeweils verwendete Fahrzeugfunktion
@@ -108,7 +108,7 @@ Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut reg
 
 Die offizielle MyŠkoda Public API bestätigt, dass der **Lademodus geändert** werden kann. Die öffentlich zugängliche Dokumentation beschreibt jedoch derzeit **nicht eindeutig die fachliche Bedeutung jedes einzelnen Enum-Werts**. Deshalb werden die folgenden Erklärungen ausdrücklich als **Vermutung anhand der API-Bezeichnungen** gekennzeichnet.
 
-| API-Wert | Anzeige in IP-Symcon | Einordnung | Erklärung |
+| API-Wert | Anzeige in Symcon | Einordnung | Erklärung |
 |---|---|---|---|
 | `MANUAL` | Manuell | 🟡 Vermutung | Direktes bzw. manuelles Laden ohne aktive Zeitsteuerung. |
 | `TIMER` | Timer | 🟡 Vermutung | Laden nach einem im Fahrzeug bzw. Ladeprofil hinterlegten Zeitplan. |
@@ -157,13 +157,13 @@ Die Variable `NewApiFeatures` wird als **Neue API-Funktionen** angezeigt:
 - `0` – die aktuell veröffentlichten API-Operationen sind dem Modul bekannt.
 - `> 0` – die API enthält zusätzliche Operationen, die die aktuelle Modulversion noch nicht integriert.
 
-Neue API-Funktionen werden **nicht automatisch als IP-Symcon-Variablen angelegt**. Die Variable ist nur ein Hinweis darauf, dass sich die API erweitert hat. Neue Datenpunkte, Datentypen und Darstellungen werden weiterhin ausschließlich über ein definiertes Modulupdate ergänzt.
+Neue API-Funktionen werden **nicht automatisch als Symcon-Variablen angelegt**. Die Variable ist nur ein Hinweis darauf, dass sich die API erweitert hat. Neue Datenpunkte, Datentypen und Darstellungen werden weiterhin ausschließlich über ein definiertes Modulupdate ergänzt.
 
 Für Entwickler werden unbekannte OpenAPI-Operationen beim Neuladen der API-Definition zusätzlich im Debug ausgegeben. Über **API-Definition neu laden** kann die Prüfung manuell angestoßen werden.
 
 ## Deutsche Statusdarstellung
 
-Statuswerte der API bleiben technisch unverändert. Die IP-Symcon-Darstellung übersetzt bekannte Werte für die Oberfläche.
+Statuswerte der API bleiben technisch unverändert. Die Symcon-Darstellung übersetzt bekannte Werte für die Oberfläche.
 
 Beispiele:
 
