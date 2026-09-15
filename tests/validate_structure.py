@@ -160,7 +160,7 @@ def main() -> None:
 
     for text in [
         "Befehlslogik für Remote-Befehle",
-        "erfolgreiche **2xx-Antwort**",
+        "2xx-Antwort",
         "PendingCommands",
         "CommandStatus",
         "Fehlertext",
