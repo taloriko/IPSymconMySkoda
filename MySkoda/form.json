@@ -182,6 +182,16 @@
           "onClick": "echo MSKODA_RefreshVehicleImage($id) ? 'Fahrzeugbild aktualisiert.' : 'Fahrzeugbild konnte nicht aktualisiert werden.';"
         }
       ]
+    },
+    {
+      "type": "RowLayout",
+      "items": [
+        {
+          "type": "Button",
+          "caption": "Diagnose Public API data",
+          "onClick": "echo MSKODA_DiagnosePublicApiData($id);"
+        }
+      ]
     }
   ],
   "status": [
