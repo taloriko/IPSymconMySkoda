@@ -15,7 +15,8 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
     - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
     - Ladeleistung, Ladelimit und Lademodus
     - Klimatisierung
--Schriebend (Wenn durch Fahrzeug unterstützt)
+  
+- Schriebend (Wenn durch Fahrzeug unterstützt)
     - Klimatisierung, Standheizung und Belüftung
     - Ladelimmit, Lademodus und Laden starten/stoppen
 
