@@ -16,14 +16,28 @@ Gerätemodul für IP-Symcon zur Anbindung eines Škoda-Fahrzeugs an die offiziel
 - API-Key-Ablaufwarnung 30 Tage vor Ablauf
 - optionale Symcon-Mitteilung über eine ausgewählte Visualisierungsinstanz
 
-## Voraussetzungen
+## Funktionen
 
-- IP-Symcon **8.1 oder neuer**
-- 17-stellige FIN/VIN
-- MySkoda API-Key
-- aktive MySkoda/Škoda-Connect-Dienste für die verwendeten Fahrzeugfunktionen
-- optional S-PIN für Standheizung
-- Archive Control für die optionale Archivierung
+- Fahrzeugdaten über FIN/VIN und MySkoda API-Key
+- zyklischer Abruf mit Berücksichtigung von Rate-Limit durch Skoda (20 Abfragen/Stunde Stand 15.09.2026)
+    - Abfrageintervall kann frei definiert werden
+ 
+- Grundsetzlich werden alle möglichen Datenpunkte ausgelesen und angelegt (Getestet mit Enyaq 80)
+- Lesend (Wenn durch Fahrzeug unterstützt)
+    - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
+    - Ladeleistung, Ladelimit und Lademodus
+    - Klimatisierung
+  
+- Schriebend (Wenn durch Fahrzeug unterstützt)
+    - Klimatisierung, Standheizung und Belüftung
+    - Ladelimmit, Lademodus und Laden starten/stoppen
+
+- Variablen-Idents als Schnittstelle für Skripte und Visualisierungsmodule
+- automatische Prüfung der OpenAPI-Definition auf neue, noch nicht integrierte API-Funktionen
+- optionale Detail-, Standort- und Diagnosevariablen- 
+- optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
+- optional und nur nach ausdrücklicher Aktivierung: Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
+    - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
 
 Offizielle API-Dokumentation: <https://public.api.connect.skoda-auto.cz/docs>
 
@@ -92,9 +106,9 @@ Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden fehlende
 
 Einmal angelegte Detailvariablen bleiben bestehen. Das Deaktivieren der Option löscht keine Variablen.
 
-## Lademodi
+## Lademodi (Ungestetet!)
 
-Die Public API stellt einen Befehl zum Ändern des Lademodus bereit. Die aktuell öffentlich zugängliche Dokumentation benennt jedoch nicht eindeutig die fachliche Bedeutung jedes einzelnen möglichen Enum-Werts. Deshalb sind die folgenden Erläuterungen dort, wo keine eindeutige offizielle Beschreibung vorliegt, ausdrücklich als **Vermutung** markiert.
+Die offizielle MyŠkoda Public API bestätigt, dass der Lademodus geändert werden kann. Die öffentlich zugängliche Dokumentation beschreibt jedoch derzeit nicht eindeutig die fachliche Bedeutung jedes einzelnen Enum-Werts. Deshalb werden die folgenden Erklärungen ausdrücklich als Vermutung anhand der API-Bezeichnungen gekennzeichnet.
 
 | API-Wert | Deutsche Anzeige | Status der Erklärung | Bedeutung |
 |---|---|---|---|
