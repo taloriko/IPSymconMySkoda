@@ -27,7 +27,6 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 - optional und nur nach ausdrücklicher Aktivierung: Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
     - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
 
-
 ## Voraussetzungen
 
 - IP-Symcon **8.1 oder neuer**
