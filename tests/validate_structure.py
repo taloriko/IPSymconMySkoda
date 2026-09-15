@@ -38,7 +38,7 @@ def main() -> None:
 
     assert GUID.match(library["id"])
     assert library["name"] == "MySkoda"
-    assert library["version"] == "1.1"
+    assert library["version"] == "1.2"
     assert library["compatibility"]["version"] >= "8.1"
     assert GUID.match(module["id"])
     assert module["name"] == "MySkoda"
@@ -68,11 +68,13 @@ def main() -> None:
     openapi = (ROOT / "MySkoda" / "src" / "OpenApiTrait.php").read_text(encoding="utf-8")
     command = (ROOT / "MySkoda" / "src" / "CommandTrait.php").read_text(encoding="utf-8")
     api = (ROOT / "MySkoda" / "src" / "ApiTrait.php").read_text(encoding="utf-8")
+    image = (ROOT / "MySkoda" / "src" / "ImageTrait.php").read_text(encoding="utf-8")
     php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
 
     assert "final class MySkoda extends IPSModuleStrict" in module_php
-    assert "Symcon-MySkoda/1.1" in module_php
+    assert "Symcon-MySkoda/1.2" in module_php
     assert "CommandTrait.php" in module_php
+    assert "ImageTrait.php" in module_php
     assert "CommandConfirmationTrait.php" not in module_php
 
     assert re.search(r"<\?(?!php)", php_sources) is None
@@ -81,10 +83,22 @@ def main() -> None:
     assert "IPS_ApplyChanges" not in php_sources
 
     for forbidden in [
-        "IPS_CreateInstance", "IPS_CreateCategory", "IPS_CreateLink", "IPS_CreateMedia",
-        "IPS_SetName", "IPS_SetHidden", "IPS_SetPosition"
+        "IPS_CreateInstance", "IPS_CreateCategory", "IPS_CreateLink"
     ]:
         assert forbidden not in php_sources
+
+    # Version 1.2 intentionally introduces one image media object managed by MySkoda.
+    for required in [
+        "VEHICLE_IMAGE_IDENT = 'VehicleImage'",
+        "IPS_CreateMedia(1)",
+        "IPS_SetIdent($mediaId, self::VEHICLE_IMAGE_IDENT)",
+        "IPS_SetMediaFile",
+        "IPS_SetMediaContent",
+        "vehicle.renderUrl",
+        "RefreshVehicleImage",
+        "syncVehicleImage(false)",
+    ]:
+        assert required in (image + module_php)
 
     # Object icons are allowed only for the date/time variables because the
     # DATE_TIME presentation does not expose the icon in presentation settings.
@@ -110,8 +124,7 @@ def main() -> None:
     assert "'STEP_SIZE' => 10" in variables
     assert "'vehicle.operations'" in core
 
-    # Version 1.1 command handling: pending exists only while the synchronous
-    # HTTP command request is running. The server response resolves it directly.
+    # Version 1.1 command handling remains unchanged in 1.2.
     for required in [
         "RegisterAttributeString('PendingCommands', '{}')",
         "RegisterAttributeString('LastCommandResult', '')",
@@ -148,12 +161,16 @@ def main() -> None:
         "Waiting for confirmation: %s": "Warte auf Bestätigung: %s",
         "Command rejected: %s": "Befehl abgelehnt: %s",
         "Confirmed: %s": "Bestätigt: %s",
+        "Diagnose vehicle images": "Fahrzeugbilder diagnostizieren",
+        "Refresh vehicle image": "Fahrzeugbild aktualisieren",
+        "Vehicle image": "Fahrzeugbild",
     }.items():
         assert translations.get(source) == german
 
     expected_sources = {
         "ApiTrait.php", "CommandTrait.php", "CoreTrait.php", "HelpersTrait.php",
-        "HistoryTrait.php", "NotificationTrait.php", "OpenApiTrait.php", "VariablesTrait.php"
+        "HistoryTrait.php", "ImageTrait.php", "NotificationTrait.php", "OpenApiTrait.php",
+        "VariablesTrait.php"
     }
     source_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
     assert source_names == expected_sources
@@ -181,6 +198,9 @@ def main() -> None:
         assert text in module_readme
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert "## 1.2 - 2026-09-15" in changelog
+    assert "VehicleImage" in changelog
+    assert "renderUrl" in changelog
     assert "## 1.1 - 2026-09-14" in changelog
     assert "Serverantwort" in changelog
     assert "## 1.0 - 2026-09-06" in changelog
