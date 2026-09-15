@@ -129,6 +129,13 @@ trait MySkodaCoreTrait
             );
         }
 
+        if (isset($form['actions']) && is_array($form['actions'])) {
+            $this->prepareConfigurationActions(
+                $form['actions'],
+                $this->instanceActionsAvailable()
+            );
+        }
+
         return json_encode($form, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 
@@ -233,6 +240,10 @@ trait MySkodaCoreTrait
 
     public function RefreshApiDefinition(): bool
     {
+        if (!$this->instanceActionsAvailable()) {
+            return false;
+        }
+
         return $this->refreshOpenApi(true) !== [];
     }
 
@@ -428,6 +439,32 @@ trait MySkodaCoreTrait
         unset($element);
     }
 
+    private function prepareConfigurationActions(array &$actions, bool $enabled): void
+    {
+        foreach ($actions as &$action) {
+            if (!is_array($action)) {
+                continue;
+            }
+
+            $name = (string) ($action['name'] ?? '');
+            if (in_array($name, ['UpdateNowButton', 'ReloadApiDefinitionButton'], true)) {
+                $action['enabled'] = $enabled;
+            }
+
+            if (isset($action['items']) && is_array($action['items'])) {
+                $this->prepareConfigurationActions($action['items'], $enabled);
+            }
+        }
+        unset($action);
+    }
+
+    private function instanceActionsAvailable(): bool
+    {
+        return $this->configurationValid()
+            && $this->ReadAttributeString('ConnectionState') === 'success'
+            && trim($this->ReadAttributeString('RawData')) !== '';
+    }
+
     private function setConnectionFeedback(string $state, string $message): void
     {
         $this->WriteAttributeString('ConnectionState', $state);
@@ -443,6 +480,10 @@ trait MySkodaCoreTrait
                 'caption',
                 $this->connectionFeedbackCaption()
             );
+
+            $enabled = $this->instanceActionsAvailable();
+            $this->UpdateFormField('UpdateNowButton', 'enabled', $enabled);
+            $this->UpdateFormField('ReloadApiDefinitionButton', 'enabled', $enabled);
         } catch (Throwable) {
         }
     }
