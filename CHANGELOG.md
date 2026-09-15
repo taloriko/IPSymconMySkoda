@@ -14,10 +14,11 @@
 - Ladelimit-Darstellung auf 50 bis 100 % in 10-%-Schritten korrigiert
 - `MSKODA_GetRemoteOperations()` liest die aktuelle API-Liste aus `vehicle.operations` und verwendet `vehicle.remoteOperations` nur noch als Fallback
 - dokumentierte Prüfung von App-Funktionen, die im offiziellen Public-API-Vertrag 1.0.0 derzeit nicht verfügbar sind: Camping Mode, Klima-Timer/Abfahrtszeiten, intelligentes Heizen/Klimatisieren, Scheiben- und Sitzheizung mit Klima, Battery Care Mode, reduzierte AC-Ladeleistung und automatisches Entriegeln des AC-Ladekabels
+- Produktbezeichnung in Dokumentation und technischen Kennungen auf **Symcon** vereinheitlicht
 
 ## 1.0 - 2026-09-06
 
-- Initiale Veröffentlichung des MySkoda-Moduls für IP-Symcon
+- Initiale Veröffentlichung des MySkoda-Moduls für Symcon
 - Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten über stabile Variablen-Idents
 - bewusst einfacher Objektbaum ausschließlich mit Modulvariablen, ohne Dummy-Instanzen, Kategorien oder Links
 - deutsche Lokalisierung für Konfiguration, Variablennamen und Statusdarstellungen
@@ -27,4 +28,4 @@
 - Rate-Limit-Behandlung, API-Key-Warnung und optionale Symcon-Mitteilungen
 - Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nur nach ausdrücklicher Benutzeraktivierung; spätere Archiveinstellungen bleiben unberührt
 - Kilometerstand als Archiv-Zähler; ungültige Werte kleiner oder gleich 0 werden verworfen
-- native IP-Symcon-Darstellungen
+- native Symcon-Darstellungen
