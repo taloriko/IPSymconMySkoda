@@ -175,17 +175,15 @@ def main() -> None:
     assert "## 1.0 - 2026-09-06" in changelog
     assert "## 2." not in changelog
 
-    # Current product branding is "Symcon". Keep technical repository names and
-    # API class/function prefixes unchanged, but do not reintroduce the old brand.
-    branded_text = "\n".join([
-        root_readme,
-        module_readme,
-        changelog,
-        module_php,
-        (ROOT / "MySkoda" / "form.json").read_text(encoding="utf-8"),
-        (ROOT / "MySkoda" / "locale.json").read_text(encoding="utf-8"),
-    ])
-    assert "IP-Symcon" not in branded_text
+    # Current product branding is "Symcon". Technical SDK identifiers such as
+    # IPSModuleStrict/IPS_* and repository names remain unchanged.
+    old_brand = "IP" + "-Symcon"
+    text_suffixes = {".md", ".json", ".php", ".py", ".yml", ".yaml"}
+    for path in ROOT.rglob("*"):
+        if not path.is_file() or path.suffix.lower() not in text_suffixes:
+            continue
+        text = path.read_text(encoding="utf-8")
+        assert old_brand not in text, f"Old product naming in {path.relative_to(ROOT)}"
 
 
 if __name__ == "__main__":
