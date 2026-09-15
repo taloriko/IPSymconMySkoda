@@ -7,21 +7,25 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 ## Funktionen
 
 - Fahrzeugdaten über FIN/VIN und MySkoda API-Key
-- zyklischer Abruf mit Berücksichtigung von Rate-Limit (20 Abfragen/Stunde)
-- Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
-- Ladeleistung, Ladelimit und Lademodus
-- Klimatisierung sowie unterstützte Remote-Funktionen
-- sofortige lokale Anzeige schreibbarer Lade- und Klimawerte
-- direkte Auswertung der Serverantwort für Remote-Befehle
-- automatischer Rollback auf den vorherigen Wert bei einem Befehlsfehler
-- technischer Fehlertext im Befehlsstatus
-- Standheizung und aktive Lüftung über öffentliche Modulmethoden
-- optionale Detail-, Standort- und Diagnosevariablen
+- zyklischer Abruf mit Berücksichtigung von Rate-Limit durch Skoda (20 Abfragen/Stunde Stand 15.09.2026)
+    - Abfrageintervall kann frei definiert werden
+ 
+- Grundsetzlich werden alle möglichen Datenpunkte ausgelesen und angelegt (Getestet mit Enyaq 80)
+- Lesend (Wenn durch Fahrzeug unterstützt)
+    - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
+    - Ladeleistung, Ladelimit und Lademodus
+    - Klimatisierung
+-Schriebend (Wenn durch Fahrzeug unterstützt)
+    - Klimatisierung, Standheizung und Belüftung
+    - Ladelimmit, Lademodus und Laden starten/stoppen
+
+- Variablen-Idents als Schnittstelle für Skripte und Visualisierungsmodule
 - automatische Prüfung der OpenAPI-Definition auf neue, noch nicht integrierte API-Funktionen
+- optionale Detail-, Standort- und Diagnosevariablen- 
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
 - optional und nur nach ausdrücklicher Aktivierung: Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
-- Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
-- stabile Variablen-Idents als Schnittstelle für Skripte und Visualisierungsmodule
+    - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
+
 
 ## Voraussetzungen
 
@@ -83,9 +87,9 @@ Die fachliche Gruppierung und Darstellung übernimmt der User oder es wird das [
 
 Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charging`, `TargetSOC` oder `Climate` bleiben stabil und bilden die Schnittstelle für Skripte und weitere Module.
 
-Vorhandene Variablen werden bei späteren Modulaktualisierungen grundsätzlich nicht neu angelegt. Für das vom Modul gelieferte Ladelimit-Profil wird in Version 1.1 die Darstellung gezielt auf 10-%-Schritte aktualisiert; eine vom Benutzer selbst gesetzte Custom-Darstellung bleibt unberührt.
+Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden deshalb nur bei der Erstanlage gesetzt und danach nicht durch ein Update überschrieben.
 
-## Lademodi
+## Lademodi (Ungestetet!)
 
 Die offizielle MyŠkoda Public API bestätigt, dass der **Lademodus geändert** werden kann. Die öffentlich zugängliche Dokumentation beschreibt jedoch derzeit **nicht eindeutig die fachliche Bedeutung jedes einzelnen Enum-Werts**. Deshalb werden die folgenden Erklärungen ausdrücklich als **Vermutung anhand der API-Bezeichnungen** gekennzeichnet.
 
