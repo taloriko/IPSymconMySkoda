@@ -69,12 +69,14 @@ def main() -> None:
     command = (ROOT / "MySkoda" / "src" / "CommandTrait.php").read_text(encoding="utf-8")
     api = (ROOT / "MySkoda" / "src" / "ApiTrait.php").read_text(encoding="utf-8")
     image = (ROOT / "MySkoda" / "src" / "ImageTrait.php").read_text(encoding="utf-8")
+    diagnostics = (ROOT / "MySkoda" / "src" / "DiagnosticsTrait.php").read_text(encoding="utf-8")
     php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
 
     assert "final class MySkoda extends IPSModuleStrict" in module_php
     assert "Symcon-MySkoda/1.2" in module_php
     assert "CommandTrait.php" in module_php
     assert "ImageTrait.php" in module_php
+    assert "DiagnosticsTrait.php" in module_php
     assert "CommandConfirmationTrait.php" not in module_php
 
     assert re.search(r"<\?(?!php)", php_sources) is None
@@ -99,6 +101,19 @@ def main() -> None:
         "syncVehicleImage(false)",
     ]:
         assert required in (image + module_php)
+
+    # Public API diagnostics analyze only cached RawData and redact personal location data.
+    for required in [
+        "DiagnosePublicApiData",
+        "ReadAttributeString('RawData')",
+        "unusedLeafPaths",
+        "usedLeafPaths",
+        "{redacted-location}",
+        "{redacted-license-plate}",
+        "This diagnostic performs no additional API request",
+    ]:
+        assert required in diagnostics
+    assert "request(" not in diagnostics
 
     # Object icons are allowed only for the date/time variables because the
     # DATE_TIME presentation does not expose the icon in presentation settings.
@@ -164,11 +179,12 @@ def main() -> None:
         "Diagnose vehicle images": "Fahrzeugbilder diagnostizieren",
         "Refresh vehicle image": "Fahrzeugbild aktualisieren",
         "Vehicle image": "Fahrzeugbild",
+        "Diagnose Public API data": "Public-API-Daten diagnostizieren",
     }.items():
         assert translations.get(source) == german
 
     expected_sources = {
-        "ApiTrait.php", "CommandTrait.php", "CoreTrait.php", "HelpersTrait.php",
+        "ApiTrait.php", "CommandTrait.php", "CoreTrait.php", "DiagnosticsTrait.php", "HelpersTrait.php",
         "HistoryTrait.php", "ImageTrait.php", "NotificationTrait.php", "OpenApiTrait.php",
         "VariablesTrait.php"
     }
