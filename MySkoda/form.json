@@ -167,6 +167,16 @@
           "onClick": "$instance = IPS_GetInstance($id); if ((int) $instance['InstanceStatus'] !== 102) { echo 'API-Definition kann erst nach einer erfolgreichen Fahrzeugverbindung neu geladen werden.'; } else { echo MSKODA_RefreshApiDefinition($id) ? 'API-Definition aktualisiert.' : 'API-Definition konnte nicht geladen werden.'; }"
         }
       ]
+    },
+    {
+      "type": "RowLayout",
+      "items": [
+        {
+          "type": "Button",
+          "caption": "Diagnose vehicle images",
+          "onClick": "echo MSKODA_DiagnoseVehicleImages($id);"
+        }
+      ]
     }
   ],
   "status": [
