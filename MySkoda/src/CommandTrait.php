@@ -42,6 +42,7 @@ trait MySkodaCommandTrait
     private function registerVariables(): void
     {
         $this->baseRegisterVariables();
+        $this->ensurePublicApiVariables();
 
         if (!$this->ReadPropertyBoolean('ShowDetails')) {
             return;
@@ -144,8 +145,12 @@ trait MySkodaCommandTrait
 
             case 'TargetTemperature':
                 $temperature = max(16.0, min(30.0, (float) $Value));
+                $previous = (float) $this->GetValue('TargetTemperature');
+                $this->SetValue('TargetTemperature', $temperature);
+
                 if (!(bool) $this->GetValue('Climate')) {
-                    $this->SetValue('TargetTemperature', $temperature);
+                    $this->WriteAttributeString('CommandStatusText', '');
+                    $this->updateCommandStatusVariables();
                     return;
                 }
 
@@ -153,7 +158,8 @@ trait MySkodaCommandTrait
                     'TargetTemperature',
                     $temperature,
                     'Target temperature',
-                    fn (): bool => $this->startClimateInternal($temperature)
+                    fn (): bool => $this->startClimateInternal($temperature),
+                    $previous
                 );
                 return;
         }
@@ -161,10 +167,18 @@ trait MySkodaCommandTrait
         throw new InvalidArgumentException('Unknown action: ' . $Ident);
     }
 
+    public function ConfirmPending(): void
+    {
+        // Compatibility endpoint for timers/scripts from early 1.1 builds.
+        // Confirmation is resolved synchronously now, so there is nothing to poll.
+        $this->clearPendingCommands();
+        $this->updateCommandStatusVariables();
+    }
+
     public function SetChargingLimit(int $Percent): bool
     {
         $Percent = max(50, min(100, $Percent));
-        return $this->executeOptimisticCommand(
+        return $this->executeDirectMethodCommand(
             'TargetSOC',
             $Percent,
             'Charging limit',
@@ -176,15 +190,15 @@ trait MySkodaCommandTrait
     {
         $Mode = strtoupper(trim($Mode));
         $index = array_search($Mode, self::CHARGE_MODES, true);
-        if ($Mode === '' || $index === false || !$this->isChargeModeAvailable($Mode)) {
+        if ($index === false || !$this->isChargeModeAvailable($Mode)) {
             $message = $this->Translate('The selected charging mode is not supported by this vehicle.');
-            $this->WriteAttributeString('LastError', $message);
             $this->WriteAttributeString('CommandStatusText', $message);
+            $this->WriteAttributeString('LastError', $message);
             $this->updateCommandStatusVariables();
             return false;
         }
 
-        return $this->executeOptimisticCommand(
+        return $this->executeDirectMethodCommand(
             'ChargeMode',
             (int) $index,
             'Charging mode',
@@ -192,94 +206,111 @@ trait MySkodaCommandTrait
         );
     }
 
-    /**
-     * Compatibility method for early 1.1 installations. Delayed command
-     * confirmation is no longer used, therefore this only clears stale state.
-     */
-    public function ConfirmPending(): void
-    {
-        $this->clearPendingCommands();
-        $this->updateCommandStatusVariables();
-    }
-
     private function executeOptimisticCommand(
         string $ident,
         mixed $desiredValue,
-        string $label,
-        Closure $command
+        string $caption,
+        Closure $request,
+        mixed $previousValue = null
     ): bool {
-        $id = @$this->GetIDForIdent($ident);
-        if ($id === false || !IPS_VariableExists($id)) {
-            throw new RuntimeException('Variable not found: ' . $ident);
+        if (!$this->ReadPropertyBoolean('EnableRemote')) {
+            $message = $this->Translate('Remote control is disabled in this instance.');
+            $this->WriteAttributeString('CommandStatusText', $message);
+            $this->updateCommandStatusVariables();
+            throw new RuntimeException($message);
         }
 
-        $previousValue = GetValue((int) $id);
-        $pending = $this->readPendingCommands();
+        if ($previousValue === null) {
+            $previousValue = $this->GetValue($ident);
+        }
+
+        $pending = $this->pendingCommands();
         $pending[$ident] = [
-            'expected' => $desiredValue,
+            'desired' => $desiredValue,
             'previous' => $previousValue,
-            'state' => 'sending',
-            'label' => $label
+            'caption' => $caption,
+            'startedAt' => time()
         ];
-
         $this->writePendingCommands($pending);
-        $this->SetValue($ident, $desiredValue);
-        $this->WriteAttributeString('LastCommandResult', 'sending');
-        $this->WriteAttributeString('CommandStatusText', '');
+        $this->WriteAttributeString(
+            'CommandStatusText',
+            sprintf($this->Translate('Waiting for confirmation: %s'), $this->Translate($caption))
+        );
         $this->updateCommandStatusVariables();
+        $this->SetValue($ident, $desiredValue);
 
+        $ok = false;
         try {
-            $ok = $command();
-        } catch (Throwable $throwable) {
+            $ok = $request();
+        } catch (Throwable $error) {
+            $this->WriteAttributeString('LastError', $error->getMessage());
             $ok = false;
-            $this->WriteAttributeString('LastError', $throwable->getMessage());
         }
 
-        $pending = $this->readPendingCommands();
+        $pending = $this->pendingCommands();
         unset($pending[$ident]);
         $this->writePendingCommands($pending);
-        $this->SetTimerInterval('CommandConfirmTimer', 0);
 
         if ($ok) {
-            // The command endpoint accepted the requested value. No additional
-            // vehicle-state confirmation is required.
             $this->SetValue($ident, $desiredValue);
-            $this->WriteAttributeString('LastCommandResult', 'accepted');
+            $this->WriteAttributeString('LastCommandResult', 'success');
             $this->WriteAttributeString(
                 'CommandStatusText',
-                sprintf($this->Translate('Confirmed: %s'), $this->Translate($label))
+                sprintf($this->Translate('Confirmed: %s'), $this->Translate($caption))
             );
             $this->updateCommandStatusVariables();
             return true;
         }
 
         $this->SetValue($ident, $previousValue);
-        $this->WriteAttributeString('LastCommandResult', 'rejected');
-
+        $this->WriteAttributeString('LastCommandResult', 'error');
+        $status = sprintf($this->Translate('Command rejected: %s'), $this->Translate($caption));
         $error = trim($this->ReadAttributeString('LastError'));
-        $status = sprintf(
-            $this->Translate('Command rejected: %s'),
-            $this->Translate($label)
-        );
         if ($error !== '') {
             $status .= ' - ' . $error;
         }
-
         $this->WriteAttributeString('CommandStatusText', $status);
         $this->updateCommandStatusVariables();
         return false;
     }
 
-    private function clearPendingCommands(): void
-    {
-        $this->WriteAttributeString('PendingCommands', '{}');
-        $this->SetTimerInterval('CommandConfirmTimer', 0);
+    private function executeDirectMethodCommand(
+        string $ident,
+        mixed $desiredValue,
+        string $caption,
+        Closure $request
+    ): bool {
+        if (!$this->ReadPropertyBoolean('EnableRemote')) {
+            $message = $this->Translate('Remote control is disabled in this instance.');
+            $this->WriteAttributeString('LastError', $message);
+            $this->WriteAttributeString('CommandStatusText', $message);
+            $this->updateCommandStatusVariables();
+            return false;
+        }
+
+        if (!$this->canRequest(true)) {
+            $message = $this->Translate('MySkoda rate limit / waiting period is active.');
+            $this->WriteAttributeString('LastError', $message);
+            $this->WriteAttributeString('CommandStatusText', $message);
+            $this->updateCommandStatusVariables();
+            $this->SetStatus(203);
+            return false;
+        }
+
+        $previousValue = $this->GetValue($ident);
+        return $this->executeOptimisticCommand(
+            $ident,
+            $desiredValue,
+            $caption,
+            $request,
+            $previousValue
+        );
     }
 
-    private function readPendingCommands(): array
+    private function pendingCommands(): array
     {
-        $decoded = json_decode($this->ReadAttributeString('PendingCommands'), true);
-        return is_array($decoded) ? $decoded : [];
+        $pending = json_decode($this->ReadAttributeString('PendingCommands'), true);
+        return is_array($pending) ? $pending : [];
     }
 
     private function writePendingCommands(array $pending): void
@@ -290,30 +321,21 @@ trait MySkodaCommandTrait
         );
     }
 
+    private function clearPendingCommands(): void
+    {
+        $this->WriteAttributeString('PendingCommands', '{}');
+        $this->SetTimerInterval('CommandConfirmTimer', 0);
+    }
+
     private function updateCommandStatusVariables(): void
     {
-        $pending = $this->readPendingCommands();
+        $pending = $this->pendingCommands();
         $this->setIfExists('PendingCommands', count($pending));
 
-        if ($pending === []) {
-            $text = trim($this->ReadAttributeString('CommandStatusText'));
-            $this->setIfExists('CommandStatus', $text !== '' ? $text : $this->Translate('Ready'));
-            return;
+        $status = trim($this->ReadAttributeString('CommandStatusText'));
+        if ($status === '') {
+            $status = $this->Translate('Ready');
         }
-
-        $labels = [];
-        foreach ($pending as $entry) {
-            if (!is_array($entry)) {
-                continue;
-            }
-            $labels[] = $this->Translate((string) ($entry['label'] ?? 'Command'));
-        }
-
-        $this->setIfExists(
-            'CommandStatus',
-            $labels !== []
-                ? sprintf($this->Translate('Waiting for confirmation: %s'), implode(', ', $labels))
-                : $this->Translate('Ready')
-        );
+        $this->setIfExists('CommandStatus', $status);
     }
 }
