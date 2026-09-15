@@ -378,7 +378,7 @@ trait MySkodaVariablesTrait
             'COLOR' => -1,
             'OPTIONS' => json_encode([
                 ['Value' => 'AC', 'Caption' => 'AC', 'IconActive' => true, 'IconValue' => 'wave-sine', 'ColorActive' => false, 'ColorValue' => -1],
-                ['Value' => 'DC', 'Caption' => 'DC', 'IconActive' => true, 'IconValue' => 'wave-sine', 'ColorActive' => false, 'ColorValue' => -1]
+                ['Value' => 'DC', 'Caption' => 'DC', 'IconActive' => true, 'IconValue' => 'equals', 'ColorActive' => false, 'ColorValue' => -1]
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ];
     }
