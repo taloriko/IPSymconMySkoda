@@ -126,8 +126,8 @@ trait MySkodaVariablesTrait
 
     /**
      * Creates variables only while their ident is missing. Existing names and positions
-     * remain user-owned. TargetSOC is re-registered to refresh the module-provided
-     * charging-limit presentation; a user-defined custom presentation remains untouched.
+     * remain user-owned. TargetSOC and ParkingState are re-registered to refresh the
+     * module-provided presentations; a user-defined custom presentation remains untouched.
      */
     private function registerVariableOnce(array $definition): void
     {
@@ -147,6 +147,14 @@ trait MySkodaVariablesTrait
 
             if ($ident === 'TargetSOC') {
                 $this->RegisterVariableInteger(
+                    $ident,
+                    $this->Translate((string) $definition['name']),
+                    (array) $definition['presentation'],
+                    (int) $definition['position']
+                );
+            }
+            if ($ident === 'ParkingState') {
+                $this->RegisterVariableString(
                     $ident,
                     $this->Translate((string) $definition['name']),
                     (array) $definition['presentation'],
@@ -336,6 +344,7 @@ trait MySkodaVariablesTrait
         $states = [
             ['PARKED', 'Parked', 'square-parking', $green],
             ['MOVING', 'Moving', 'car-side', $orange],
+            ['IN_MOTION', 'Moving', 'car-side', $orange],
             ['DRIVING', 'Driving', 'car-side', $orange],
             ['UNKNOWN', 'Unknown', 'circle-question', -1]
         ];
