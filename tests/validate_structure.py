@@ -49,13 +49,14 @@ def main() -> None:
         ROOT / "CHANGELOG.md",
         ROOT / "LICENSE",
         ROOT / "MySkoda" / "README.md",
-        ROOT / "MySkoda" / "README_FIN_VIN.md",
         ROOT / "MySkoda" / "module.php",
         ROOT / "MySkoda" / "module.json",
         ROOT / "MySkoda" / "form.json",
         ROOT / "MySkoda" / "locale.json",
     ]:
         assert required.is_file(), required
+
+    assert not (ROOT / "MySkoda" / "README_FIN_VIN.md").exists()
 
     assert isinstance(translations, dict) and translations
     all_form_captions = captions(form.get("elements", [])) | captions(form.get("actions", [])) | captions(form.get("status", []))
@@ -274,14 +275,18 @@ def main() -> None:
 
     root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
     module_readme = (ROOT / "MySkoda" / "README.md").read_text(encoding="utf-8")
-    vin_readme = (ROOT / "MySkoda" / "README_FIN_VIN.md").read_text(encoding="utf-8")
+
     for text in [
         "Befehlsausführung ab Version 1.1",
         "Serverantwort",
         "PendingCommands",
         "CommandStatus",
         "vorherige Wert",
-        "README_FIN_VIN.md",
+        "Voraussetzungen",
+        "Installation",
+        "Erste Einrichtung",
+        "FIN/VIN-Entschlüsselung",
+        "keine offiziellen Fahrzeugstammdaten von Škoda",
     ]:
         assert text in root_readme
 
@@ -293,14 +298,8 @@ def main() -> None:
         "Fehlertext",
         "standardmäßig **aus**",
         "Datenschutz und externe Dienste",
-        "README_FIN_VIN.md",
         "MSKODA_GetVINData",
-    ]:
-        assert text in module_readme
-
-    for text in [
-        "# FIN / VIN entschlüsseln",
-        "keine offizielle Škoda-Datenquelle",
+        "## 6. FIN / VIN entschlüsseln",
         "WMI",
         "VDS",
         "VIS",
@@ -308,14 +307,15 @@ def main() -> None:
         "Enyaq",
         "Elroq",
         "Karoq",
-        "MSKODA_GetVINData",
+        "keine offiziellen Fahrzeugstammdaten von Škoda",
     ]:
-        assert text in vin_readme
+        assert text in module_readme
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## 1.3 - 2026-09-16" in changelog
     assert "FIN / VIN entschlüsseln" in changelog
     assert "MSKODA_GetVINData()" in changelog
+    assert "keine zusätzliche Dokumentationsdatei" in changelog
     assert "## 1.2 - 2026-09-15" in changelog
     assert "VehicleImage" in changelog
     assert "renderUrl" in changelog
