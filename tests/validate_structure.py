@@ -70,6 +70,7 @@ def main() -> None:
     api = (ROOT / "MySkoda" / "src" / "ApiTrait.php").read_text(encoding="utf-8")
     image = (ROOT / "MySkoda" / "src" / "ImageTrait.php").read_text(encoding="utf-8")
     diagnostics = (ROOT / "MySkoda" / "src" / "DiagnosticsTrait.php").read_text(encoding="utf-8")
+    climate_selection = (ROOT / "MySkoda" / "src" / "ClimateSelectionTrait.php").read_text(encoding="utf-8")
     php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
 
     assert "final class MySkoda extends IPSModuleStrict" in module_php
@@ -77,6 +78,7 @@ def main() -> None:
     assert "CommandTrait.php" in module_php
     assert "ImageTrait.php" in module_php
     assert "DiagnosticsTrait.php" in module_php
+    assert "ClimateSelectionTrait.php" in module_php
     assert "CommandConfirmationTrait.php" not in module_php
 
     assert re.search(r"<\?(?!php)", php_sources) is None
@@ -89,7 +91,6 @@ def main() -> None:
     ]:
         assert forbidden not in php_sources
 
-    # Version 1.2 intentionally introduces one image media object managed by MySkoda.
     for required in [
         "VEHICLE_IMAGE_IDENT = 'VehicleImage'",
         "IPS_CreateMedia(1)",
@@ -102,7 +103,6 @@ def main() -> None:
     ]:
         assert required in (image + module_php)
 
-    # Public API diagnostics analyze only cached RawData and redact personal location data.
     for required in [
         "DiagnosePublicApiData",
         "ReadAttributeString('RawData')",
@@ -115,8 +115,6 @@ def main() -> None:
         assert required in diagnostics
     assert "request(" not in diagnostics
 
-    # Object icons are allowed only for the date/time variables because the
-    # DATE_TIME presentation does not expose the icon in presentation settings.
     assert "applyDefaultObjectIcons" in variables
     assert "IPS_SetIcon($variableId, $icon);" in variables
     for ident, icon in {
@@ -139,7 +137,6 @@ def main() -> None:
     assert "'STEP_SIZE' => 10" in variables
     assert "'vehicle.operations'" in core
 
-    # Version 1.1 command handling remains unchanged in 1.2.
     for required in [
         "RegisterAttributeString('PendingCommands', '{}')",
         "RegisterAttributeString('LastCommandResult', '')",
@@ -164,10 +161,23 @@ def main() -> None:
     for ident in ["Charging", "TargetSOC", "ChargeMode", "Climate", "TargetTemperature"]:
         assert f"'{ident}'" in command
 
-    # ApiTrait is the single source of truth for HTTP success/failure.
+    # A target selected while climate is off is local only until a successful
+    # climate start. Regular vehicle polling must not overwrite that selection.
+    for required in [
+        "RegisterAttributeBoolean('TargetTemperatureOverride', false)",
+        "WriteAttributeBoolean('TargetTemperatureOverride', true)",
+        "ReadAttributeBoolean('TargetTemperatureOverride')",
+        "WriteAttributeBoolean('TargetTemperatureOverride', false)",
+        "commandRequestAction($Ident, $Value)",
+        "if ((bool) $this->GetValue('Climate'))",
+    ]:
+        assert required in climate_selection
+    assert "fetchVehicle(" not in climate_selection
+
     assert "private function sendCommand" in api
     assert "if (!$response['ok'])" in api
     assert "$this->setApiError($response);" in api
+    assert "sendCommand('POST', $path, null)" in api
 
     for source, german in {
         "Pending commands": "Ausstehende Befehle",
@@ -184,9 +194,9 @@ def main() -> None:
         assert translations.get(source) == german
 
     expected_sources = {
-        "ApiTrait.php", "CommandTrait.php", "CoreTrait.php", "DiagnosticsTrait.php", "HelpersTrait.php",
-        "HistoryTrait.php", "ImageTrait.php", "NotificationTrait.php", "OpenApiTrait.php",
-        "VariablesTrait.php"
+        "ApiTrait.php", "ClimateSelectionTrait.php", "CommandTrait.php", "CoreTrait.php",
+        "DiagnosticsTrait.php", "HelpersTrait.php", "HistoryTrait.php", "ImageTrait.php",
+        "NotificationTrait.php", "OpenApiTrait.php", "VariablesTrait.php"
     }
     source_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
     assert source_names == expected_sources
@@ -222,8 +232,6 @@ def main() -> None:
     assert "## 1.0 - 2026-09-06" in changelog
     assert "## 2." not in changelog
 
-    # Current product branding is "Symcon". Technical SDK identifiers such as
-    # IPSModuleStrict/IPS_* and repository names remain unchanged.
     old_brand = "IP" + "-Symcon"
     text_suffixes = {".md", ".json", ".php", ".py", ".yml", ".yaml"}
     for path in ROOT.rglob("*"):
