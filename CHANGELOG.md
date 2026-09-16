@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.3 - 2026-09-16
+
+- lokale FIN-/VIN-Entschlüsselung direkt in der Instanzkonfiguration, ohne zusätzliche API-Anfrage
+- eigener Konfigurationsblock **FIN entschlüsseln** mit strukturierter Zerlegung in WMI, VDS und VIS sowie Anzeige der ermittelbaren Fahrzeugdaten
+- Auswertung von Hersteller, Herkunftsland, Modell-/Baureihencode, Modelljahr, Produktionswerk, Seriennummer und Prüfziffer, soweit die jeweilige FIN eine belastbare Zuordnung erlaubt
+- zusätzliche modellabhängige Auswertung für bekannte Škoda-Baureihen; Enyaq und Elroq werden trotz gemeinsam verwendetem `NY`-Baureihencode anhand weiterer FIN-Merkmale unterschieden
+- für bekannte Enyaq-FINs zusätzliche Auswertung von Karosserie, Links-/Rechtslenker, Heck-/Allradantrieb, Leistung, Variante und Rückhaltesystem
+- unbekannte oder nicht eindeutig belegte Codes werden nicht geraten, sondern als unbekannt bzw. mehrdeutig belassen
+- optionale reine String-Variablen für die FIN-Informationen mit stabilen Idents; keine Icons, Profile oder besonderen Darstellungen
+- FIN-Variablen werden nur beim erstmaligen Anlegen und bei Änderung der konfigurierten FIN beschrieben; das normale MySkoda-Polling verändert sie nicht
+- öffentlicher Modulaufruf `MSKODA_GetVINData()` liefert die lokal entschlüsselten FIN-Daten als JSON
+- FIN-Decodierung wird über einen eigenen Fingerprint gecacht und nur bei geänderter FIN neu berechnet
+- README-Dateien bleiben gegenüber Version 1.2 unverändert
+
 ## 1.2 - 2026-09-15
 
 - fahrzeugspezifisches Bild wird direkt aus `vehicle.renderUrl` der offiziellen MySkoda Public API übernommen
