@@ -7,6 +7,8 @@ Der tatsächlich verfügbare Funktionsumfang hängt vom Fahrzeug, dessen Ausstat
 ## 1. Funktionsumfang
 
 - Fahrzeugdaten über FIN/VIN und MySkoda API-Key
+- lokale FIN/VIN-Entschlüsselung in der Instanzkonfiguration
+- optionales Anlegen der entschlüsselten FIN-Informationen als String-Variablen
 - zyklischer Abruf mit einstellbarem Abfrageintervall
 - Berücksichtigung der von der API gelieferten Rate-Limit-Informationen und `Retry-After`
 - stabile Variablen-Idents als Schnittstelle für Skripte und weitere Module
@@ -14,6 +16,10 @@ Der tatsächlich verfügbare Funktionsumfang hängt vom Fahrzeug, dessen Ausstat
 - automatische Prüfung der öffentlichen OpenAPI-Definition auf neue, noch nicht integrierte API-Operationen
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
 - optionale Archivierung ausgewählter Fahrzeugwerte nach ausdrücklicher Aktivierung
+
+Die genaue FIN-Struktur, die verwendeten Prüfungen, bekannten Škoda-Codes und die Grenzen der Interpretation sind separat unter [FIN / VIN entschlüsseln](README_FIN_VIN.md) dokumentiert.
+
+> **Hinweis zur FIN-Entschlüsselung:** Die daraus abgeleiteten Angaben sind keine offiziellen Fahrzeugstammdaten von Škoda. Sie basieren auf öffentlich verfügbaren Informationen und können für einzelne Fahrzeuge unvollständig oder mehrdeutig sein.
 
 ### Lesbare Fahrzeugdaten
 
@@ -107,6 +113,7 @@ Das Standard-Abfrageintervall beträgt **300 Sekunden**. In der Konfiguration si
 | Einstellung | Funktion | Standard |
 |---|---|---:|
 | FIN / VIN | 17-stellige Fahrzeug-Identifikationsnummer | leer |
+| FIN-Informationsvariablen | legt die lokal entschlüsselten FIN-Informationen als reine String-Variablen an | aus |
 | API-Token | MyŠkoda Public API-Key | leer |
 | Abfrageintervall | automatischer Fahrzeugabruf in Sekunden | 300 s |
 | Remote-Steuerung | erlaubt die vom Modul bereitgestellten Remote-Befehle | an |
@@ -257,6 +264,7 @@ In den Beispielen ist `12345` die Instanz-ID der MySkoda-Instanz.
 | `MSKODA_Update(12345);` | `void` | Fahrzeugdaten sofort aktualisieren |
 | `MSKODA_TestConnection(12345);` | `bool` | Verbindung und Fahrzeugabruf testen |
 | `MSKODA_GetRawData(12345);` | `string` | letzte vollständige Fahrzeugantwort als JSON ausgeben |
+| `MSKODA_GetVINData(12345);` | `string` | lokal entschlüsselte FIN-Informationen als JSON ausgeben |
 | `MSKODA_GetChargingProfiles(12345);` | `string` | Ladeprofile aus den zuletzt empfangenen Fahrzeugdaten als JSON ausgeben |
 | `MSKODA_GetRemoteOperations(12345);` | `string` | vom Fahrzeug gemeldete Remote-Operationen als JSON ausgeben |
 | `MSKODA_SetChargingLimit(12345, 80);` | `bool` | Ladelimit setzen |
