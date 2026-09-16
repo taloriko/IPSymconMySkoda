@@ -34,13 +34,22 @@
     },
     {
       "type": "ExpansionPanel",
-      "caption": "VIN decoding",
+      "caption": "VIN / FIN decoding",
       "expanded": true,
       "items": [
         {
           "type": "Label",
+          "caption": "VIN structure",
+          "bold": true
+        },
+        {
+          "type": "Label",
           "name": "VINDecodeStructure",
-          "caption": "Enter and apply a valid VIN to decode it.",
+          "caption": "Enter and apply a valid VIN to decode it."
+        },
+        {
+          "type": "Label",
+          "caption": "Manufacturer and origin",
           "bold": true
         },
         {
@@ -50,8 +59,18 @@
         },
         {
           "type": "Label",
+          "caption": "Vehicle model",
+          "bold": true
+        },
+        {
+          "type": "Label",
           "name": "VINDecodeModel",
           "caption": "Model"
+        },
+        {
+          "type": "Label",
+          "caption": "Drive and power",
+          "bold": true
         },
         {
           "type": "Label",
@@ -60,8 +79,18 @@
         },
         {
           "type": "Label",
+          "caption": "Production data",
+          "bold": true
+        },
+        {
+          "type": "Label",
           "name": "VINDecodeProduction",
           "caption": "Production"
+        },
+        {
+          "type": "Label",
+          "caption": "Restraint system",
+          "bold": true
         },
         {
           "type": "Label",
@@ -70,8 +99,17 @@
         },
         {
           "type": "Label",
+          "caption": "Check digit",
+          "bold": true
+        },
+        {
+          "type": "Label",
           "name": "VINDecodeValidation",
           "caption": "Check digit"
+        },
+        {
+          "type": "Label",
+          "caption": "The VIN interpretation is not an official Skoda data source. It is derived from publicly available information and may be incomplete or ambiguous for individual vehicles."
         },
         {
           "type": "CheckBox",
