@@ -39,73 +39,111 @@
       "items": [
         {
           "type": "Label",
-          "caption": "VIN structure",
-          "bold": true
-        },
-        {
-          "type": "Label",
           "name": "VINDecodeStructure",
-          "caption": "Enter and apply a valid VIN to decode it."
-        },
-        {
-          "type": "Label",
-          "caption": "Manufacturer and origin",
+          "caption": "Enter and apply a valid VIN to decode it.",
           "bold": true
         },
         {
-          "type": "Label",
-          "name": "VINDecodeManufacturer",
-          "caption": "Manufacturer"
+          "type": "RowLayout",
+          "items": [
+            {
+              "type": "Label",
+              "name": "VINCodeManufacturer",
+              "caption": "",
+              "bold": true,
+              "width": "120px"
+            },
+            {
+              "type": "Label",
+              "name": "VINDecodeManufacturer",
+              "caption": "Manufacturer"
+            }
+          ]
         },
         {
-          "type": "Label",
-          "caption": "Vehicle model",
-          "bold": true
+          "type": "RowLayout",
+          "items": [
+            {
+              "type": "Label",
+              "name": "VINCodeModel",
+              "caption": "",
+              "bold": true,
+              "width": "120px"
+            },
+            {
+              "type": "Label",
+              "name": "VINDecodeModel",
+              "caption": "Model"
+            }
+          ]
         },
         {
-          "type": "Label",
-          "name": "VINDecodeModel",
-          "caption": "Model"
+          "type": "RowLayout",
+          "items": [
+            {
+              "type": "Label",
+              "name": "VINCodeDrive",
+              "caption": "",
+              "bold": true,
+              "width": "120px"
+            },
+            {
+              "type": "Label",
+              "name": "VINDecodeDrive",
+              "caption": "Drive"
+            }
+          ]
         },
         {
-          "type": "Label",
-          "caption": "Drive and power",
-          "bold": true
+          "type": "RowLayout",
+          "items": [
+            {
+              "type": "Label",
+              "name": "VINCodeProduction",
+              "caption": "",
+              "bold": true,
+              "width": "120px"
+            },
+            {
+              "type": "Label",
+              "name": "VINDecodeProduction",
+              "caption": "Production"
+            }
+          ]
         },
         {
-          "type": "Label",
-          "name": "VINDecodeDrive",
-          "caption": "Drive"
+          "type": "RowLayout",
+          "items": [
+            {
+              "type": "Label",
+              "name": "VINCodeRestraint",
+              "caption": "",
+              "bold": true,
+              "width": "120px"
+            },
+            {
+              "type": "Label",
+              "name": "VINDecodeRestraint",
+              "caption": "Restraint system"
+            }
+          ]
         },
         {
-          "type": "Label",
-          "caption": "Production data",
-          "bold": true
-        },
-        {
-          "type": "Label",
-          "name": "VINDecodeProduction",
-          "caption": "Production"
-        },
-        {
-          "type": "Label",
-          "caption": "Restraint system",
-          "bold": true
-        },
-        {
-          "type": "Label",
-          "name": "VINDecodeRestraint",
-          "caption": "Restraint system"
-        },
-        {
-          "type": "Label",
-          "caption": "Check digit",
-          "bold": true
-        },
-        {
-          "type": "Label",
-          "name": "VINDecodeValidation",
-          "caption": "Check digit"
+          "type": "RowLayout",
+          "items": [
+            {
+              "type": "Label",
+              "name": "VINCodeValidation",
+              "caption": "",
+              "bold": true,
+              "width": "120px"
+            },
+            {
+              "type": "Label",
+              "name": "VINDecodeValidation",
+              "caption": "Check digit"
+            }
+          ]
         },
         {
           "type": "Label",
