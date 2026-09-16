@@ -247,14 +247,9 @@ trait MySkodaVinDecoderTrait
         $plantCode = $vin[10];
         $serialNumber = substr($vin, 11, 6);
         $modelYear = $this->decodeVINModelYear($modelYearCode, $modelCode);
-        $model = $this->decodeVINModel($modelCode, $bodyCode, $modelYear);
+        $model = $this->decodeVINModel($wmi, $modelCode, $bodyCode, $modelYear);
 
-        $manufacturer = '';
-        $country = '';
-        if ($wmi === 'TMB') {
-            $manufacturer = 'Škoda Auto';
-            $country = $this->Translate('Czech Republic');
-        }
+        [$manufacturer, $country] = $this->decodeVINManufacturer($wmi);
 
         $body = '';
         $steering = '';
@@ -265,19 +260,23 @@ trait MySkodaVinDecoderTrait
 
         if ($model === 'Enyaq') {
             [$body, $steering, $drive] = $this->decodeEnyaqBody($bodyCode);
-            $powerKw = $this->decodeElectricPower($engineCode);
+            $powerKw = $this->decodeEnyaqPower($engineCode);
             $variant = $this->decodeEnyaqVariant($engineCode, $drive, $modelYear);
-            $restraint = $this->decodeEnyaqRestraint($restraintCode);
+            $restraint = $this->decodeElectricRestraint($restraintCode);
         } elseif ($model === 'Elroq') {
-            $body = 'SUV';
-            $powerKw = $this->decodeElectricPower($engineCode);
-            $variant = $this->decodeElroqVariant($engineCode);
-            $restraint = $this->decodeEnyaqRestraint($restraintCode);
+            [$body, $steering, $drive] = $this->decodeElroqBody($bodyCode);
+            $powerKw = $this->decodeElroqPower($engineCode);
+            $variant = $this->decodeElroqVariant($engineCode, $drive);
+            $restraint = $this->decodeElectricRestraint($restraintCode);
+        } elseif ($model === 'Karoq') {
+            [$body, $steering, $drive] = $this->decodeKaroqBody($bodyCode);
+            [$powerKw, $variant] = $this->decodeKaroqEngine($engineCode);
+            $restraint = $this->decodeKaroqRestraint($restraintCode);
         } elseif ($model === 'Octavia IV') {
             if ($bodyCode === 'J') {
                 $body = $this->Translate('Estate');
                 $steering = $this->Translate('Left-hand drive');
-                $drive = $this->Translate('Single-axle drive');
+                $drive = $this->Translate('Front-wheel drive');
             }
             if ($engineCode === 'R') {
                 $powerKw = 110;
@@ -289,7 +288,7 @@ trait MySkodaVinDecoderTrait
         }
 
         $calculatedCheckDigit = $this->calculateVINCheckDigit($vin);
-        $plant = $this->decodeVINPlant($plantCode, $modelCode);
+        $plant = $this->decodeVINPlant($wmi, $plantCode, $modelCode);
         $power = '';
         if (is_int($powerKw)) {
             $power = $powerKw . ' kW / ' . (string) round($powerKw * 1.359621617) . ' PS';
@@ -321,13 +320,35 @@ trait MySkodaVinDecoderTrait
         ]);
     }
 
-    private function decodeVINModel(string $modelCode, string $bodyCode, ?int $modelYear): string
+    private function decodeVINManufacturer(string $wmi): array
     {
+        return match ($wmi) {
+            'TMB' => ['Škoda Auto', $this->Translate('Czech Republic')],
+            'MEX' => ['Škoda Auto Volkswagen India', $this->Translate('India')],
+            default => ['', '']
+        };
+    }
+
+    private function decodeVINModel(string $wmi, string $modelCode, string $bodyCode, ?int $modelYear): string
+    {
+        if ($wmi === 'MEX') {
+            $indiaModels = [
+                'PA' => 'Kushaq',
+                'PB' => 'Slavia',
+                'PC' => 'Kylaq'
+            ];
+            return $indiaModels[$modelCode] ?? '';
+        }
+
+        if ($wmi !== 'TMB') {
+            return '';
+        }
+
         if ($modelCode === 'NY') {
             if (in_array($bodyCode, ['E', 'F', 'G', 'H', 'J', 'K', 'L', 'M'], true)) {
                 return 'Enyaq';
             }
-            if (($modelYear ?? 0) >= 2025 && in_array($bodyCode, ['N', 'P', 'R'], true)) {
+            if (($modelYear ?? 0) >= 2025 && in_array($bodyCode, ['N', 'P', 'R', 'S'], true)) {
                 return 'Elroq';
             }
             return 'Enyaq / Elroq';
@@ -351,7 +372,7 @@ trait MySkodaVinDecoderTrait
             'NS' => 'Kodiaq I',
             'PS' => 'Kodiaq II',
             'NW' => 'Scala / Kamiq',
-            'NF' => 'Citigo',
+            'AA' => 'Citigo',
             'NH' => 'Rapid',
             'NK' => 'Rapid'
         ];
@@ -372,8 +393,8 @@ trait MySkodaVinDecoderTrait
             '1U' => [1996, 2011], '1Z' => [2004, 2013], '5E' => [2012, 2021], 'NX' => [2019, 2039],
             '3U' => [2001, 2008], '3T' => [2008, 2015], '3V' => [2015, 2024], 'NZ' => [2023, 2039],
             '5L' => [2009, 2018], 'NU' => [2017, 2039], 'NS' => [2016, 2024], 'PS' => [2023, 2039],
-            'NW' => [2019, 2039], 'NF' => [2011, 2021], 'NH' => [2012, 2021], 'NK' => [2012, 2021],
-            'NY' => [2020, 2039]
+            'NW' => [2019, 2039], 'AA' => [2011, 2021], 'NH' => [2012, 2021], 'NK' => [2012, 2021],
+            'NY' => [2020, 2039], 'PA' => [2021, 2039], 'PB' => [2021, 2039], 'PC' => [2024, 2039]
         ];
 
         $candidates = [1980 + $index, 2010 + $index, 2040 + $index];
@@ -397,8 +418,11 @@ trait MySkodaVinDecoderTrait
         return $latest;
     }
 
-    private function decodeVINPlant(string $code, string $modelCode): string
+    private function decodeVINPlant(string $wmi, string $code, string $modelCode): string
     {
+        if ($wmi !== 'TMB') {
+            return '';
+        }
         if (in_array($code, ['0', '1', '2', '3', '4'], true)) {
             return 'Mladá Boleslav';
         }
@@ -431,16 +455,39 @@ trait MySkodaVinDecoderTrait
         return $map[$code] ?? ['', '', ''];
     }
 
-    private function decodeElectricPower(string $code): ?int
+    private function decodeElroqBody(string $code): array
+    {
+        $map = [
+            'N' => ['SUV', $this->Translate('Left-hand drive'), $this->Translate('Rear-wheel drive')],
+            'P' => ['SUV', $this->Translate('Right-hand drive'), $this->Translate('Rear-wheel drive')],
+            'R' => ['SUV', $this->Translate('Left-hand drive'), $this->Translate('All-wheel drive')],
+            'S' => ['SUV', $this->Translate('Right-hand drive'), $this->Translate('All-wheel drive')]
+        ];
+
+        return $map[$code] ?? ['SUV', '', ''];
+    }
+
+    private function decodeEnyaqPower(string $code): ?int
     {
         $map = [
             'A' => 109,
             'B' => 132,
             'C' => 150,
-            'D' => 165,
             'E' => 195,
             'F' => 220,
             'H' => 210,
+            'J' => 250
+        ];
+        return $map[$code] ?? null;
+    }
+
+    private function decodeElroqPower(string $code): ?int
+    {
+        $map = [
+            'G' => 125,
+            'C' => 150,
+            'H' => 210,
+            'F' => 220,
             'J' => 250
         ];
         return $map[$code] ?? null;
@@ -471,17 +518,28 @@ trait MySkodaVinDecoderTrait
         return '';
     }
 
-    private function decodeElroqVariant(string $engineCode): string
+    private function decodeElroqVariant(string $engineCode, string $drive): string
     {
-        $map = [
-            'C' => 'Elroq 60',
-            'H' => 'Elroq 85',
-            'J' => 'Elroq RS'
-        ];
-        return $map[$engineCode] ?? '';
+        if ($engineCode === 'G') {
+            return 'Elroq 50';
+        }
+        if ($engineCode === 'C') {
+            return 'Elroq 60';
+        }
+        if ($engineCode === 'H') {
+            return $drive === $this->Translate('All-wheel drive') ? 'Elroq 85x' : 'Elroq 85';
+        }
+        if ($engineCode === 'F' && $drive === $this->Translate('All-wheel drive')) {
+            return 'Elroq 85x';
+        }
+        if ($engineCode === 'J' && $drive === $this->Translate('All-wheel drive')) {
+            return 'Elroq RS';
+        }
+
+        return '';
     }
 
-    private function decodeEnyaqRestraint(string $code): string
+    private function decodeElectricRestraint(string $code): string
     {
         if ($code === '7') {
             return $this->Translate('2 front airbags, 2 side airbags, 2 head airbags and 1 center airbag');
@@ -490,6 +548,47 @@ trait MySkodaVinDecoderTrait
             return $this->Translate('2 front airbags, 4 side airbags, 2 head airbags and 1 center airbag');
         }
         return '';
+    }
+
+    private function decodeKaroqBody(string $code): array
+    {
+        $map = [
+            'J' => ['SUV', $this->Translate('Left-hand drive'), $this->Translate('Front-wheel drive')],
+            'K' => ['SUV', $this->Translate('Right-hand drive'), $this->Translate('Front-wheel drive')],
+            'L' => ['SUV', $this->Translate('Left-hand drive'), $this->Translate('All-wheel drive')],
+            'M' => ['SUV', $this->Translate('Right-hand drive'), $this->Translate('All-wheel drive')]
+        ];
+
+        return $map[$code] ?? ['SUV', '', ''];
+    }
+
+    private function decodeKaroqEngine(string $code): array
+    {
+        $map = [
+            'E' => [140, '2.0 TSI'],
+            'G' => [85, '1.6 TDI'],
+            'J' => [110, '2.0 TDI'],
+            'M' => [140, '2.0 TDI'],
+            'P' => [85, '1.0 TSI'],
+            'R' => [110, '1.5 TSI']
+        ];
+
+        return $map[$code] ?? [null, ''];
+    }
+
+    private function decodeKaroqRestraint(string $code): string
+    {
+        $map = [
+            '2' => $this->Translate('2 front airbags'),
+            '4' => $this->Translate('2 front airbags and 2 side airbags'),
+            '5' => $this->Translate('2 front airbags, 2 side airbags and 1 knee airbag'),
+            '6' => $this->Translate('2 front airbags, 2 side airbags and 2 head airbags'),
+            '7' => $this->Translate('2 front airbags, 2 side airbags, 2 head airbags and 1 knee airbag'),
+            '8' => $this->Translate('2 front airbags, 4 side airbags and 2 head airbags'),
+            '9' => $this->Translate('2 front airbags, 4 side airbags, 2 head airbags and 1 knee airbag')
+        ];
+
+        return $map[$code] ?? '';
     }
 
     private function calculateVINCheckDigit(string $vin): string
