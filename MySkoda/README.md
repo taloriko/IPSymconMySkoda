@@ -7,33 +7,31 @@ Der tatsächlich verfügbare Funktionsumfang hängt vom Fahrzeug, dessen Ausstat
 ## 1. Funktionsumfang
 
 - Fahrzeugdaten über FIN/VIN und MySkoda API-Key
-- lokale FIN/VIN-Entschlüsselung in der Instanzkonfiguration
-- optionales Anlegen der entschlüsselten FIN-Informationen als reine String-Variablen
 - zyklischer Abruf mit einstellbarem Abfrageintervall
 - Berücksichtigung der von der API gelieferten Rate-Limit-Informationen und `Retry-After`
 - stabile Variablen-Idents als Schnittstelle für Skripte und weitere Module
 - optionale Detail-, Standort- und Diagnosevariablen
+- lokale FIN/VIN-Entschlüsselung in der Instanzkonfiguration
+- optionale FIN-Informationsvariablen als reine String-Variablen
 - automatische Prüfung der öffentlichen OpenAPI-Definition auf neue, noch nicht integrierte API-Operationen
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
 - optionale Archivierung ausgewählter Fahrzeugwerte nach ausdrücklicher Aktivierung
 
-> **Hinweis zur FIN/VIN-Entschlüsselung:** Die daraus abgeleiteten Angaben sind keine offiziellen Fahrzeugstammdaten von Škoda. Sie werden anhand öffentlich verfügbarer Herstellerinformationen, technischer Unterlagen, Typgenehmigungsdaten und nachvollziehbarer FIN-Beispiele interpretiert und können bei einzelnen Fahrzeugen unvollständig oder mehrdeutig sein. Unbekannte oder nicht eindeutig belegte Codes werden bewusst nicht geraten.
+Die Details zur FIN/VIN-Zerlegung, den ausgewerteten Stellen, bekannten Škoda-Codes, Prüflogik und Grenzen der Interpretation sind in [README_FIN_VIN.md](README_FIN_VIN.md) dokumentiert.
+
+> **Hinweis zur FIN/VIN-Entschlüsselung:** Die daraus abgeleiteten Angaben sind keine offiziellen Fahrzeugstammdaten von Škoda. Sie werden anhand öffentlich verfügbarer Informationen interpretiert und können bei einzelnen Fahrzeugen unvollständig oder mehrdeutig sein.
 
 ### Lesbare Fahrzeugdaten
 
-Soweit vom Fahrzeug und der API geliefert, werden unter anderem folgende Werte verarbeitet:
+Soweit vom Fahrzeug und der API geliefert, werden unter anderem verarbeitet:
 
-- Ladezustand
-- Reichweite
-- Kilometerstand
+- Ladezustand, Reichweite und Kilometerstand
 - Verriegelungs-, Tür- und Fensterstatus
-- Ladezustand und Ladeleistung
-- Ladelimit und Lademodus
+- Ladeleistung, Ladelimit und Lademodus
 - Klimatisierungsstatus und Solltemperatur
 - Fahrzeugname und Kennzeichen
-- weitere Statusdetails
 - Standortdaten
-- API- und Diagnoseinformationen
+- weitere Status- und Diagnoseinformationen
 
 ### Steuerbare Funktionen
 
@@ -63,13 +61,13 @@ Folgende Funktionen sind in der MySkoda App verfügbar, aber im offiziellen **Pu
 - reduzierte AC-Ladeleistung / Begrenzung des AC-Ladestroms
 - automatisches Entriegeln des AC-Ladekabels
 
-Das Modul verwendet ausschließlich die offizielle MyŠkoda Public API. Private oder interne App-Schnittstellen werden nicht verwendet.
+Das Modul verwendet für Fahrzeugdaten und Remote-Funktionen ausschließlich die offizielle MyŠkoda Public API. Private oder interne App-Schnittstellen werden nicht verwendet.
 
 ## 2. Voraussetzungen
 
 - Symcon **8.1 oder neuer**
 - 17-stellige FIN/VIN
-- MyŠkoda API-Key
+- MySkoda API-Key
 - aktive MySkoda/Škoda-Connect-Dienste für die verwendeten Fahrzeugfunktionen
 - Internetzugang von Symcon zur MyŠkoda Public API
 - optional S-PIN für die Standheizung
@@ -83,7 +81,7 @@ Offizielle API-Dokumentation: <https://public.api.connect.skoda-auto.cz/docs>
 
 ### Module Store
 
-Im Symcon **Module Store** nach **MySkoda** suchen und das Modul installieren. Anschließend kann über **Instanz hinzufügen** eine Instanz **MySkoda** angelegt werden.
+Im Symcon **Module Store** nach **MySkoda** suchen, das Modul installieren und anschließend eine Instanz **MySkoda** anlegen.
 
 ### Manuell über Module Control
 
@@ -102,8 +100,7 @@ Anschließend kann unter **Instanz hinzufügen** eine Instanz **MySkoda** angele
 3. FIN/VIN und API-Token eintragen.
 4. Konfiguration übernehmen.
 5. Über **Verbindung testen** prüfen, ob Fahrzeugdaten empfangen werden.
-6. Optional **FIN-Informationsvariablen anlegen** aktivieren.
-7. Optional Archivierung, Benachrichtigungen sowie Detail- und Diagnosevariablen aktivieren.
+6. Optional FIN-Informationsvariablen, Archivierung, Mitteilungen sowie Detail- und Diagnosevariablen aktivieren.
 
 Das Standard-Abfrageintervall beträgt **300 Sekunden**. In der Konfiguration sind Werte von **180 bis 3600 Sekunden** möglich.
 
@@ -112,7 +109,7 @@ Das Standard-Abfrageintervall beträgt **300 Sekunden**. In der Konfiguration si
 | Einstellung | Funktion | Standard |
 |---|---|---:|
 | FIN / VIN | 17-stellige Fahrzeug-Identifikationsnummer | leer |
-| FIN-Informationsvariablen | legt die lokal entschlüsselten FIN-Informationen als reine String-Variablen an | aus |
+| FIN-Informationsvariablen | legt die lokal entschlüsselten FIN-Informationen als String-Variablen an | aus |
 | API-Token | MyŠkoda Public API-Key | leer |
 | Abfrageintervall | automatischer Fahrzeugabruf in Sekunden | 300 s |
 | Remote-Steuerung | erlaubt die vom Modul bereitgestellten Remote-Befehle | an |
@@ -129,182 +126,17 @@ Die Schaltflächen in der Konfiguration ermöglichen zusätzlich:
 - **Jetzt aktualisieren**
 - **Mitteilung testen**
 - **API-Definition neu laden**
+- **Fahrzeugbilder diagnostizieren**
+- **Fahrzeugbild aktualisieren**
+- **Public-API-Daten diagnostizieren**
 
-## 6. FIN / VIN entschlüsseln
-
-Die konfigurierte FIN wird lokal ausgewertet. Dafür ist keine zusätzliche API-Anfrage erforderlich.
-
-### 6.1 Aufbau und Prüfung
-
-Die 17-stellige FIN wird in folgende Bereiche zerlegt:
-
-| Position | Bereich | Verwendung |
-|---|---|---|
-| 1–3 | WMI | Hersteller-/Herkunftskennung |
-| 4–8 | VDS | modellabhängige Fahrzeugbeschreibung |
-| 9 | Sicherheits-/Prüfzeichen | Vergleich mit berechneter Prüfziffer |
-| 10 | Modelljahr | Modelljahrcode |
-| 11 | Werk | Produktionswerk, soweit bekannt |
-| 12–17 | Seriennummer | laufende Fahrzeugnummer |
-
-Vor der Interpretation wird geprüft:
-
-- genau 17 Zeichen
-- nur `A-H`, `J-N`, `P`, `R-Z` und `0-9`
-- die Buchstaben `I`, `O` und `Q` sind nicht zulässig
-
-Verwendetes Muster:
-
-```text
-^[A-HJ-NPR-Z0-9]{17}$
-```
-
-Bei formal ungültiger FIN werden keine Fahrzeugmerkmale abgeleitet.
-
-### 6.2 Hersteller- und Modellzuordnung
-
-Aktuell werden unter anderem folgende Herstellerkennungen berücksichtigt:
-
-| WMI | Interpretation |
-|---|---|
-| `TMB` | Škoda Auto, Tschechien |
-| `MEX` | Škoda Auto Volkswagen India, Indien |
-
-Für `TMB` sind unter anderem folgende Baureihen hinterlegt:
-
-| Code | Baureihe |
-|---|---|
-| `6Y` | Fabia I |
-| `5J` | Fabia II / Roomster |
-| `NJ` | Fabia III |
-| `PJ` | Fabia IV |
-| `1U` | Octavia I |
-| `1Z` | Octavia II |
-| `5E` | Octavia III |
-| `NX` | Octavia IV |
-| `3U` | Superb I |
-| `3T` | Superb II |
-| `3V` | Superb III |
-| `NZ` | Superb IV |
-| `5L` | Yeti |
-| `NU` | Karoq |
-| `NS` | Kodiaq I |
-| `PS` | Kodiaq II |
-| `NW` | Scala / Kamiq |
-| `AA` | Citigo |
-| `NH`, `NK` | Rapid |
-| `NY` | Enyaq / Elroq; weitere VDS-Stellen werden zur Unterscheidung verwendet |
-
-Für `MEX` sind aktuell Kushaq (`PA`), Slavia (`PB`) und Kylaq (`PC`) hinterlegt.
-
-Ein Modellcode allein ist nicht in jedem Fall eindeutig. Besonders `NY` wird von Enyaq und Elroq verwendet. Das Modul kombiniert deshalb Modellcode, Modelljahr und weitere VDS-Zeichen.
-
-### 6.3 Modelljahr
-
-Stelle 10 wird als Modelljahr interpretiert. Der bekannte 30-Jahres-Zyklus wird mit dem zeitlichen Bereich der jeweiligen Baureihe kombiniert.
-
-Beispiele:
-
-| Code | Modelljahr |
-|---|---:|
-| `L` | 2020 |
-| `M` | 2021 |
-| `N` | 2022 |
-| `P` | 2023 |
-| `R` | 2024 |
-| `S` | 2025 |
-| `T` | 2026 |
-| `V` | 2027 |
-
-**Modelljahr ist nicht gleich Produktionsdatum oder Erstzulassung.**
-
-### 6.4 Produktionswerk und Seriennummer
-
-Für bekannte europäische `TMB`-FINs werden hinterlegte Werkscodes ausgewertet. Wenn eine Zuordnung nicht ausreichend belegt ist, bleibt das Produktionswerk leer.
-
-Die Stellen 12 bis 17 werden als Serien-/Produktionsnummer ausgegeben. Daraus wird kein Produktionsdatum berechnet.
-
-### 6.5 Prüfzeichen
-
-Stelle 9 wird zusätzlich mit der verbreiteten VIN-Prüfziffer nach dem gewichteten Modulo-11-Verfahren verglichen.
-
-Gewichte:
-
-```text
-Position: 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
-Gewicht:  8  7  6  5  4  3  2 10  0  9  8  7  6  5  4  3  2
-```
-
-Da Škoda bei europäischen Fahrzeugen von einem Sicherheitscode spricht, wird eine Abweichung bewusst als **nicht bestätigt** und nicht pauschal als ungültige FIN behandelt.
-
-### 6.6 Detaillierte VDS-Auswertung
-
-Für bekannte Baureihen werden weitere VDS-Merkmale ausgewertet, wenn dafür belastbare Zuordnungen vorliegen.
-
-Beim **Enyaq** werden beispielsweise Karosserie, Links-/Rechtslenker, Heck-/Allradantrieb, Leistung, Variante und Rückhaltesystem interpretiert. Beim **Elroq** wird die gemeinsame `NY`-Baureihenkennung anhand weiterer Zeichen unterschieden. Beim **Karoq** werden bekannte Karosserie-/Antriebs-, Motor- und Rückhaltesystemcodes ausgewertet.
-
-Unbekannte Kombinationen bleiben leer oder mehrdeutig und werden nicht geraten.
-
-### 6.7 Optionale FIN-Informationsvariablen
-
-Wenn **FIN-Informationsvariablen anlegen** aktiviert ist, können folgende reine String-Variablen entstehen:
-
-| Ident | Inhalt |
-|---|---|
-| `VINWMI` | WMI |
-| `VINVDS` | VDS |
-| `VINVIS` | VIS |
-| `VINManufacturer` | Hersteller |
-| `VINCountry` | Herkunftsland |
-| `VINModel` | Modell/Baureihe |
-| `VINModelCode` | Modellcode |
-| `VINBody` | Karosserie |
-| `VINSteering` | Links-/Rechtslenker |
-| `VINDrive` | Antriebsart |
-| `VINPower` | Leistung |
-| `VINVariant` | Modellvariante |
-| `VINRestraint` | Rückhaltesystem |
-| `VINModelYear` | Modelljahr |
-| `VINPlant` | Produktionswerk |
-| `VINSerialNumber` | Seriennummer |
-| `VINCheckDigit` | Prüfzeichen und Prüfergebnis |
-
-Alle FIN-Variablen sind Strings ohne Icon und ohne spezielle Darstellung. Sie werden nur beim erstmaligen Anlegen oder bei Änderung der konfigurierten FIN aktualisiert. Das normale MySkoda-Polling verändert sie nicht. Bereits angelegte Variablen bleiben bestehen, auch wenn die Option später deaktiviert wird.
-
-### 6.8 Beispiel
-
-Beispiel-FIN:
-
-```text
-TMBJC7NY5NF017514
-```
-
-Aktuelle Interpretation des Moduls:
-
-```text
-Hersteller: Škoda Auto
-Land: Tschechien
-Modell: Enyaq
-Karosserie: SUV
-Lenkung: Linkslenker
-Antrieb: Heckantrieb
-Leistung: 150 kW / 204 PS
-Variante: Enyaq iV 80
-Modelljahr: 2022
-Produktionswerk: Mladá Boleslav
-Seriennummer: 017514
-Prüfzeichen: 5, Berechnung: 5
-```
-
-Nicht aus der FIN abgeleitet werden unter anderem exaktes Produktionsdatum, Erstzulassung, komplette Ausstattung/PR-Codes, Wärmepumpe, Canton, HUD, Anhängerkupplung, DCC, Softwareversion, Batteriezellhersteller, SOH, Servicehistorie oder TPI-Anwendbarkeit.
-
-## 7. Statusvariablen und Darstellungen
+## 6. Statusvariablen und Darstellungen
 
 Das Modul legt ausschließlich eigene Variablen unterhalb der MySkoda-Instanz an. Es werden keine Dummy-Instanzen, Kategorien oder Links erzeugt.
 
 Vorhandene Variablen bleiben benutzerverwaltet. Namen, Positionen und andere benutzerseitig veränderbare Objekteigenschaften werden bei späteren Aktualisierungen nicht fortlaufend überschrieben.
 
-### 7.1 Standard-Datenpunkte
+### 6.1 Standard-Datenpunkte
 
 | Ident | Deutsche Anzeige | Typ | Bedienbar | Beschreibung |
 |---|---|---|---:|---|
@@ -324,49 +156,27 @@ Vorhandene Variablen bleiben benutzerverwaltet. Namen, Positionen und andere ben
 | `NewApiFeatures` | Neue API-Funktionen | Integer | Nein | Anzahl unbekannter Operationen der aktuellen OpenAPI-Definition |
 | `LastUpdate` | Letzte Aktualisierung | Integer | Nein | Zeitpunkt des letzten erfolgreichen Fahrzeugabrufs |
 
-### 7.2 Optionale Detail- und Diagnosevariablen
+### 6.2 Optionale FIN-Informationsvariablen
 
-Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden zusätzlich fehlende Variablen angelegt.
+Wenn **FIN-Informationsvariablen anlegen** aktiviert wird, legt das Modul die entschlüsselten FIN-Daten als einfache String-Variablen an. Es werden keine Icons, Profile oder besonderen Darstellungen verwendet.
 
-| Ident | Deutsche Anzeige | Inhalt |
-|---|---|---|
-| `VehicleName` | Fahrzeugname | von der API gelieferter Fahrzeugname |
-| `LicensePlate` | Kennzeichen | Kennzeichen |
-| `TrunkOpen` | Kofferraum offen | Kofferraumstatus |
-| `BonnetOpen` | Motorhaube offen | Haubenstatus |
-| `SunroofOpen` | Schiebedach offen | Schiebedachstatus |
-| `LightsOn` | Licht an | Lichtstatus |
-| `ParkingState` | Parkstatus | Parkstatus der API |
-| `ChargingState` | Ladestatus | Ladezustand der API |
-| `ChargeType` | Ladeart | Ladeart der API |
-| `FullyChargedAt` | Vollgeladen um | von der API berechneter Zeitpunkt |
-| `Latitude` | Breitengrad | Standort, sofern verfügbar |
-| `Longitude` | Längengrad | Standort, sofern verfügbar |
-| `ApiKeyExpiresAtVar` | API-Key gültig bis | Ablaufzeitpunkt des API-Keys |
-| `RequestsRemaining` | Verbleibende API-Anfragen | letzter vom Portal gemeldeter Restwert |
-| `PartialErrors` | API-Teilfehler | von der Fahrzeugantwort gelieferte Teilfehler |
-| `PendingCommands` | Ausstehende Befehle | Anzahl aktuell laufender Befehlsanfragen |
-| `CommandStatus` | Befehlsstatus | Ergebnis bzw. Fehlertext des letzten Remote-Befehls |
+Die Variablen werden bei der Erstanlage und anschließend nur bei Änderung der konfigurierten FIN aktualisiert. Der normale zyklische Fahrzeugabruf verändert sie nicht. Bereits angelegte FIN-Variablen bleiben beim späteren Deaktivieren der Option bestehen.
+
+Die genaue Liste der FIN-Variablen und deren Bedeutung ist in [README_FIN_VIN.md](README_FIN_VIN.md) beschrieben.
+
+### 6.3 Optionale Detail- und Diagnosevariablen
+
+Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden zusätzliche Status- und Diagnosevariablen angelegt, unter anderem Fahrzeugname, Kennzeichen, Kofferraum-/Haubenstatus, Ladeinformationen, Standortdaten, API-Restkontingent, `PendingCommands` und `CommandStatus`.
 
 Einmal angelegte Detailvariablen werden beim Deaktivieren der Option nicht gelöscht.
 
-### 7.3 Profile und Darstellungen
+### 6.4 Profile und Darstellungen
 
 Das Modul verwendet die nativen Darstellungen von Symcon. Es werden keine benutzerdefinierten Variablenprofile angelegt.
 
-Der Lademodus wird nur gesendet, wenn er in der vom Fahrzeug gemeldeten Liste `charging.settings.availableChargeModes` enthalten ist. Die im Modul bekannten API-Werte sind:
+Der Lademodus wird nur gesendet, wenn er in der vom Fahrzeug gemeldeten Liste `charging.settings.availableChargeModes` enthalten ist.
 
-- `MANUAL`
-- `TIMER`
-- `TIMER_CHARGING_WITH_CLIMATISATION`
-- `PREFERRED_CHARGING_TIMES`
-- `ONLY_OWN_CURRENT`
-- `IMMEDIATE_DISCHARGING`
-- `HOME_STORAGE_CHARGING`
-
-Nicht jeder dieser Werte muss von jedem Fahrzeug unterstützt werden.
-
-## 8. Befehlslogik für Remote-Befehle
+## 7. Befehlslogik für Remote-Befehle
 
 Bei den über Variablen bedienbaren Remote-Funktionen wird der gewünschte Wert beim Absenden sofort lokal angezeigt.
 
@@ -377,20 +187,11 @@ Während der synchronen HTTP-Anfrage wird der betroffene Datenpunkt als Pending 
 
 Der normale zyklische Fahrzeugabruf läuft unabhängig davon weiter. Liefert das Portal später einen anderen Fahrzeugzustand, wird dieser beim regulären Abruf übernommen.
 
-`PendingCommands` zeigt die Anzahl der aktuell laufenden Befehlsanfragen. `CommandStatus` zeigt das Ergebnis des letzten Befehls. Bei einem Fehler wird zusätzlich der von API oder Transport gelieferte **Fehlertext** ausgegeben.
+`PendingCommands` zeigt die Anzahl der aktuell laufenden Befehlsanfragen. `CommandStatus` zeigt das Ergebnis des letzten Befehls. Bei einem Fehler wird zusätzlich der von API oder Transport gelieferte Fehlertext ausgegeben.
 
-Beispiele:
+## 8. API-Diagnose und neue API-Funktionen
 
-```text
-Bestätigt: Ladelimit
-Bestätigt: Klimatisierung
-Befehl abgelehnt: Ladelimit - HTTP 400: ...
-Befehl abgelehnt: Klimatisierung - cURL: ...
-```
-
-## 9. API-Diagnose und neue API-Funktionen
-
-Nach einem erfolgreichen Fahrzeugabruf prüft das Modul zusätzlich die öffentliche OpenAPI-Definition der MyŠkoda Public API. Die Definition wird intern bis zu 24 Stunden zwischengespeichert.
+Nach einer erfolgreichen Fahrzeugabfrage prüft das Modul zusätzlich die öffentliche OpenAPI-Definition der MyŠkoda Public API. Die Definition wird intern bis zu 24 Stunden zwischengespeichert.
 
 `NewApiFeatures` zeigt die Anzahl der API-Operationen, die der aktuellen Modulversion noch nicht bekannt sind:
 
@@ -399,9 +200,7 @@ Nach einem erfolgreichen Fahrzeugabruf prüft das Modul zusätzlich die öffentl
 
 Neue Operationen werden nicht automatisch als Variablen oder Befehle angelegt.
 
-Mit `MSKODA_GetRemoteOperations()` kann die vom Fahrzeug gelieferte Liste der verfügbaren Remote-Operationen ausgelesen werden. Das Modul verwendet `vehicle.operations` und `vehicle.remoteOperations` als Fallback.
-
-## 10. Archivierung
+## 9. Archivierung
 
 Die Archivierung ist standardmäßig **aus** und wird nur nach ausdrücklicher Aktivierung eingerichtet.
 
@@ -414,15 +213,13 @@ Einmalig werden folgende Variablen für das Logging im Archive Control aktiviert
 
 Der Kilometerstand wird als Zähler eingerichtet. Werte `<= 0` werden nicht übernommen. Nach der erstmaligen Einrichtung verändert das Modul spätere Benutzeranpassungen im Archive Control nicht mehr.
 
-## 11. Visualisierung
+## 10. Visualisierung
 
 Die vom Modul angelegten Variablen können direkt in den Symcon-Visualisierungen verwendet werden.
 
 Für eine zusätzliche Fahrzeugdarstellung kann optional das separate Modul [IPSymconEVTile](https://github.com/taloriko/IPSymconEVTile) verwendet werden. MySkoda selbst legt keine zusätzliche Objektstruktur für die Visualisierung an.
 
-Standortdaten werden nur gesetzt, wenn die MyŠkoda Public API sie für das Fahrzeug und den jeweiligen Benutzer liefert.
-
-## 12. PHP-Befehlsreferenz
+## 11. PHP-Befehlsreferenz
 
 In den Beispielen ist `12345` die Instanz-ID der MySkoda-Instanz.
 
@@ -443,12 +240,11 @@ In den Beispielen ist `12345` die Instanz-ID der MySkoda-Instanz.
 | `MSKODA_StopVentilation(12345);` | `bool` | aktive Lüftung stoppen |
 | `MSKODA_RefreshApiDefinition(12345);` | `bool` | öffentliche OpenAPI-Definition neu laden |
 | `MSKODA_TestNotification(12345);` | `bool` | konfigurierte Symcon-Mitteilung testen |
+| `MSKODA_DiagnoseVehicleImages(12345);` | `string` | Diagnose der von der API gelieferten Fahrzeugbilder |
+| `MSKODA_RefreshVehicleImage(12345);` | `bool` | lokales Fahrzeugbild aktualisieren |
+| `MSKODA_DiagnosePublicApiData(12345);` | `string` | genutzte und ungenutzte Public-API-Datenpfade ausgeben |
 
-Bei Befehlen für fahrzeugabhängige Funktionen liefert `false` einen nicht erfolgreichen Aufruf. Der zugehörige Fehler wird intern in `LastError` geführt und bei den optionalen Diagnosevariablen soweit vorgesehen in `CommandStatus` angezeigt.
-
-## 13. Instanzstatus und Fehlersuche
-
-### Instanzstatus
+## 12. Instanzstatus und Fehlersuche
 
 | Code | Bedeutung |
 |---:|---|
@@ -458,18 +254,16 @@ Bei Befehlen für fahrzeugabhängige Funktionen liefert `false` einen nicht erfo
 | `202` | API- oder Verbindungsfehler |
 | `203` | Rate-Limit / Wartezeit aktiv |
 
-### Fehlersuche
+Typische Prüfungen:
 
-- **Keine Verbindung:** FIN/VIN und API-Token prüfen und anschließend **Verbindung testen** ausführen.
-- **Status 203:** Das API-Rate-Limit oder eine von der API vorgegebene Wartezeit ist aktiv.
-- **Befehl springt sofort zurück:** Der Remote-Aufruf war nicht erfolgreich. Bei aktivierten Diagnosevariablen `CommandStatus` prüfen.
-- **Wert ändert sich nach einem späteren Abruf:** Der reguläre Fahrzeugabruf hat einen anderen Zustand vom Portal geliefert und übernommen.
-- **Keine Standortdaten:** Die API liefert für das Fahrzeug bzw. den Benutzer aktuell keine Standortdaten.
-- **Neue API-Funktionen > 0:** Die öffentliche OpenAPI-Definition enthält mindestens eine der Modulversion noch unbekannte Operation.
+- FIN/VIN und API-Token prüfen und anschließend **Verbindung testen** ausführen.
+- Bei Status `203` das API-Rate-Limit bzw. die Wartezeit abwarten.
+- Bei zurückspringenden Befehlswerten `CommandStatus` prüfen.
+- Standortdaten sind nur verfügbar, wenn die MyŠkoda Public API sie für Fahrzeug und Benutzer liefert.
 
 Bei Fehlermeldungen niemals API-Key, S-PIN oder vollständige FIN öffentlich veröffentlichen.
 
-## 14. Datenschutz und externe Dienste
+## 13. Datenschutz und externe Dienste
 
 Das Modul kommuniziert direkt mit der offiziellen MyŠkoda Public API. Für fahrzeugbezogene API-Anfragen werden die konfigurierte FIN/VIN und der API-Token verwendet.
 
@@ -477,15 +271,15 @@ Remote-Befehle werden ausschließlich durch eine Benutzeraktion, ein Benutzerskr
 
 Zusätzlich lädt das Modul die öffentliche OpenAPI-Definition von Škoda. Für diesen Abruf wird kein Fahrzeug-API-Key übertragen.
 
-Die FIN/VIN-Entschlüsselung erfolgt vollständig lokal innerhalb der Instanz und verursacht keine zusätzliche externe Anfrage.
+Das Fahrzeugbild wird ausschließlich von der URL geladen, die von der offiziellen MyŠkoda Public API für das konfigurierte Fahrzeug geliefert wird, und lokal in Symcon gespeichert.
 
 FIN/VIN, API-Token und optional die S-PIN werden als Instanzkonfiguration in Symcon gespeichert. Zugangsdaten sollten nicht in Fehlermeldungen, Screenshots oder öffentlichen Supportbeiträgen veröffentlicht werden.
 
-## 15. Versionshistorie
+## 14. Versionshistorie
 
 Die Versionshistorie der Library befindet sich in [CHANGELOG.md](../CHANGELOG.md).
 
-## 16. Lizenz und Markenhinweis
+## 15. Lizenz und Markenhinweis
 
 Copyright © 2026 **taloriko**.
 
