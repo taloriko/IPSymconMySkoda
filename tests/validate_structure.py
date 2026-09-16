@@ -40,7 +40,7 @@ def main() -> None:
 
     assert GUID.match(library["id"])
     assert library["name"] == "MySkoda"
-    assert library["version"] == "1.3"
+    assert library["version"] == "1.4"
     assert library["compatibility"]["version"] >= "8.1"
     assert GUID.match(module["id"])
     assert module["name"] == "MySkoda"
@@ -81,7 +81,7 @@ def main() -> None:
     php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
 
     assert "final class MySkoda extends IPSModuleStrict" in module_php
-    assert "Symcon-MySkoda/1.3" in module_php
+    assert "Symcon-MySkoda/1.4" in module_php
     assert "VinDecoderTrait.php" in module_php
     assert "VinIntegrationTrait.php" in module_php
     assert re.search(r"<\?(?!php)", php_sources) is None
@@ -111,6 +111,15 @@ def main() -> None:
         "DiagnosePublicApiData",
         "{redacted-location}",
         "{redacted-license-plate}",
+        "APICarType",
+        "APIPrimaryEngineType",
+        "APISecondaryEngineType",
+        "APISupportedFeatures",
+        "APIAvailableChargeModes",
+        "APIRemoteOperations",
+        "APIAuxiliaryHeatingState",
+        "APIActiveVentilationState",
+        "publicApiSupportedFeatures",
     ]:
         assert required in diagnostics
 
@@ -234,6 +243,9 @@ def main() -> None:
         assert text in vin_readme
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert "## 1.4 - 2026-09-16" in changelog
+    assert "APISupportedFeatures" in changelog
+    assert "APIAvailableChargeModes" in changelog
     assert "## 1.3 - 2026-09-16" in changelog
     assert "FIN / VIN entschlüsseln" in changelog
     assert "MSKODA_GetVINData()" in changelog
