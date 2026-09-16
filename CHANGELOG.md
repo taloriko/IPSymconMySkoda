@@ -6,9 +6,13 @@
 - eigener Konfigurationsblock **FIN entschlüsseln** mit strukturierter Zerlegung in WMI, VDS und VIS sowie Anzeige der ermittelbaren Fahrzeugdaten
 - Auswertung von Hersteller, Herkunftsland, Modell-/Baureihencode, Modelljahr, Produktionswerk, Seriennummer und Prüfziffer, soweit die jeweilige FIN eine belastbare Zuordnung erlaubt
 - zusätzliche modellabhängige Auswertung für bekannte Škoda-Baureihen; Enyaq und Elroq werden trotz gemeinsam verwendetem `NY`-Baureihencode anhand weiterer FIN-Merkmale unterschieden
-- für bekannte Enyaq-FINs zusätzliche Auswertung von Karosserie, Links-/Rechtslenker, Heck-/Allradantrieb, Leistung, Variante und Rückhaltesystem
+- für bekannte Enyaq- und Elroq-FINs zusätzliche Auswertung von Karosserie, Links-/Rechtslenker, Heck-/Allradantrieb, Leistung, Variante und Rückhaltesystem
+- Karoq-VDS wird zusätzlich nach Karosserie-/Lenkungs-/Antriebsart, bekannten Motorcodes und Rückhaltesystem ausgewertet
+- europäische `TMB`-FINs und indische `MEX`-FINs werden getrennt behandelt; für Indien sind Kushaq (`PA`), Slavia (`PB`) und Kylaq (`PC`) als eigene Baureihen hinterlegt
+- Citigo wird über den in der FIN verwendeten Baureihencode `AA` erkannt
 - unbekannte oder nicht eindeutig belegte Codes werden nicht geraten, sondern als unbekannt bzw. mehrdeutig belassen
 - optionale reine String-Variablen für die FIN-Informationen mit stabilen Idents; keine Icons, Profile oder besonderen Darstellungen
+- der Schalter für FIN-Informationsvariablen steuert nur deren Anlage; bereits vorhandene Variablen bleiben auch nach dem Deaktivieren erhalten und werden bei einem späteren FIN-Wechsel weiter gepflegt
 - FIN-Variablen werden nur beim erstmaligen Anlegen und bei Änderung der konfigurierten FIN beschrieben; das normale MySkoda-Polling verändert sie nicht
 - öffentlicher Modulaufruf `MSKODA_GetVINData()` liefert die lokal entschlüsselten FIN-Daten als JSON
 - FIN-Decodierung wird über einen eigenen Fingerprint gecacht und nur bei geänderter FIN neu berechnet
