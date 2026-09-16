@@ -21,7 +21,9 @@ trait MySkodaVinIntegrationTrait
         $this->climateApplyChanges();
         $this->ensureVINVariables();
 
-        if ($vinChanged && $this->ReadPropertyBoolean('CreateVINVariables')) {
+        // The option controls creation only. Once VIN variables exist, they stay
+        // maintained when the configured VIN changes, just like other module data.
+        if ($vinChanged) {
             $this->updateVINVariablesFromCache();
         }
 
