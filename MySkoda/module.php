@@ -63,7 +63,7 @@ final class MySkoda extends IPSModuleStrict
 
     private const API_ROOT = 'https://public.api.connect.skoda-auto.cz';
     private const OPENAPI_URL = self::API_ROOT . '/v3/api-docs';
-    private const USER_AGENT = 'Symcon-MySkoda/1.3';
+    private const USER_AGENT = 'Symcon-MySkoda/1.4';
     private const QUOTA_RESERVE = 2;
 
     public function Update(): void
