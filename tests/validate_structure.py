@@ -38,7 +38,7 @@ def main() -> None:
 
     assert GUID.match(library["id"])
     assert library["name"] == "MySkoda"
-    assert library["version"] == "1.2"
+    assert library["version"] == "1.3"
     assert library["compatibility"]["version"] >= "8.1"
     assert GUID.match(module["id"])
     assert module["name"] == "MySkoda"
@@ -71,14 +71,18 @@ def main() -> None:
     image = (ROOT / "MySkoda" / "src" / "ImageTrait.php").read_text(encoding="utf-8")
     diagnostics = (ROOT / "MySkoda" / "src" / "DiagnosticsTrait.php").read_text(encoding="utf-8")
     climate_selection = (ROOT / "MySkoda" / "src" / "ClimateSelectionTrait.php").read_text(encoding="utf-8")
+    vin_decoder = (ROOT / "MySkoda" / "src" / "VinDecoderTrait.php").read_text(encoding="utf-8")
+    vin_integration = (ROOT / "MySkoda" / "src" / "VinIntegrationTrait.php").read_text(encoding="utf-8")
     php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
 
     assert "final class MySkoda extends IPSModuleStrict" in module_php
-    assert "Symcon-MySkoda/1.2" in module_php
+    assert "Symcon-MySkoda/1.3" in module_php
     assert "CommandTrait.php" in module_php
     assert "ImageTrait.php" in module_php
     assert "DiagnosticsTrait.php" in module_php
     assert "ClimateSelectionTrait.php" in module_php
+    assert "VinDecoderTrait.php" in module_php
+    assert "VinIntegrationTrait.php" in module_php
     assert "CommandConfirmationTrait.php" not in module_php
 
     assert re.search(r"<\?(?!php)", php_sources) is None
@@ -161,8 +165,6 @@ def main() -> None:
     for ident in ["Charging", "TargetSOC", "ChargeMode", "Climate", "TargetTemperature"]:
         assert f"'{ident}'" in command
 
-    # A target selected while climate is off is local only until a successful
-    # climate start. Regular vehicle polling must not overwrite that selection.
     for required in [
         "RegisterAttributeBoolean('TargetTemperatureOverride', false)",
         "WriteAttributeBoolean('TargetTemperatureOverride', true)",
@@ -173,6 +175,40 @@ def main() -> None:
     ]:
         assert required in climate_selection
     assert "fetchVehicle(" not in climate_selection
+
+    for required in [
+        "GetVINData",
+        "decodeVIN",
+        "calculateVINCheckDigit",
+        "VINDecodeFingerprint",
+        "VINDecodeData",
+        "CreateVINVariables",
+        "VINWMI",
+        "VINVDS",
+        "VINVIS",
+        "VINModel",
+        "VINModelYear",
+        "VINPlant",
+        "VINCheckDigit",
+        "NY",
+        "Enyaq",
+        "Elroq",
+    ]:
+        assert required in (vin_decoder + vin_integration)
+
+    assert "request(" not in vin_decoder
+    assert "request(" not in vin_integration
+    assert "updateVINDecodeCache($vin)" in vin_integration
+    assert "if ($vinChanged && $this->ReadPropertyBoolean('CreateVINVariables'))" in vin_integration
+    assert "updateVINVariablesFromCache();" in vin_integration
+
+    vin_panel = next(item for item in form["elements"] if item.get("caption") == "VIN decoding")
+    vin_names = {item.get("name") for item in vin_panel.get("items", [])}
+    for required in [
+        "VINDecodeStructure", "VINDecodeManufacturer", "VINDecodeModel", "VINDecodeDrive",
+        "VINDecodeProduction", "VINDecodeRestraint", "VINDecodeValidation", "CreateVINVariables"
+    ]:
+        assert required in vin_names
 
     assert "private function sendCommand" in api
     assert "if (!$response['ok'])" in api
@@ -190,13 +226,17 @@ def main() -> None:
         "Refresh vehicle image": "Fahrzeugbild aktualisieren",
         "Vehicle image": "Fahrzeugbild",
         "Diagnose Public API data": "Public-API-Daten diagnostizieren",
+        "VIN decoding": "FIN entschlüsseln",
+        "Create VIN information variables": "FIN-Informationsvariablen anlegen",
+        "VIN model year": "FIN Modelljahr",
     }.items():
         assert translations.get(source) == german
 
     expected_sources = {
         "ApiTrait.php", "ClimateSelectionTrait.php", "CommandTrait.php", "CoreTrait.php",
         "DiagnosticsTrait.php", "HelpersTrait.php", "HistoryTrait.php", "ImageTrait.php",
-        "NotificationTrait.php", "OpenApiTrait.php", "VariablesTrait.php"
+        "NotificationTrait.php", "OpenApiTrait.php", "VariablesTrait.php", "VinDecoderTrait.php",
+        "VinIntegrationTrait.php"
     }
     source_names = {path.name for path in (ROOT / "MySkoda" / "src").glob("*.php")}
     assert source_names == expected_sources
@@ -224,6 +264,9 @@ def main() -> None:
         assert text in module_readme
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert "## 1.3 - 2026-09-16" in changelog
+    assert "FIN entschlüsseln" in changelog
+    assert "MSKODA_GetVINData()" in changelog
     assert "## 1.2 - 2026-09-15" in changelog
     assert "VehicleImage" in changelog
     assert "renderUrl" in changelog
