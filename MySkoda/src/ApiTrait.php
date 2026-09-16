@@ -9,7 +9,8 @@ trait MySkodaApiTrait
         $vin = rawurlencode(strtoupper(trim($this->ReadPropertyString('VIN'))));
         $path = '/api/v1/vehicles/' . $vin . '/' . ltrim($relativePath, '/');
 
-        return $this->sendCommand('POST', $path, []);
+        // Public API start/stop operations do not define a JSON request body.
+        return $this->sendCommand('POST', $path, null);
     }
 
     private function startClimateInternal(float $temperature): bool
@@ -18,16 +19,41 @@ trait MySkodaApiTrait
         $body = [
             'targetTemperature' => [
                 'value' => max(16.0, min(30.0, $temperature)),
-                'unit' => 'CELSIUS'
-            ],
-            'airConditioningWithoutExternalPower' => $this->ReadPropertyBoolean('ClimateWithoutExternalPower')
+                'unit' => $this->commandTemperatureUnit()
+            ]
         ];
+
+        // Optional according to the Public API. Only send it when this vehicle
+        // actually reports the setting in its current vehicle data.
+        $raw = json_decode($this->ReadAttributeString('RawData'), true);
+        $withoutExternalPower = is_array($raw)
+            ? $this->path($raw, 'vehicle.airConditioning.airConditioningWithoutExternalPower', null)
+            : null;
+        if ($withoutExternalPower !== null) {
+            $body['airConditioningWithoutExternalPower'] = $this->ReadPropertyBoolean('ClimateWithoutExternalPower');
+        }
 
         return $this->sendCommand(
             'POST',
             '/api/v1/vehicles/' . $vin . '/air-conditioning/start',
             $body
         );
+    }
+
+    private function commandTemperatureUnit(): string
+    {
+        $raw = json_decode($this->ReadAttributeString('RawData'), true);
+        if (!is_array($raw)) {
+            return 'CELSIUS';
+        }
+
+        $unit = strtoupper((string) $this->path(
+            $raw,
+            'vehicle.airConditioning.targetTemperature.unit',
+            'CELSIUS'
+        ));
+
+        return in_array($unit, ['CELSIUS', 'FAHRENHEIT'], true) ? $unit : 'CELSIUS';
     }
 
     private function sendDiscoveredScalarCommand(string $purpose, int|string $value): bool
