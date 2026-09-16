@@ -7,6 +7,8 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 ## Funktionen
 
 - Fahrzeugdaten über FIN/VIN und MySkoda API-Key
+- lokale FIN/VIN-Entschlüsselung direkt in der Instanzkonfiguration
+- optionales Anlegen der entschlüsselten FIN-Informationen als String-Variablen
 - zyklischer Abruf mit Berücksichtigung von Rate-Limit durch Skoda (20 Abfragen/Stunde Stand 15.09.2026)
     - Abfrageintervall kann frei definiert werden
  
@@ -26,6 +28,10 @@ Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als nativ
 - optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
 - optional und nur nach ausdrücklicher Aktivierung: Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand
     - Kilometerstand im Archiv als Zähler; ungültige Werte `<= 0` werden nicht übernommen
+
+Die Details zur Zerlegung der FIN, den geprüften Stellen, bekannten Škoda-Codes und der Prüfziffer befinden sich in der separaten Dokumentation [FIN / VIN entschlüsseln](MySkoda/README_FIN_VIN.md).
+
+> **Hinweis zur FIN-Entschlüsselung:** Die dabei angezeigten Zuordnungen sind keine offiziellen Fahrzeugstammdaten von Škoda. Sie werden anhand öffentlich verfügbarer Informationen interpretiert und können bei einzelnen Fahrzeugen unvollständig oder mehrdeutig sein.
 
 ## In der App verfügbar, aber nicht in der Public API
 
