@@ -1,5 +1,17 @@
 # Changelog
 
+## 1.4 - 2026-09-16
+
+- zusätzliche reine String-Variablen für statische Fahrzeuginformationen und vom Fahrzeug gemeldete Funktions-/Ausstattungsmerkmale der offiziellen MySkoda Public API
+- neue Idents direkt hinter den FIN-Informationsvariablen: `APICarType`, `APIPrimaryEngineType`, `APISecondaryEngineType`, `APISupportedFeatures`, `APIAvailableChargeModes`, `APIRemoteOperations`, `APIAuxiliaryHeatingState` und `APIActiveVentilationState`
+- `APICarType` sowie primärer und sekundärer Antriebstyp werden aus `fuelStatus` übernommen, sofern das Fahrzeug diese Daten liefert
+- `APISupportedFeatures` fasst die vom konkreten Fahrzeug bereitgestellten Public-API-Bereiche zusammen; vorübergehend deaktivierte oder nicht verfügbare Bereiche gelten weiterhin als unterstützt, ausdrücklich als `*_UNSUPPORTED` gemeldete Bereiche nicht
+- verfügbare Lademodi und Remote-Operationen werden zusätzlich als kompakte String-Listen bereitgestellt
+- Status von Standheizung und aktiver Lüftung wird als zusätzliche Fahrzeug-/Ausstattungsinformation übernommen, sofern die API die jeweiligen Bereiche liefert
+- die neuen Informationsvariablen verwenden bewusst keine Icons, Profile oder besonderen Darstellungen
+- es werden ausschließlich Daten der offiziellen MySkoda Public API verwendet; nicht im Public-API-Vertrag enthaltene interne App-Daten wie Ausstattungslinie, Farbe, Batterie-Nennkapazität oder Softwarestand werden nicht ergänzt
+- bestehende README-Dateien bleiben gegenüber Version 1.3 unverändert
+
 ## 1.3 - 2026-09-16
 
 - lokale FIN-/VIN-Entschlüsselung direkt in der Instanzkonfiguration, ohne zusätzliche API-Anfrage
@@ -68,6 +80,3 @@
 - Remote-Steuerung für unterstützte Lade- und Klimafunktionen
 - automatische Erkennung zusätzlicher, noch nicht integrierter OpenAPI-Funktionen über die Variable `NewApiFeatures`; neue Datenpunkte werden ausschließlich über Modulupdates ergänzt
 - Rate-Limit-Behandlung, API-Key-Warnung und optionale Symcon-Mitteilungen
-- Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nur nach ausdrücklicher Benutzeraktivierung; spätere Archiveinstellungen bleiben unberührt
-- Kilometerstand als Archiv-Zähler; ungültige Werte kleiner oder gleich 0 werden verworfen
-- native Symcon-Darstellungen
