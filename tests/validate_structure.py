@@ -193,14 +193,23 @@ def main() -> None:
         "NY",
         "Enyaq",
         "Elroq",
+        "Karoq",
+        "MEX",
+        "PA",
+        "PB",
+        "PC",
+        "AA",
+        "decodeElroqPower",
+        "decodeKaroqEngine",
     ]:
         assert required in (vin_decoder + vin_integration)
 
     assert "request(" not in vin_decoder
     assert "request(" not in vin_integration
     assert "updateVINDecodeCache($vin)" in vin_integration
-    assert "if ($vinChanged && $this->ReadPropertyBoolean('CreateVINVariables'))" in vin_integration
+    assert "if ($vinChanged)" in vin_integration
     assert "updateVINVariablesFromCache();" in vin_integration
+    assert "ReadPropertyBoolean('CreateVINVariables')" in vin_decoder
 
     vin_panel = next(item for item in form["elements"] if item.get("caption") == "VIN decoding")
     vin_names = {item.get("name") for item in vin_panel.get("items", [])}
@@ -229,6 +238,8 @@ def main() -> None:
         "VIN decoding": "FIN entschlüsseln",
         "Create VIN information variables": "FIN-Informationsvariablen anlegen",
         "VIN model year": "FIN Modelljahr",
+        "India": "Indien",
+        "Front-wheel drive": "Frontantrieb",
     }.items():
         assert translations.get(source) == german
 
