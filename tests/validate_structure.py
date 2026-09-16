@@ -314,7 +314,7 @@ def main() -> None:
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## 1.3 - 2026-09-16" in changelog
-    assert "FIN entschlüsseln" in changelog
+    assert "FIN / VIN entschlüsseln" in changelog
     assert "MSKODA_GetVINData()" in changelog
     assert "## 1.2 - 2026-09-15" in changelog
     assert "VehicleImage" in changelog
