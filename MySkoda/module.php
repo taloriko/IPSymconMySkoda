@@ -12,6 +12,7 @@ require_once __DIR__ . '/src/DiagnosticsTrait.php';
 require_once __DIR__ . '/src/NotificationTrait.php';
 require_once __DIR__ . '/src/HelpersTrait.php';
 require_once __DIR__ . '/src/CommandTrait.php';
+require_once __DIR__ . '/src/ClimateSelectionTrait.php';
 
 final class MySkoda extends IPSModuleStrict
 {
@@ -24,15 +25,23 @@ final class MySkoda extends IPSModuleStrict
         MySkodaDiagnosticsTrait,
         MySkodaNotificationTrait,
         MySkodaHelpersTrait,
-        MySkodaCommandTrait {
+        MySkodaCommandTrait,
+        MySkodaClimateSelectionTrait {
         MySkodaCoreTrait::Create as private coreCreate;
         MySkodaCoreTrait::ApplyChanges as private coreApplyChanges;
         MySkodaVariablesTrait::registerVariables as private baseRegisterVariables;
+        MySkodaVariablesTrait::setPathValue as private baseSetPathValue;
 
-        MySkodaCommandTrait::Create insteadof MySkodaCoreTrait;
-        MySkodaCommandTrait::ApplyChanges insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::Create as private commandCreate;
+        MySkodaCommandTrait::ApplyChanges as private commandApplyChanges;
+        MySkodaCommandTrait::RequestAction as private commandRequestAction;
+
+        MySkodaClimateSelectionTrait::Create insteadof MySkodaCoreTrait, MySkodaCommandTrait;
+        MySkodaClimateSelectionTrait::ApplyChanges insteadof MySkodaCoreTrait, MySkodaCommandTrait;
+        MySkodaClimateSelectionTrait::RequestAction insteadof MySkodaCoreTrait, MySkodaCommandTrait;
+        MySkodaClimateSelectionTrait::setPathValue insteadof MySkodaVariablesTrait;
+
         MySkodaCommandTrait::registerVariables insteadof MySkodaVariablesTrait;
-        MySkodaCommandTrait::RequestAction insteadof MySkodaCoreTrait;
         MySkodaCommandTrait::SetChargingLimit insteadof MySkodaCoreTrait;
         MySkodaCommandTrait::SetChargeMode insteadof MySkodaCoreTrait;
         MySkodaCommandTrait::UpdateChargingProfile insteadof MySkodaCoreTrait;
