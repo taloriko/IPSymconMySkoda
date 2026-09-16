@@ -16,9 +16,10 @@
 - FIN-Variablen werden nur beim erstmaligen Anlegen und bei Änderung der konfigurierten FIN beschrieben; das normale MySkoda-Polling verändert sie nicht
 - öffentlicher Modulaufruf `MSKODA_GetVINData()` liefert die lokal entschlüsselten FIN-Daten als JSON
 - FIN-Decodierung wird über einen eigenen Fingerprint gecacht und nur bei geänderter FIN neu berechnet
-- eigene Dokumentation `MySkoda/README_FIN_VIN.md` beschreibt FIN-Aufbau, Prüfungen, bekannte Codes, Grenzen und Quellen der Interpretation
-- Root- und Modul-README enthalten nur den Funktionshinweis, die optionalen FIN-Variablen und den Verweis auf die separate FIN-Dokumentation
-- deutlicher Hinweis in Dokumentation und Instanzkonfiguration, dass die FIN-Interpretation keine offizielle Škoda-Fahrzeugdatenquelle ist
+- FIN/VIN-Dokumentation in die vorhandenen `README.md`-Dateien integriert; keine zusätzliche Dokumentationsdatei erforderlich
+- Root-README für Module-Store-Nutzung mit Voraussetzungen, Installation, Einrichtung und Funktionsübersicht nachgezogen
+- Modul-README um FIN/VIN-Prüfung, optionale FIN-Variablen und `MSKODA_GetVINData()` ergänzt
+- deutlicher Hinweis in beiden README-Dateien und der Instanzkonfiguration, dass die FIN-Interpretation keine offizielle Škoda-Fahrzeugdatenquelle ist
 - Ergebnisbereiche in der Instanzkonfiguration besitzen eigene fett dargestellte Überschriften für eine leichtere Zuordnung
 
 ## 1.2 - 2026-09-15
