@@ -34,6 +34,58 @@
     },
     {
       "type": "ExpansionPanel",
+      "caption": "VIN decoding",
+      "expanded": true,
+      "items": [
+        {
+          "type": "Label",
+          "name": "VINDecodeStructure",
+          "caption": "Enter and apply a valid VIN to decode it.",
+          "bold": true
+        },
+        {
+          "type": "Label",
+          "name": "VINDecodeManufacturer",
+          "caption": "Manufacturer"
+        },
+        {
+          "type": "Label",
+          "name": "VINDecodeModel",
+          "caption": "Model"
+        },
+        {
+          "type": "Label",
+          "name": "VINDecodeDrive",
+          "caption": "Drive"
+        },
+        {
+          "type": "Label",
+          "name": "VINDecodeProduction",
+          "caption": "Production"
+        },
+        {
+          "type": "Label",
+          "name": "VINDecodeRestraint",
+          "caption": "Restraint system"
+        },
+        {
+          "type": "Label",
+          "name": "VINDecodeValidation",
+          "caption": "Check digit"
+        },
+        {
+          "type": "CheckBox",
+          "name": "CreateVINVariables",
+          "caption": "Create VIN information variables"
+        },
+        {
+          "type": "Label",
+          "caption": "VIN information is decoded locally from the VIN. Variables are updated only when they are created or the configured VIN changes."
+        }
+      ]
+    },
+    {
+      "type": "ExpansionPanel",
       "caption": "Polling and control",
       "expanded": true,
       "items": [
