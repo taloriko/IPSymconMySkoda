@@ -1,71 +1,49 @@
 # MySkoda für Symcon
 
-MySkoda ist ein Symcon-Modul zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**.
-
-Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als native Symcon-Variablen bereit und unterstützt – soweit vom Fahrzeug und der API freigegeben – ausgewählte Remote-Funktionen.
+MySkoda bindet Škoda-Fahrzeuge über die offizielle **MyŠkoda Public API** in Symcon ein. Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als Symcon-Variablen bereit und unterstützt – soweit von Fahrzeug und API freigegeben – ausgewählte Remote-Funktionen.
 
 ## Funktionen
 
 - Fahrzeugdaten über FIN/VIN und MySkoda API-Key
-- lokale FIN/VIN-Entschlüsselung direkt in der Instanzkonfiguration
-- optionales Anlegen der entschlüsselten FIN-Informationen als reine String-Variablen
-- zyklischer Abruf mit Berücksichtigung der von Škoda gelieferten Rate-Limit-Informationen
-- einstellbares Abfrageintervall
-- lesend, soweit vom Fahrzeug unterstützt:
-  - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
-  - Ladeleistung, Ladelimit und Lademodus
-  - Klimatisierung
-- schreibend, soweit vom Fahrzeug unterstützt:
-  - Klimatisierung, Standheizung und Belüftung
-  - Ladelimit, Lademodus und Laden starten/stoppen
-- stabile Variablen-Idents als Schnittstelle für Skripte und Visualisierungsmodule
-- automatische Prüfung der OpenAPI-Definition auf neue, noch nicht integrierte API-Funktionen
+- Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
+- Ladeleistung, Ladelimit und Lademodus
+- Klimatisierung und Solltemperatur
+- Laden starten/stoppen, Ladelimit und Lademodus ändern
+- Klimatisierung, Standheizung und Lüftung steuern, soweit unterstützt
 - optionale Detail-, Standort- und Diagnosevariablen
-- optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
-- optionale Archivierung von Ladezustand, Ladelimit, Ladeleistung und Kilometerstand nach ausdrücklicher Aktivierung
+- optionale Archivierung ausgewählter Fahrzeugwerte
+- API-Key-Ablaufwarnung per Symcon-Mitteilung
+- Prüfung der öffentlichen OpenAPI-Definition auf neue API-Funktionen
+- lokales Fahrzeugbild aus der von MyŠkoda gelieferten Render-URL
+- lokale FIN/VIN-Entschlüsselung mit optionalen String-Variablen
 
-Die FIN/VIN wird lokal in WMI, VDS und VIS zerlegt. Soweit für die jeweilige Škoda-Baureihe belastbare Zuordnungen hinterlegt sind, werden daraus unter anderem Hersteller, Modell, Modelljahr, Produktionswerk, Seriennummer sowie modellabhängig weitere Fahrzeugmerkmale angezeigt. Unbekannte oder nicht eindeutig belegte Codes werden nicht geraten. Die Auswertung löst keine zusätzliche MyŠkoda-API-Anfrage aus.
+Die FIN/VIN-Entschlüsselung ist bewusst nur eine Zusatzfunktion. Details zur Zerlegung, Prüflogik, bekannten Codes und Grenzen stehen separat in [MySkoda/README_FIN_VIN.md](MySkoda/README_FIN_VIN.md).
 
-> **Hinweis zur FIN/VIN-Entschlüsselung:** Die daraus abgeleiteten Angaben sind keine offiziellen Fahrzeugstammdaten von Škoda. Sie werden anhand öffentlich verfügbarer Herstellerinformationen, technischer Unterlagen, Typgenehmigungsdaten und nachvollziehbarer FIN-Beispiele interpretiert und können für einzelne Fahrzeuge unvollständig oder mehrdeutig sein.
-
-## In der App verfügbar, aber nicht in der Public API
-
-Folgende Funktionen sind in der MySkoda App verfügbar, aber im offiziellen **Public-API-Vertrag 1.0.0** derzeit nicht enthalten und können deshalb vom Modul nicht bereitgestellt werden:
-
-- Camping Mode
-- Klima-Timer / Abfahrtszeiten
-- intelligentes Heizen / intelligentes Klimatisieren
-- Scheibenheizung im Zusammenhang mit der Klimatisierung
-- Sitzheizung Fahrer und Beifahrer im Zusammenhang mit der Klimatisierung
-- Battery Care Mode
-- reduzierte AC-Ladeleistung / Begrenzung des AC-Ladestroms
-- automatisches Entriegeln des AC-Ladekabels
-
-Das Modul verwendet für Fahrzeugdaten und Remote-Funktionen ausschließlich die offizielle MyŠkoda Public API. Private oder interne App-Schnittstellen werden nicht verwendet.
+> **Hinweis zur FIN/VIN-Entschlüsselung:** Die daraus abgeleiteten Angaben sind keine offiziellen Fahrzeugstammdaten von Škoda. Sie werden anhand öffentlich verfügbarer Informationen interpretiert und können bei einzelnen Fahrzeugen unvollständig oder mehrdeutig sein.
 
 ## Voraussetzungen
 
 - Symcon **8.1 oder neuer**
 - 17-stellige FIN/VIN
 - MySkoda API-Key
-- aktive MySkoda/Škoda-Connect-Dienste für die jeweils verwendete Fahrzeugfunktion
+- aktive MySkoda/Škoda-Connect-Dienste für die verwendeten Fahrzeugfunktionen
 - Internetzugang von Symcon zur MyŠkoda Public API
-- optional S-PIN für Standheizung
-- Archive Control nur für die optionale Archivierung
+- optional S-PIN für die Standheizung
+- Archive Control nur bei Verwendung der optionalen Archivierung
 
 Der API-Key wird in der MySkoda App unter **Profil → Smart Home → Schlüssel erstellen** erzeugt.
 
-Die offizielle MyŠkoda Public API ist unter <https://public.api.connect.skoda-auto.cz/docs> dokumentiert.
+Offizielle API-Dokumentation: <https://public.api.connect.skoda-auto.cz/docs>
 
 ## Installation
 
 ### Module Store
 
-Im Symcon **Module Store** nach **MySkoda** suchen und das Modul installieren. Anschließend kann über **Instanz hinzufügen** eine Instanz **MySkoda** angelegt werden.
+Im Symcon **Module Store** nach **MySkoda** suchen, das Modul installieren und anschließend eine Instanz **MySkoda** anlegen.
 
 ### Manuell über Module Control
 
-Alternativ kann das Repository im **Module Control** hinzugefügt werden:
+Alternativ das Repository im **Module Control** hinzufügen:
 
 ```text
 https://github.com/taloriko/IPSymconMySkoda
@@ -75,136 +53,36 @@ Anschließend eine Instanz **MySkoda** anlegen.
 
 ## Erste Einrichtung
 
-1. In der MySkoda App einen API-Key erstellen: **Profil → Smart Home → Schlüssel erstellen**.
+1. In der MySkoda App einen API-Key erstellen.
 2. FIN/VIN und API-Token in der MySkoda-Instanz eintragen.
 3. Konfiguration übernehmen.
 4. Mit **Verbindung testen** prüfen, ob Fahrzeugdaten empfangen werden.
-5. Optional **FIN-Informationsvariablen anlegen** aktivieren, wenn die entschlüsselten FIN-Daten zusätzlich als Variablen benötigt werden.
-6. Optional Detailvariablen, Mitteilungen und Archivierung aktivieren.
+5. Optional FIN-Informationsvariablen, Detail-/Diagnosevariablen, Mitteilungen und Archivierung aktivieren.
 
-Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul wertet die von der API gelieferten Rate-Limit-Header aus und berücksichtigt `Retry-After`.
+Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul berücksichtigt die von der API gelieferten Rate-Limit-Header und `Retry-After`.
 
-## Objektstruktur
+## Verhalten bei Remote-Befehlen
 
-Das Modul hält den Objektbaum bewusst einfach. Unter der MySkoda-Instanz liegen ausschließlich echte Modulvariablen und das optionale Fahrzeugbild. Es werden **keine Dummy-Instanzen**, Kategorien oder Links angelegt.
+Schreibbare Werte werden beim Absenden sofort lokal gesetzt. Während der HTTP-Anfrage wird der Datenpunkt intern als Pending geführt.
 
-```text
-MySkoda
-├─ Ladezustand
-├─ Reichweite
-├─ Kilometerstand
-├─ Verriegelt
-├─ Türen offen
-├─ Fenster offen
-├─ Laden
-├─ Ladeleistung
-├─ Ladelimit
-├─ Lademodus
-├─ Klimatisierung
-├─ Solltemperatur
-├─ API-Key Warnung
-├─ Neue API-Funktionen
-└─ Letzte Aktualisierung
-```
+- Bei erfolgreicher 2xx-Antwort bleibt der gewünschte Wert gesetzt.
+- Bei Fehlerantwort oder Übertragungsfehler wird der vorherige Wert wiederhergestellt.
 
-Je nach aktivierten Optionen kommen Detail-/Diagnosevariablen und die FIN-Informationsvariablen hinzu. Die FIN-Variablen sind reine Strings ohne eigenes Icon oder spezielle Darstellung und werden nur bei ihrer Erstanlage bzw. bei Änderung der konfigurierten FIN aktualisiert. Das normale Fahrzeug-Polling verändert sie nicht.
+Der normale zyklische Fahrzeugabruf läuft unabhängig davon weiter und übernimmt später wieder den vom Portal gemeldeten Fahrzeugzustand.
 
-Die fachliche Gruppierung und Darstellung übernimmt der Benutzer oder es wird das [IPSymconEVTile](https://github.com/taloriko/IPSymconEVTile) genutzt.
+Bei aktivierten Detail- und Diagnosevariablen zeigen `PendingCommands` und `CommandStatus` den aktuellen bzw. letzten Befehlsstatus.
 
-Die technischen Variablen-Idents wie `StateOfCharge`, `Range`, `Mileage`, `Charging`, `TargetSOC` oder `Climate` bleiben stabil und bilden die Schnittstelle für Skripte und weitere Module.
+## In der App verfügbar, aber nicht in der Public API
 
-Vorhandene Variablen werden bei späteren Modulaktualisierungen nicht erneut registriert. Name, Position und Darstellung werden deshalb nur bei der Erstanlage gesetzt und danach nicht durch ein Update überschrieben.
+Einige Funktionen der MySkoda App sind im öffentlichen API-Vertrag derzeit nicht enthalten und können deshalb vom Modul nicht bereitgestellt werden, darunter Klima-Timer/Abfahrtszeiten, intelligentes Heizen/Klimatisieren, Sitzheizung im Zusammenhang mit der Klimatisierung, Battery Care Mode, reduzierte AC-Ladeleistung und automatisches Entriegeln des AC-Ladekabels.
 
-## Lademodi
-
-Die offizielle MyŠkoda Public API bestätigt, dass der **Lademodus geändert** werden kann. Die öffentlich zugängliche Dokumentation beschreibt jedoch derzeit **nicht eindeutig die fachliche Bedeutung jedes einzelnen Enum-Werts**. Deshalb werden die folgenden Erklärungen ausdrücklich als **Vermutung anhand der API-Bezeichnungen** gekennzeichnet.
-
-| API-Wert | Anzeige in Symcon | Einordnung | Erklärung |
-|---|---|---|---|
-| `MANUAL` | Manuell | Vermutung | Direktes bzw. manuelles Laden ohne aktive Zeitsteuerung. |
-| `TIMER` | Timer | Vermutung | Laden nach einem im Fahrzeug bzw. Ladeprofil hinterlegten Zeitplan. |
-| `TIMER_CHARGING_WITH_CLIMATISATION` | Timer + Klimatisierung | Vermutung | Zeitgesteuertes Laden zusammen mit einer vorbereitenden Klimatisierung. Die Public API 1.0.0 stellt keine eigene Bearbeitung von Klima-Zeitplänen bereit; wahrscheinlich wird ein bereits im Fahrzeug bzw. in der App konfigurierter Plan verwendet. |
-| `PREFERRED_CHARGING_TIMES` | Bevorzugte Ladezeiten | Vermutung | Laden innerhalb bevorzugter Zeitfenster eines Ladeprofils bzw. gespeicherten Ladeorts. |
-| `ONLY_OWN_CURRENT` | Nur eigener Strom | Vermutung | Vermutlich Laden nur mit eigener Energieerzeugung, z. B. PV-Überschuss, sofern Fahrzeug und Energiesystem dies unterstützen. |
-| `IMMEDIATE_DISCHARGING` | Sofort entladen | Vermutung | Vermutlich sofortiges Entladen bei einem bidirektionalen bzw. Home-Energy-fähigen System. Für normale Fahrzeuge ohne diese Funktion nicht relevant. |
-| `HOME_STORAGE_CHARGING` | Heimspeicher laden | Vermutung | Vermutlich ein Modus für die Kopplung mit einem Heimspeicher. Richtung und genaues Verhalten sind in der öffentlich zugänglichen API-Dokumentation nicht eindeutig beschrieben. |
-
-Nicht jeder Modus muss von jedem Fahrzeug unterstützt werden. Das Modul liest – sofern vom Portal geliefert – `charging.settings.availableChargeModes` und prüft den gewünschten Modus vor dem Senden.
-
-Welche Modi ein konkretes Fahrzeug aktuell meldet, lässt sich aus den Rohdaten prüfen:
-
-```php
-$raw = json_decode(MSKODA_GetRawData(12345), true);
-echo json_encode(
-    $raw['vehicle']['charging']['settings']['availableChargeModes'] ?? null,
-    JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-);
-```
-
-Damit ist klar getrennt zwischen **gesichertem API-Wert** und **nur vermuteter fachlicher Bedeutung**.
-
-## Befehlsausführung ab Version 1.1
-
-Schreibbare Werte wie Ladelimit, Lademodus, Laden, Klimatisierung und – bei aktiver Klimatisierung – die Solltemperatur werden beim Absenden sofort lokal auf den gewünschten Wert gesetzt.
-
-Während die HTTP-Anfrage läuft, wird der Datenpunkt intern kurz als Pending geführt. Danach entscheidet ausschließlich die **Serverantwort** des Befehlsaufrufs:
-
-- **erfolgreiche 2xx-Antwort:** Der gewünschte Wert bleibt gesetzt und Pending wird sofort beendet.
-- **Fehlerantwort oder Übertragungsfehler:** Der vorherige Wert wird sofort wiederhergestellt und Pending wird ebenfalls beendet.
-
-Es gibt keine zusätzliche Bestätigungsabfrage und es wird nicht auf eine verzögerte Rückmeldung des Fahrzeugs gewartet. Der normale zyklische Fahrzeugabruf läuft unabhängig davon weiter und kann den Wert später wieder auf den dann vom Portal gemeldeten Fahrzeugzustand setzen.
-
-Bei aktivierten **Detail- und Diagnosevariablen** stehen zusätzlich zur Verfügung:
-
-- `PendingCommands` – **Ausstehende Befehle**; normalerweise nur während der laufenden Serveranfrage ungleich `0`
-- `CommandStatus` – **Befehlsstatus**; bei Erfolg z. B. `Bestätigt: Ladelimit`, bei Fehler zusätzlich mit dem tatsächlichen Fehlertext, z. B. `Befehl abgelehnt: Ladelimit - HTTP 400: ...`
-
-## Neue API-Funktionen
-
-Nach einer erfolgreichen Fahrzeugabfrage prüft das Modul zusätzlich die öffentliche OpenAPI-Definition der MyŠkoda Public API. Die Definition wird höchstens einmal innerhalb von 24 Stunden neu geladen und belastet nicht das fahrzeugbezogene API-Kontingent.
-
-Die Variable `NewApiFeatures` wird als **Neue API-Funktionen** angezeigt:
-
-- `0` – die aktuell veröffentlichten API-Operationen sind dem Modul bekannt.
-- `> 0` – die API enthält zusätzliche Operationen, die die aktuelle Modulversion noch nicht integriert.
-
-Neue API-Funktionen werden **nicht automatisch als Symcon-Variablen angelegt**. Die Variable ist nur ein Hinweis darauf, dass sich die API erweitert hat. Neue Datenpunkte, Datentypen und Darstellungen werden weiterhin ausschließlich über ein definiertes Modulupdate ergänzt.
-
-Für Entwickler werden unbekannte OpenAPI-Operationen beim Neuladen der API-Definition zusätzlich im Debug ausgegeben. Über **API-Definition neu laden** kann die Prüfung manuell angestoßen werden.
-
-## Deutsche Statusdarstellung
-
-Statuswerte der API bleiben technisch unverändert. Die Symcon-Darstellung übersetzt bekannte Werte für die Oberfläche.
-
-Beispiele:
-
-- `PARKED` → **Geparkt**
-- `MOVING` → **In Bewegung**
-- `DRIVING` → **In Fahrt**
-- `CHARGING` → **Laden aktiv**
-- `READY_FOR_CHARGING` → **Ladebereit**
-- `UNKNOWN` → **Unbekannt**
-
-Dadurch bleiben Skripte unabhängig von der eingestellten Sprache, während die Oberfläche deutsch dargestellt wird.
-
-## Archivierung
-
-Die Archivierung ist **standardmäßig deaktiviert** und wird nur nach ausdrücklicher Aktivierung in der Instanz eingerichtet.
-
-Dabei werden einmalig folgende Variablen für das Logging konfiguriert:
-
-- `StateOfCharge` – Ladezustand
-- `TargetSOC` – Ladelimit
-- `ChargePower` – Ladeleistung
-- `Mileage` – Kilometerstand
-
-Der Kilometerstand wird als **Zähler** archiviert. Ein von der API gelieferter Kilometerstand `<= 0` wird nicht in die Variable geschrieben. Zusätzlich ist für den Archiv-Zähler das Ignorieren von Null- und negativen Werten aktiviert.
-
-Nach der erstmaligen Einrichtung verändert das Modul die Archive-Control-Einstellungen nicht erneut. Benutzeranpassungen bleiben damit erhalten.
+Das Modul verwendet für Fahrzeugdaten und Remote-Funktionen ausschließlich die offizielle MyŠkoda Public API. Private oder interne App-Schnittstellen werden nicht verwendet.
 
 ## Dokumentation
 
-Die vollständige Modul-Dokumentation mit Konfiguration, Variablen und PHP-Befehlen befindet sich unter [MySkoda/README.md](MySkoda/README.md).
+Die vollständige Modul-Dokumentation mit Konfiguration, Variablen, PHP-Befehlen, Fehlersuche und Datenschutz befindet sich unter [MySkoda/README.md](MySkoda/README.md).
+
+Die technische Dokumentation der optionalen FIN/VIN-Entschlüsselung befindet sich unter [MySkoda/README_FIN_VIN.md](MySkoda/README_FIN_VIN.md).
 
 ## Fehler melden
 
