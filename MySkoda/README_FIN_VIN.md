@@ -266,7 +266,7 @@ TMBJC7NY5NF017514
 Zerlegung:
 
 ```text
-TMB | J | C | 7 | NY | 5 | N | F | 017514
+TMB | J | C | 7 | NY | 5 | N | F | 000001
 ```
 
 Aktuelle Interpretation des Moduls:
@@ -282,7 +282,7 @@ Leistung: 150 kW / 204 PS
 Variante: Enyaq iV 80
 Modelljahr: 2022
 Produktionswerk: Mladá Boleslav
-Seriennummer: 017514
+Seriennummer: 000001
 Prüfzeichen: 5, Berechnung: 5
 ```
 
@@ -320,5 +320,3 @@ Aktuell verwendete bzw. zur Gegenprüfung geeignete Quellen sind unter anderem:
   <https://www.law.cornell.edu/cfr/text/49/565.15>
 - Škoda-/Rettungs- und Typgenehmigungsunterlagen sowie öffentlich zugängliche nationale Typgenehmigungsdaten für die Gegenprüfung einzelner Baureihen
 - dokumentierte reale FIN-Beispiele aus Fahrzeugforen nur ergänzend; solche Beispiele werden nicht allein als Herstellerbeleg behandelt
-
-Bei neuen oder widersprüchlichen Erkenntnissen sollte die Zuordnung lieber als unbekannt bleiben, bis sie nachvollziehbar abgesichert ist.
