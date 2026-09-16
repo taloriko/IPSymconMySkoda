@@ -35,6 +35,11 @@ final class MySkoda extends IPSModuleStrict
         MySkodaCommandTrait::RequestAction insteadof MySkodaCoreTrait;
         MySkodaCommandTrait::SetChargingLimit insteadof MySkodaCoreTrait;
         MySkodaCommandTrait::SetChargeMode insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::UpdateChargingProfile insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::StartAuxiliaryHeating insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::StopAuxiliaryHeating insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::StartVentilation insteadof MySkodaCoreTrait;
+        MySkodaCommandTrait::StopVentilation insteadof MySkodaCoreTrait;
     }
 
     private const API_ROOT = 'https://public.api.connect.skoda-auto.cz';
