@@ -194,6 +194,97 @@ trait MySkodaCommandTrait
         );
     }
 
+    public function UpdateChargingProfile(int $ProfileID, string $ProfileJSON): bool
+    {
+        $profile = json_decode($ProfileJSON, true);
+        if (!is_array($profile)) {
+            return $this->rejectDirectCommand(
+                'Charging profile',
+                $this->Translate('Invalid charging profile JSON')
+            );
+        }
+
+        $operation = $this->findOperation($this->refreshOpenApi(false), 'profile');
+        if ($operation === null) {
+            return $this->rejectDirectCommand(
+                'Charging profile',
+                $this->Translate('Charging profile operation was not found in the OpenAPI definition.')
+            );
+        }
+
+        $path = $this->replacePathParameters((string) $operation['path'], $ProfileID);
+        $body = $this->buildProfilePayload($operation, $profile);
+
+        return $this->executeDirectCommand(
+            'UpdateChargingProfile',
+            'Charging profile',
+            fn (): bool => $this->sendCommand((string) $operation['method'], $path, $body)
+        );
+    }
+
+    public function StartAuxiliaryHeating(
+        float $TargetTemperature = 22.0,
+        int $DurationMinutes = 30,
+        string $Mode = 'HEATING'
+    ): bool {
+        $spin = trim($this->ReadPropertyString('SPIN'));
+        if ($spin === '') {
+            return $this->rejectDirectCommand(
+                'Auxiliary heating',
+                $this->Translate('S-PIN is missing')
+            );
+        }
+
+        $body = [
+            'spin' => $spin,
+            'targetTemperature' => [
+                'value' => max(16.0, min(30.0, $TargetTemperature)),
+                'unit' => $this->commandTemperatureUnit()
+            ],
+            'durationInSeconds' => max(60, $DurationMinutes * 60),
+            'startMode' => strtoupper($Mode) === 'VENTILATION' ? 'VENTILATION' : 'HEATING'
+        ];
+
+        return $this->executeDirectCommand(
+            'StartAuxiliaryHeating',
+            'Auxiliary heating',
+            fn (): bool => $this->sendCommand(
+                'POST',
+                '/api/v1/vehicles/'
+                    . rawurlencode(strtoupper(trim($this->ReadPropertyString('VIN'))))
+                    . '/auxiliary-heating/start',
+                $body
+            )
+        );
+    }
+
+    public function StopAuxiliaryHeating(): bool
+    {
+        return $this->executeDirectCommand(
+            'StopAuxiliaryHeating',
+            'Auxiliary heating',
+            fn (): bool => $this->sendSimpleCommand('auxiliary-heating/stop')
+        );
+    }
+
+    public function StartVentilation(): bool
+    {
+        return $this->executeDirectCommand(
+            'StartVentilation',
+            'Ventilation',
+            fn (): bool => $this->sendSimpleCommand('active-ventilation/start')
+        );
+    }
+
+    public function StopVentilation(): bool
+    {
+        return $this->executeDirectCommand(
+            'StopVentilation',
+            'Ventilation',
+            fn (): bool => $this->sendSimpleCommand('active-ventilation/stop')
+        );
+    }
+
     /**
      * Compatibility method for early 1.1 installations. Delayed command
      * confirmation is no longer used, therefore this only clears stale state.
@@ -268,6 +359,67 @@ trait MySkodaCommandTrait
         }
 
         $this->WriteAttributeString('CommandStatusText', $status);
+        $this->updateCommandStatusVariables();
+        return false;
+    }
+
+    private function executeDirectCommand(string $key, string $label, Closure $command): bool
+    {
+        $pending = $this->readPendingCommands();
+        $pending[$key] = [
+            'state' => 'sending',
+            'label' => $label
+        ];
+
+        $this->writePendingCommands($pending);
+        $this->WriteAttributeString('LastCommandResult', 'sending');
+        $this->WriteAttributeString('CommandStatusText', '');
+        $this->updateCommandStatusVariables();
+
+        try {
+            $ok = $command();
+        } catch (Throwable $throwable) {
+            $ok = false;
+            $this->WriteAttributeString('LastError', $throwable->getMessage());
+        }
+
+        $pending = $this->readPendingCommands();
+        unset($pending[$key]);
+        $this->writePendingCommands($pending);
+        $this->SetTimerInterval('CommandConfirmTimer', 0);
+
+        if ($ok) {
+            $this->WriteAttributeString('LastCommandResult', 'accepted');
+            $this->WriteAttributeString(
+                'CommandStatusText',
+                sprintf($this->Translate('Confirmed: %s'), $this->Translate($label))
+            );
+            $this->updateCommandStatusVariables();
+            return true;
+        }
+
+        $this->WriteAttributeString('LastCommandResult', 'rejected');
+        $error = trim($this->ReadAttributeString('LastError'));
+        $status = sprintf(
+            $this->Translate('Command rejected: %s'),
+            $this->Translate($label)
+        );
+        if ($error !== '') {
+            $status .= ' - ' . $error;
+        }
+        $this->WriteAttributeString('CommandStatusText', $status);
+        $this->updateCommandStatusVariables();
+        return false;
+    }
+
+    private function rejectDirectCommand(string $label, string $message): bool
+    {
+        $this->WriteAttributeString('LastError', $message);
+        $this->WriteAttributeString('LastCommandResult', 'rejected');
+        $this->WriteAttributeString(
+            'CommandStatusText',
+            sprintf($this->Translate('Command rejected: %s'), $this->Translate($label)) . ' - ' . $message
+        );
         $this->updateCommandStatusVariables();
         return false;
     }
