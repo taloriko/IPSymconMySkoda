@@ -40,7 +40,7 @@ def main() -> None:
 
     assert GUID.match(library["id"])
     assert library["name"] == "MySkoda"
-    assert library["version"] == "1.4"
+    assert library["version"] == "1.5"
     assert library["compatibility"]["version"] >= "8.1"
     assert GUID.match(module["id"])
     assert module["name"] == "MySkoda"
@@ -68,6 +68,22 @@ def main() -> None:
     missing = sorted(caption for caption in all_form_captions if caption not in translations)
     assert not missing, f"Missing German form translations: {missing}"
 
+    action_captions = captions(form.get("actions", []))
+    for removed in [
+        "Test connection",
+        "Test notification",
+        "Reload API definition",
+        "Diagnose vehicle images",
+        "Diagnose Public API data",
+    ]:
+        assert removed not in action_captions
+    for required in [
+        "Update now",
+        "Refresh vehicle image",
+        "Show raw vehicle response",
+    ]:
+        assert required in action_captions
+
     module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
     variables = (ROOT / "MySkoda" / "src" / "VariablesTrait.php").read_text(encoding="utf-8")
     history = (ROOT / "MySkoda" / "src" / "HistoryTrait.php").read_text(encoding="utf-8")
@@ -81,7 +97,7 @@ def main() -> None:
     php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
 
     assert "final class MySkoda extends IPSModuleStrict" in module_php
-    assert "Symcon-MySkoda/1.4" in module_php
+    assert "Symcon-MySkoda/1.5" in module_php
     assert "VinDecoderTrait.php" in module_php
     assert "VinIntegrationTrait.php" in module_php
     assert re.search(r"<\?(?!php)", php_sources) is None
@@ -93,6 +109,7 @@ def main() -> None:
         assert forbidden not in php_sources
 
     assert "RegisterPropertyBoolean('EnableChargingHistory', false)" in core
+    assert "GetRawData" in core
     assert "AC_SetLoggingStatus" in history
     assert "applyDefaultObjectIcons" in variables
     assert "executeOptimisticCommand" in command
@@ -108,9 +125,6 @@ def main() -> None:
         assert required in (image + module_php)
 
     for required in [
-        "DiagnosePublicApiData",
-        "{redacted-location}",
-        "{redacted-license-plate}",
         "APICarType",
         "APIPrimaryEngineType",
         "APISecondaryEngineType",
@@ -199,6 +213,7 @@ def main() -> None:
 
     assert translations.get("VIN / FIN decoding") == "FIN / VIN entschlüsseln"
     assert translations.get("Create VIN information variables") == "FIN-Informationsvariablen anlegen"
+    assert translations.get("Show raw vehicle response") == "Rohe Fahrzeugantwort anzeigen"
 
     root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
     module_readme = (ROOT / "MySkoda" / "README.md").read_text(encoding="utf-8")
@@ -243,6 +258,8 @@ def main() -> None:
         assert text in vin_readme
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    assert "## 1.5 - 2026-09-17" in changelog
+    assert "Rohe Fahrzeugantwort anzeigen" in changelog
     assert "## 1.4 - 2026-09-16" in changelog
     assert "APISupportedFeatures" in changelog
     assert "APIAvailableChargeModes" in changelog
