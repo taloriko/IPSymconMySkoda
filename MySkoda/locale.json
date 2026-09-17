@@ -105,6 +105,7 @@
       "Refresh vehicle image": "Fahrzeugbild aktualisieren",
       "Vehicle image": "Fahrzeugbild",
       "Diagnose Public API data": "Public-API-Daten diagnostizieren",
+      "Show raw vehicle response": "Rohe Fahrzeugantwort anzeigen",
       "Connected to MySkoda": "Mit MySkoda verbunden",
       "Inactive": "Inaktiv",
       "VIN or API token is missing or invalid": "FIN oder API-Token fehlt oder ist ungültig",
