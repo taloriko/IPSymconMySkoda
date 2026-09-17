@@ -68,21 +68,18 @@ final class MySkoda extends IPSModuleStrict
 
     public function Update(): void
     {
-        if ($this->fetchVehicle(false)) {
-            $this->updatePublicApiValuesFromRawData();
-            $this->syncVehicleImage(false);
-            $this->refreshOpenApi(false);
-        }
+        $this->refreshVehicleData(false);
     }
 
-    public function TestConnection(): bool
+    private function refreshVehicleData(bool $userAction): bool
     {
-        $ok = $this->fetchVehicle(true);
-        if ($ok) {
-            $this->updatePublicApiValuesFromRawData();
-            $this->syncVehicleImage(false);
-            $this->refreshOpenApi(false);
+        if (!$this->fetchVehicle($userAction)) {
+            return false;
         }
-        return $ok;
+
+        $this->updatePublicApiValuesFromRawData();
+        $this->syncVehicleImage(false);
+        $this->refreshOpenApi(false);
+        return true;
     }
 }
