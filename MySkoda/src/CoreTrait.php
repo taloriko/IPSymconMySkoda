@@ -22,6 +22,7 @@ trait MySkodaCoreTrait
 
         // Runtime state
         $this->RegisterAttributeString('RawData', '');
+        $this->RegisterAttributeString('LastVehicleResponseRaw', '');
         $this->RegisterAttributeString('OpenApiOperations', '');
         $this->RegisterAttributeInteger('OpenApiUpdatedAt', 0);
         $this->RegisterAttributeString('AvailableChargeModes', '[]');
@@ -212,6 +213,11 @@ trait MySkodaCoreTrait
         return $this->ReadAttributeString('RawData');
     }
 
+    public function GetLastVehicleResponseRaw(): string
+    {
+        return $this->ReadAttributeString('LastVehicleResponseRaw');
+    }
+
     public function GetChargingProfiles(): string
     {
         $raw = json_decode($this->ReadAttributeString('RawData'), true);
@@ -367,6 +373,10 @@ trait MySkodaCoreTrait
             'GET',
             '/api/v1/vehicles/' . rawurlencode($vin)
         );
+        $this->WriteAttributeString(
+            'LastVehicleResponseRaw',
+            (string) ($response['raw'] ?? '')
+        );
         $this->absorbHeaders($response['headers']);
 
         if (!$response['ok'] || !is_array($response['json'])) {
@@ -446,8 +456,7 @@ trait MySkodaCoreTrait
                 continue;
             }
 
-            $name = (string) ($action['name'] ?? '');
-            if (in_array($name, ['UpdateNowButton', 'ReloadApiDefinitionButton'], true)) {
+            if ((string) ($action['name'] ?? '') === 'UpdateNowButton') {
                 $action['enabled'] = $enabled;
             }
 
@@ -481,9 +490,11 @@ trait MySkodaCoreTrait
                 $this->connectionFeedbackCaption()
             );
 
-            $enabled = $this->instanceActionsAvailable();
-            $this->UpdateFormField('UpdateNowButton', 'enabled', $enabled);
-            $this->UpdateFormField('ReloadApiDefinitionButton', 'enabled', $enabled);
+            $this->UpdateFormField(
+                'UpdateNowButton',
+                'enabled',
+                $this->instanceActionsAvailable()
+            );
         } catch (Throwable) {
         }
     }
