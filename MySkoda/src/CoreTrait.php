@@ -92,22 +92,12 @@ trait MySkodaCoreTrait
                 'checking',
                 $this->Translate('Checking connection to MySkoda...')
             );
-            $this->TestConnection();
+            $this->refreshVehicleData(true);
             return;
         }
 
         $this->SetStatus(102);
         $this->refreshConnectionForm();
-    }
-
-    public function Update(): void
-    {
-        $this->fetchVehicle(false);
-    }
-
-    public function TestConnection(): bool
-    {
-        return $this->fetchVehicle(true);
     }
 
     public function GetConfigurationForm(): string
@@ -138,79 +128,6 @@ trait MySkodaCoreTrait
         }
 
         return json_encode($form, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
-    }
-
-    public function RequestAction(string $Ident, mixed $Value): void
-    {
-        if (!$this->ReadPropertyBoolean('EnableRemote')) {
-            throw new RuntimeException(
-                $this->Translate('Remote control is disabled in this instance.')
-            );
-        }
-
-        if (!$this->canRequest(true)) {
-            $this->SetStatus(203);
-            throw new RuntimeException(
-                $this->Translate('MySkoda rate limit / waiting period is active.')
-            );
-        }
-
-        switch ($Ident) {
-            case 'Charging':
-                $ok = $this->sendSimpleCommand((bool) $Value ? 'charging/start' : 'charging/stop');
-                if ($ok) {
-                    $this->SetValue('Charging', (bool) $Value);
-                }
-                return;
-
-            case 'TargetSOC':
-                $percent = max(50, min(100, (int) $Value));
-                $ok = $this->sendDiscoveredScalarCommand('limit', $percent);
-                if ($ok) {
-                    $this->SetValue('TargetSOC', $percent);
-                }
-                return;
-
-            case 'ChargeMode':
-                $mode = self::CHARGE_MODES[(int) $Value] ?? null;
-                if (!is_string($mode) || !$this->isChargeModeAvailable($mode)) {
-                    throw new RuntimeException(
-                        $this->Translate('The selected charging mode is not supported by this vehicle.')
-                    );
-                }
-
-                $ok = $this->sendDiscoveredScalarCommand('mode', $mode);
-                if ($ok) {
-                    $this->SetValue('ChargeMode', (int) $Value);
-                }
-                return;
-
-            case 'Climate':
-                $ok = (bool) $Value
-                    ? $this->startClimateInternal((float) $this->GetValue('TargetTemperature'))
-                    : $this->sendSimpleCommand('air-conditioning/stop');
-
-                if ($ok) {
-                    $this->SetValue('Climate', (bool) $Value);
-                }
-                return;
-
-            case 'TargetTemperature':
-                $temperature = max(16.0, min(30.0, (float) $Value));
-                $this->SetValue('TargetTemperature', $temperature);
-
-                if ((bool) $this->GetValue('Climate')) {
-                    $this->startClimateInternal($temperature);
-                }
-                return;
-        }
-
-        throw new InvalidArgumentException('Unknown action: ' . $Ident);
-    }
-
-    public function GetRawData(): string
-    {
-        return $this->ReadAttributeString('RawData');
     }
 
     public function GetLastVehicleResponseRaw(): string
@@ -244,112 +161,6 @@ trait MySkodaCoreTrait
         );
     }
 
-    public function RefreshApiDefinition(): bool
-    {
-        if (!$this->instanceActionsAvailable()) {
-            return false;
-        }
-
-        return $this->refreshOpenApi(true) !== [];
-    }
-
-    public function SetChargingLimit(int $Percent): bool
-    {
-        $Percent = max(50, min(100, $Percent));
-        return $this->sendDiscoveredScalarCommand('limit', $Percent);
-    }
-
-    public function SetChargeMode(string $Mode): bool
-    {
-        $Mode = strtoupper(trim($Mode));
-        if ($Mode === '' || !$this->isChargeModeAvailable($Mode)) {
-            $this->WriteAttributeString(
-                'LastError',
-                $this->Translate('The selected charging mode is not supported by this vehicle.')
-            );
-            return false;
-        }
-
-        return $this->sendDiscoveredScalarCommand('mode', $Mode);
-    }
-
-    public function UpdateChargingProfile(int $ProfileID, string $ProfileJSON): bool
-    {
-        if (!$this->ReadPropertyBoolean('EnableRemote')) {
-            return false;
-        }
-
-        $profile = json_decode($ProfileJSON, true);
-        if (!is_array($profile)) {
-            $this->WriteAttributeString(
-                'LastError',
-                $this->Translate('Invalid charging profile JSON')
-            );
-            return false;
-        }
-
-        $operation = $this->findOperation($this->refreshOpenApi(false), 'profile');
-        if ($operation === null) {
-            $this->WriteAttributeString(
-                'LastError',
-                $this->Translate(
-                    'Charging profile operation was not found in the OpenAPI definition.'
-                )
-            );
-            return false;
-        }
-
-        $path = $this->replacePathParameters((string) $operation['path'], $ProfileID);
-        $body = $this->buildProfilePayload($operation, $profile);
-
-        return $this->sendCommand((string) $operation['method'], $path, $body);
-    }
-
-    public function StartAuxiliaryHeating(
-        float $TargetTemperature = 22.0,
-        int $DurationMinutes = 30,
-        string $Mode = 'HEATING'
-    ): bool {
-        $spin = trim($this->ReadPropertyString('SPIN'));
-        if ($spin === '') {
-            $this->WriteAttributeString('LastError', $this->Translate('S-PIN is missing'));
-            return false;
-        }
-
-        $body = [
-            'spin' => $spin,
-            'targetTemperature' => [
-                'value' => max(16.0, min(30.0, $TargetTemperature)),
-                'unit' => 'CELSIUS'
-            ],
-            'durationInSeconds' => max(60, $DurationMinutes * 60),
-            'startMode' => strtoupper($Mode) === 'VENTILATION' ? 'VENTILATION' : 'HEATING'
-        ];
-
-        return $this->sendCommand(
-            'POST',
-            '/api/v1/vehicles/'
-                . rawurlencode(strtoupper($this->ReadPropertyString('VIN')))
-                . '/auxiliary-heating/start',
-            $body
-        );
-    }
-
-    public function StopAuxiliaryHeating(): bool
-    {
-        return $this->sendSimpleCommand('auxiliary-heating/stop');
-    }
-
-    public function StartVentilation(): bool
-    {
-        return $this->sendSimpleCommand('active-ventilation/start');
-    }
-
-    public function StopVentilation(): bool
-    {
-        return $this->sendSimpleCommand('active-ventilation/stop');
-    }
-
     private function fetchVehicle(bool $userAction): bool
     {
         if (!$this->configurationValid()) {
@@ -373,6 +184,7 @@ trait MySkodaCoreTrait
             'GET',
             '/api/v1/vehicles/' . rawurlencode($vin)
         );
+
         $this->WriteAttributeString(
             'LastVehicleResponseRaw',
             (string) ($response['raw'] ?? '')
