@@ -84,6 +84,10 @@ def main() -> None:
     ]:
         assert required in action_captions
 
+    form_text = json.dumps(form, ensure_ascii=False)
+    assert "MSKODA_GetLastVehicleResponseRaw($id)" in form_text
+    assert "MSKODA_GetRawData($id)" not in form_text
+
     module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
     variables = (ROOT / "MySkoda" / "src" / "VariablesTrait.php").read_text(encoding="utf-8")
     history = (ROOT / "MySkoda" / "src" / "HistoryTrait.php").read_text(encoding="utf-8")
@@ -109,7 +113,11 @@ def main() -> None:
         assert forbidden not in php_sources
 
     assert "RegisterPropertyBoolean('EnableChargingHistory', false)" in core
+    assert "RegisterAttributeString('LastVehicleResponseRaw', '')" in core
     assert "GetRawData" in core
+    assert "GetLastVehicleResponseRaw" in core
+    assert "(string) ($response['raw'] ?? '')" in core
+    assert "ReloadApiDefinitionButton" not in core
     assert "AC_SetLoggingStatus" in history
     assert "applyDefaultObjectIcons" in variables
     assert "executeOptimisticCommand" in command
@@ -260,6 +268,7 @@ def main() -> None:
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## 1.5 - 2026-09-17" in changelog
     assert "Rohe Fahrzeugantwort anzeigen" in changelog
+    assert "LastVehicleResponseRaw" not in changelog
     assert "## 1.4 - 2026-09-16" in changelog
     assert "APISupportedFeatures" in changelog
     assert "APIAvailableChargeModes" in changelog
