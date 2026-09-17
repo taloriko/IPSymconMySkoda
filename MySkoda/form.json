@@ -282,7 +282,7 @@
     {
       "type": "Button",
       "caption": "Show raw vehicle response",
-      "onClick": "$raw = MSKODA_GetRawData($id); if ($raw === '') { echo 'Noch keine Fahrzeugantwort zwischengespeichert.'; } else { $data = json_decode($raw, true); echo is_array($data) ? json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $raw; }"
+      "onClick": "$raw = MSKODA_GetLastVehicleResponseRaw($id); if ($raw === '') { echo 'Noch keine rohe Fahrzeugantwort zwischengespeichert.'; } else { $data = json_decode($raw, true); echo is_array($data) ? json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $raw; }"
     }
   ],
   "status": [
