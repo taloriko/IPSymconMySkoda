@@ -267,42 +267,10 @@
       "items": [
         {
           "type": "Button",
-          "caption": "Test connection",
-          "onClick": "echo MSKODA_TestConnection($id) ? 'Verbindung erfolgreich - Fahrzeugdaten empfangen.' : 'Verbindung fehlgeschlagen - Instanzstatus und API-Daten prüfen.';"
-        },
-        {
-          "type": "Button",
           "name": "UpdateNowButton",
           "caption": "Update now",
           "enabled": false,
           "onClick": "$instance = IPS_GetInstance($id); if ((int) $instance['InstanceStatus'] !== 102) { echo 'Aktualisierung nicht möglich - zuerst eine erfolgreiche Fahrzeugverbindung herstellen.'; } else { MSKODA_Update($id); $instance = IPS_GetInstance($id); echo (int) $instance['InstanceStatus'] === 102 ? 'Aktualisierung erfolgreich.' : 'Aktualisierung fehlgeschlagen - Instanzstatus und Verbindungsdaten prüfen.'; }"
-        }
-      ]
-    },
-    {
-      "type": "RowLayout",
-      "items": [
-        {
-          "type": "Button",
-          "caption": "Test notification",
-          "onClick": "echo MSKODA_TestNotification($id) ? 'Mitteilung gesendet.' : 'Mitteilung konnte nicht gesendet werden. Ausgewählte Visualisierung und registrierte Mobilgeräte prüfen.';"
-        },
-        {
-          "type": "Button",
-          "name": "ReloadApiDefinitionButton",
-          "caption": "Reload API definition",
-          "enabled": false,
-          "onClick": "$instance = IPS_GetInstance($id); if ((int) $instance['InstanceStatus'] !== 102) { echo 'API-Definition kann erst nach einer erfolgreichen Fahrzeugverbindung neu geladen werden.'; } else { echo MSKODA_RefreshApiDefinition($id) ? 'API-Definition aktualisiert.' : 'API-Definition konnte nicht geladen werden.'; }"
-        }
-      ]
-    },
-    {
-      "type": "RowLayout",
-      "items": [
-        {
-          "type": "Button",
-          "caption": "Diagnose vehicle images",
-          "onClick": "echo MSKODA_DiagnoseVehicleImages($id);"
         },
         {
           "type": "Button",
@@ -312,14 +280,9 @@
       ]
     },
     {
-      "type": "RowLayout",
-      "items": [
-        {
-          "type": "Button",
-          "caption": "Diagnose Public API data",
-          "onClick": "echo MSKODA_DiagnosePublicApiData($id);"
-        }
-      ]
+      "type": "Button",
+      "caption": "Show raw vehicle response",
+      "onClick": "$raw = MSKODA_GetRawData($id); if ($raw === '') { echo 'Noch keine Fahrzeugantwort zwischengespeichert.'; } else { $data = json_decode($raw, true); echo is_array($data) ? json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : $raw; }"
     }
   ],
   "status": [
