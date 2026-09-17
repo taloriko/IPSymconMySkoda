@@ -46,103 +46,43 @@
         {
           "type": "RowLayout",
           "items": [
-            {
-              "type": "Label",
-              "name": "VINCodeManufacturer",
-              "caption": "",
-              "bold": true,
-              "width": "120px"
-            },
-            {
-              "type": "Label",
-              "name": "VINDecodeManufacturer",
-              "caption": "Manufacturer"
-            }
+            {"type": "Label", "name": "VINCodeManufacturer", "caption": "", "bold": true, "width": "120px"},
+            {"type": "Label", "name": "VINDecodeManufacturer", "caption": "Manufacturer"}
           ]
         },
         {
           "type": "RowLayout",
           "items": [
-            {
-              "type": "Label",
-              "name": "VINCodeModel",
-              "caption": "",
-              "bold": true,
-              "width": "120px"
-            },
-            {
-              "type": "Label",
-              "name": "VINDecodeModel",
-              "caption": "Model"
-            }
+            {"type": "Label", "name": "VINCodeModel", "caption": "", "bold": true, "width": "120px"},
+            {"type": "Label", "name": "VINDecodeModel", "caption": "Model"}
           ]
         },
         {
           "type": "RowLayout",
           "items": [
-            {
-              "type": "Label",
-              "name": "VINCodeDrive",
-              "caption": "",
-              "bold": true,
-              "width": "120px"
-            },
-            {
-              "type": "Label",
-              "name": "VINDecodeDrive",
-              "caption": "Drive"
-            }
+            {"type": "Label", "name": "VINCodeDrive", "caption": "", "bold": true, "width": "120px"},
+            {"type": "Label", "name": "VINDecodeDrive", "caption": "Drive"}
           ]
         },
         {
           "type": "RowLayout",
           "items": [
-            {
-              "type": "Label",
-              "name": "VINCodeProduction",
-              "caption": "",
-              "bold": true,
-              "width": "120px"
-            },
-            {
-              "type": "Label",
-              "name": "VINDecodeProduction",
-              "caption": "Production"
-            }
+            {"type": "Label", "name": "VINCodeProduction", "caption": "", "bold": true, "width": "120px"},
+            {"type": "Label", "name": "VINDecodeProduction", "caption": "Production"}
           ]
         },
         {
           "type": "RowLayout",
           "items": [
-            {
-              "type": "Label",
-              "name": "VINCodeRestraint",
-              "caption": "",
-              "bold": true,
-              "width": "120px"
-            },
-            {
-              "type": "Label",
-              "name": "VINDecodeRestraint",
-              "caption": "Restraint system"
-            }
+            {"type": "Label", "name": "VINCodeRestraint", "caption": "", "bold": true, "width": "120px"},
+            {"type": "Label", "name": "VINDecodeRestraint", "caption": "Restraint system"}
           ]
         },
         {
           "type": "RowLayout",
           "items": [
-            {
-              "type": "Label",
-              "name": "VINCodeValidation",
-              "caption": "",
-              "bold": true,
-              "width": "120px"
-            },
-            {
-              "type": "Label",
-              "name": "VINDecodeValidation",
-              "caption": "Check digit"
-            }
+            {"type": "Label", "name": "VINCodeValidation", "caption": "", "bold": true, "width": "120px"},
+            {"type": "Label", "name": "VINDecodeValidation", "caption": "Check digit"}
           ]
         },
         {
@@ -177,21 +117,9 @@
           "type": "Label",
           "caption": "Recommended: 300 seconds. The module observes the rate-limit information returned by the API."
         },
-        {
-          "type": "CheckBox",
-          "name": "EnableRemote",
-          "caption": "Enable remote control"
-        },
-        {
-          "type": "CheckBox",
-          "name": "ClimateWithoutExternalPower",
-          "caption": "Allow air conditioning without external power"
-        },
-        {
-          "type": "PasswordTextBox",
-          "name": "SPIN",
-          "caption": "S-PIN (optional, auxiliary heating only)"
-        }
+        {"type": "CheckBox", "name": "EnableRemote", "caption": "Enable remote control"},
+        {"type": "CheckBox", "name": "ClimateWithoutExternalPower", "caption": "Allow air conditioning without external power"},
+        {"type": "PasswordTextBox", "name": "SPIN", "caption": "S-PIN (optional, auxiliary heating only)"}
       ]
     },
     {
@@ -199,11 +127,7 @@
       "caption": "Archiving",
       "expanded": true,
       "items": [
-        {
-          "type": "CheckBox",
-          "name": "EnableChargingHistory",
-          "caption": "Archive vehicle data"
-        },
+        {"type": "CheckBox", "name": "EnableChargingHistory", "caption": "Archive vehicle data"},
         {
           "type": "Label",
           "caption": "After explicit activation, archive logging is configured once for state of charge, charging limit, charging power and mileage. Later Archive Control changes remain untouched."
@@ -230,6 +154,11 @@
           "type": "Label",
           "name": "NotificationTargetFeedback",
           "caption": "Select a Tile Visualization or WebFront for notifications."
+        },
+        {
+          "type": "Button",
+          "caption": "Test notification",
+          "onClick": "echo MSKODA_TestNotification($id) ? 'Mitteilung gesendet.' : 'Mitteilung konnte nicht gesendet werden. Ausgewählte Visualisierung und registrierte Mobilgeräte prüfen.';"
         }
       ]
     },
@@ -238,15 +167,8 @@
       "caption": "Additional data",
       "expanded": false,
       "items": [
-        {
-          "type": "CheckBox",
-          "name": "ShowDetails",
-          "caption": "Create detail and diagnostic variables"
-        },
-        {
-          "type": "Label",
-          "caption": "Missing detail variables are created when enabled. Existing variables are kept when this option is disabled."
-        }
+        {"type": "CheckBox", "name": "ShowDetails", "caption": "Create detail and diagnostic variables"},
+        {"type": "Label", "caption": "Missing detail variables are created when enabled. Existing variables are kept when this option is disabled."}
       ]
     },
     {
@@ -254,10 +176,7 @@
       "caption": "Help and documentation",
       "expanded": false,
       "items": [
-        {
-          "type": "Label",
-          "caption": "Documentation and source code: github.com/taloriko/IPSymconMySkoda"
-        }
+        {"type": "Label", "caption": "Documentation and source code: github.com/taloriko/IPSymconMySkoda"}
       ]
     }
   ],
