@@ -4,59 +4,6 @@ declare(strict_types=1);
 
 trait MySkodaDiagnosticsTrait
 {
-    public function DiagnosePublicApiData(): string
-    {
-        $raw = json_decode($this->ReadAttributeString('RawData'), true);
-        if (!is_array($raw)) {
-            return $this->encodePublicApiDiagnostic([
-                'ok' => false,
-                'message' => 'No vehicle response is cached yet. Test the connection or update the vehicle first.'
-            ]);
-        }
-
-        $leaves = [];
-        $this->flattenPublicApiData($raw, '', $leaves);
-        ksort($leaves, SORT_NATURAL | SORT_FLAG_CASE);
-
-        $used = [];
-        $unused = [];
-        foreach ($leaves as $path => $value) {
-            $entry = [
-                'path' => $path,
-                'type' => $this->publicApiDiagnosticType($value),
-                'value' => $this->publicApiDiagnosticValue($path, $value)
-            ];
-
-            if ($this->isPublicApiPathUsed($path)) {
-                $used[] = $entry;
-            } else {
-                $unused[] = $entry;
-            }
-        }
-
-        $diagnostic = [
-            'ok' => true,
-            'source' => 'MySkoda Public API RawData',
-            'note' => 'This diagnostic performs no additional API request. VIN, license plate and location values are masked.',
-            'summary' => [
-                'totalLeafPaths' => count($leaves),
-                'usedLeafPaths' => count($used),
-                'unusedLeafPaths' => count($unused)
-            ],
-            'topLevelKeys' => array_values(array_map('strval', array_keys($raw))),
-            'vehicleKeys' => isset($raw['vehicle']) && is_array($raw['vehicle'])
-                ? array_values(array_map('strval', array_keys($raw['vehicle'])))
-                : [],
-            'unused' => $unused,
-            'used' => $used
-        ];
-
-        $json = $this->encodePublicApiDiagnostic($diagnostic);
-        $this->SendDebug('Public API data diagnostic', $json, 0);
-
-        return $json;
-    }
-
     private function ensurePublicApiVariables(): void
     {
         $definitions = [
@@ -100,10 +47,6 @@ trait MySkodaDiagnosticsTrait
                 ['ON', 'On', 'car-rear', 0x22C55E],
                 ['UNKNOWN', 'Unknown', 'circle-question', -1]
             ])),
-
-            // Additional information directly supplied by the official Public API.
-            // Kept deliberately simple like the VIN information: strings only,
-            // without icons, profiles or special presentations.
             $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1270, []),
             $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1280, []),
             $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1290, []),
@@ -137,38 +80,24 @@ trait MySkodaDiagnosticsTrait
         $this->setPublicApiBoolean('WindowHeatingEnabled', $this->path($vehicle, 'airConditioning.windowHeating.enabled', null));
         $this->setPublicApiString('WindowHeatingFront', $this->path($vehicle, 'airConditioning.windowHeating.front', null), true);
         $this->setPublicApiString('WindowHeatingRear', $this->path($vehicle, 'airConditioning.windowHeating.rear', null), true);
-
         $this->setPublicApiBoolean('AtSavedChargingLocation', $this->path($vehicle, 'charging.isVehicleInSavedLocation', null));
         $this->setPublicApiString('AutoUnlockPlug', $this->path($vehicle, 'charging.settings.autoUnlockPlugWhenCharged', null), true);
         $this->setPublicApiInteger('BatteryCareTargetSOC', $this->path($vehicle, 'charging.settings.batteryCareModeTargetValueInPercent', null));
         $this->setPublicApiString('BatteryCareMode', $this->path($vehicle, 'charging.settings.chargingCareMode', null), true);
         $this->setPublicApiString('MaxChargeCurrentAC', $this->path($vehicle, 'charging.settings.maxChargeCurrentAc', null), true);
         $this->setPublicApiInteger('RemainingChargingTime', $this->path($vehicle, 'charging.status.remainingTimeToFullyChargedInMinutes', null));
-
-        // Additional API information strings. Missing values are explicitly cleared
-        // so switching the configured VIN can never leave information from the old car.
         $this->setPublicApiString('APICarType', $this->path($vehicle, 'fuelStatus.carType', ''), true);
         $this->setPublicApiString('APIPrimaryEngineType', $this->path($vehicle, 'fuelStatus.primaryEngineRange.engineType', ''), true);
         $this->setPublicApiString('APISecondaryEngineType', $this->path($vehicle, 'fuelStatus.secondaryEngineRange.engineType', ''), true);
         $this->setPublicApiString('APIAuxiliaryHeatingState', $this->path($vehicle, 'auxiliaryHeating.state', ''), true);
         $this->setPublicApiString('APIActiveVentilationState', $this->path($vehicle, 'activeVentilation.state', ''), true);
-        $this->setPublicApiString(
-            'APIAvailableChargeModes',
-            $this->publicApiValueAsString($this->path($vehicle, 'charging.settings.availableChargeModes', []))
-        );
+        $this->setPublicApiString('APIAvailableChargeModes', $this->publicApiValueAsString($this->path($vehicle, 'charging.settings.availableChargeModes', [])));
 
-        $operations = $this->path(
-            $vehicle,
-            'operations',
-            $this->path($vehicle, 'remoteOperations', [])
-        );
+        $operations = $this->path($vehicle, 'operations', $this->path($vehicle, 'remoteOperations', []));
         $this->setPublicApiString('APIRemoteOperations', $this->publicApiValueAsString($operations));
 
         $errors = isset($raw['errors']) && is_array($raw['errors']) ? $raw['errors'] : [];
-        $this->setPublicApiString(
-            'APISupportedFeatures',
-            $this->publicApiSupportedFeatures($vehicle, $errors)
-        );
+        $this->setPublicApiString('APISupportedFeatures', $this->publicApiSupportedFeatures($vehicle, $errors));
 
         $reliableLock = $this->path($vehicle, 'status.overall.reliableLockStatus', null);
         if ($reliableLock !== null) {
@@ -216,23 +145,15 @@ trait MySkodaDiagnosticsTrait
         if ($value === null) {
             return '';
         }
-
         if (is_bool($value)) {
             return $value ? 'true' : 'false';
         }
-
         if (is_string($value) || is_int($value) || is_float($value)) {
             return trim((string) $value);
         }
-
-        if (!is_array($value)) {
+        if (!is_array($value) || $value === []) {
             return '';
         }
-
-        if ($value === []) {
-            return '';
-        }
-
         if (array_is_list($value)) {
             $items = [];
             $onlyScalars = true;
@@ -247,7 +168,6 @@ trait MySkodaDiagnosticsTrait
                 $onlyScalars = false;
                 break;
             }
-
             if ($onlyScalars) {
                 return implode(', ', $items);
             }
@@ -278,8 +198,6 @@ trait MySkodaDiagnosticsTrait
             }
         }
 
-        // A temporarily unavailable or disabled part is still supported by the
-        // vehicle. Only *_UNSUPPORTED must not be interpreted as a capability.
         $errorPrefixes = [
             'STATUS' => 'status',
             'FUEL_STATUS' => 'fuelStatus',
@@ -296,7 +214,6 @@ trait MySkodaDiagnosticsTrait
             if (!is_array($error)) {
                 continue;
             }
-
             $type = strtoupper(trim((string) ($error['type'] ?? '')));
             if ($type === '' || str_ends_with($type, '_UNSUPPORTED')) {
                 continue;
@@ -304,7 +221,6 @@ trait MySkodaDiagnosticsTrait
             if (!str_ends_with($type, '_DISABLED') && !str_ends_with($type, '_UNAVAILABLE')) {
                 continue;
             }
-
             foreach ($errorPrefixes as $prefix => $apiName) {
                 if (str_starts_with($type, $prefix . '_')) {
                     $supported[$apiName] = true;
@@ -319,7 +235,6 @@ trait MySkodaDiagnosticsTrait
                 $ordered[] = $apiName;
             }
         }
-
         return implode(', ', $ordered);
     }
 
@@ -343,174 +258,5 @@ trait MySkodaDiagnosticsTrait
             'COLOR' => -1,
             'OPTIONS' => json_encode($options, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ];
-    }
-
-    private function flattenPublicApiData(mixed $value, string $path, array &$leaves): void
-    {
-        if (!is_array($value)) {
-            if ($path !== '') {
-                $leaves[$path] = $value;
-            }
-            return;
-        }
-
-        if ($value === []) {
-            if ($path !== '') {
-                $leaves[$path] = [];
-            }
-            return;
-        }
-
-        foreach ($value as $key => $child) {
-            if (is_int($key)) {
-                $childPath = $path . '[' . $key . ']';
-            } else {
-                $childPath = $path === '' ? (string) $key : $path . '.' . (string) $key;
-            }
-            $this->flattenPublicApiData($child, $childPath, $leaves);
-        }
-    }
-
-    private function isPublicApiPathUsed(string $path): bool
-    {
-        $normalized = preg_replace('/\[\d+\]/', '[]', $path) ?? $path;
-
-        $exact = [
-            'vehicle.vin',
-            'vehicle.name',
-            'vehicle.licensePlate',
-            'vehicle.renderUrl',
-            'vehicle.odometer.mileageInKm',
-            'vehicle.status.overall.doorsLocked',
-            'vehicle.status.overall.locked',
-            'vehicle.status.overall.reliableLockStatus',
-            'vehicle.status.overall.doors',
-            'vehicle.status.overall.windows',
-            'vehicle.status.overall.lights',
-            'vehicle.status.detail.trunk',
-            'vehicle.status.detail.bonnet',
-            'vehicle.status.detail.sunroof',
-            'vehicle.fuelStatus.carType',
-            'vehicle.fuelStatus.primaryEngineRange.engineType',
-            'vehicle.fuelStatus.secondaryEngineRange.engineType',
-            'vehicle.auxiliaryHeating.state',
-            'vehicle.activeVentilation.state',
-            'vehicle.charging.status.state',
-            'vehicle.charging.status.chargePowerInKw',
-            'vehicle.charging.status.chargeType',
-            'vehicle.charging.status.fullyChargedAt',
-            'vehicle.charging.status.remainingTimeToFullyChargedInMinutes',
-            'vehicle.charging.status.battery.stateOfChargeInPercent',
-            'vehicle.charging.status.battery.remainingCruisingRangeInMeters',
-            'vehicle.charging.isVehicleInSavedLocation',
-            'vehicle.charging.settings.targetStateOfChargeInPercent',
-            'vehicle.charging.settings.availableChargeModes[]',
-            'vehicle.charging.settings.preferredChargeMode',
-            'vehicle.charging.settings.autoUnlockPlugWhenCharged',
-            'vehicle.charging.settings.batteryCareModeTargetValueInPercent',
-            'vehicle.charging.settings.chargingCareMode',
-            'vehicle.charging.settings.maxChargeCurrentAc',
-            'vehicle.airConditioning.state',
-            'vehicle.airConditioning.targetTemperature.value',
-            'vehicle.airConditioning.targetTemperature.unit',
-            'vehicle.airConditioning.airConditioningAtUnlock',
-            'vehicle.airConditioning.windowHeating.enabled',
-            'vehicle.airConditioning.windowHeating.front',
-            'vehicle.airConditioning.windowHeating.rear',
-            'vehicle.parkingPosition.state',
-            'vehicle.parkingPosition.latitude',
-            'vehicle.parkingPosition.longitude',
-            'vehicle.parkingPosition.gpsCoordinates.latitude',
-            'vehicle.parkingPosition.gpsCoordinates.longitude',
-            'vehicle.parkingPosition.gpsCoordinates.lat',
-            'vehicle.parkingPosition.gpsCoordinates.lon',
-            'vehicle.parkingPosition.gpsCoordinates.lng'
-        ];
-        if (in_array($normalized, $exact, true)) {
-            return true;
-        }
-
-        foreach ([
-            'vehicle.operations',
-            'vehicle.remoteOperations',
-            'vehicle.chargingProfiles',
-            'errors'
-        ] as $prefix) {
-            if ($normalized === $prefix
-                || str_starts_with($normalized, $prefix . '.')
-                || str_starts_with($normalized, $prefix . '[]')) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function publicApiDiagnosticValue(string $path, mixed $value): mixed
-    {
-        $lowerPath = strtolower($path);
-
-        if (str_contains($lowerPath, 'latitude')
-            || str_contains($lowerPath, 'longitude')
-            || str_ends_with($lowerPath, '.lat')
-            || str_ends_with($lowerPath, '.lon')
-            || str_ends_with($lowerPath, '.lng')) {
-            return '{redacted-location}';
-        }
-
-        if (str_contains($lowerPath, 'licenseplate')) {
-            return '{redacted-license-plate}';
-        }
-
-        if (str_contains($lowerPath, '.vin') || $lowerPath === 'vin') {
-            return '{vin}';
-        }
-
-        if (is_string($value)) {
-            $vin = strtoupper(trim($this->ReadPropertyString('VIN')));
-            if ($vin !== '') {
-                $value = str_ireplace([$vin, rawurlencode($vin)], '{vin}', $value);
-            }
-        }
-
-        if (is_array($value)) {
-            return $value === [] ? '[]' : 'array(' . count($value) . ')';
-        }
-
-        return $value;
-    }
-
-    private function publicApiDiagnosticType(mixed $value): string
-    {
-        if (is_array($value)) {
-            return $value === [] ? 'empty-array' : 'array';
-        }
-        if ($value === null) {
-            return 'null';
-        }
-        if (is_bool($value)) {
-            return 'bool';
-        }
-        if (is_int($value)) {
-            return 'int';
-        }
-        if (is_float($value)) {
-            return 'float';
-        }
-        if (is_string($value)) {
-            return 'string';
-        }
-
-        return get_debug_type($value);
-    }
-
-    private function encodePublicApiDiagnostic(array $diagnostic): string
-    {
-        $json = json_encode(
-            $diagnostic,
-            JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES
-        );
-
-        return is_string($json) ? $json : '{}';
     }
 }
