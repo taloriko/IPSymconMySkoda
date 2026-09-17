@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.5 - 2026-09-17
+
+- Instanzkonfiguration für den normalen Benutzerbetrieb aufgeräumt; Test- und Entwickler-/Diagnose-Schaltflächen wurden aus der Konfiguration entfernt
+- reguläre Aktionen **Jetzt aktualisieren** und **Fahrzeugbild aktualisieren** bleiben erhalten
+- neue Benutzerdiagnose **Rohe Fahrzeugantwort anzeigen** gibt den zuletzt erfolgreich zwischengespeicherten vollständigen Datensatz aus `RawData` formatiert aus, ohne eine zusätzliche API-Anfrage auszulösen
+- dadurch kann der vollständige vom Fahrzeug gelieferte Public-API-Datensatz für Support und Funktionsprüfung direkt aus der Instanz kopiert werden
+- bestehende öffentliche PHP-Methoden bleiben aus Kompatibilitätsgründen erhalten; lediglich die Entwicklerbedienung in der Instanz wird entfernt
+- Versionskennung und User-Agent auf 1.5 angehoben
+- bestehende README-Dateien bleiben gegenüber Version 1.4 unverändert
+
 ## 1.4 - 2026-09-16
 
 - zusätzliche reine String-Variablen für statische Fahrzeuginformationen und vom Fahrzeug gemeldete Funktions-/Ausstattungsmerkmale der offiziellen MySkoda Public API
