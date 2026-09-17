@@ -4,9 +4,11 @@
 
 - Instanzkonfiguration für den normalen Benutzerbetrieb aufgeräumt; Test- und Entwickler-/Diagnose-Schaltflächen wurden aus der Konfiguration entfernt
 - reguläre Aktionen **Jetzt aktualisieren** und **Fahrzeugbild aktualisieren** bleiben erhalten
-- neue Benutzerdiagnose **Rohe Fahrzeugantwort anzeigen** gibt den zuletzt erfolgreich zwischengespeicherten vollständigen Datensatz aus `RawData` formatiert aus, ohne eine zusätzliche API-Anfrage auszulösen
-- dadurch kann der vollständige vom Fahrzeug gelieferte Public-API-Datensatz für Support und Funktionsprüfung direkt aus der Instanz kopiert werden
+- neue Benutzerdiagnose **Rohe Fahrzeugantwort anzeigen** gibt den exakten Response-Body der letzten tatsächlich ausgeführten Fahrzeugabfrage aus, ohne eine zusätzliche API-Anfrage auszulösen
+- die rohe Antwort wird getrennt vom weiterhin nur für gültige Fahrzeugdaten verwendeten `RawData`-Cache gespeichert; dadurch bleibt der letzte gültige Arbeitsdatensatz auch bei einer späteren API-Fehlerantwort erhalten
+- auch ein von MySkoda gelieferter Fehler-Response kann damit für Support und Fehlersuche vollständig aus der Instanz kopiert werden
 - bestehende öffentliche PHP-Methoden bleiben aus Kompatibilitätsgründen erhalten; lediglich die Entwicklerbedienung in der Instanz wird entfernt
+- nicht mehr vorhandene Form-Referenzen auf den entfernten Button zum Neuladen der API-Definition wurden aus dem Code entfernt
 - Versionskennung und User-Agent auf 1.5 angehoben
 - bestehende README-Dateien bleiben gegenüber Version 1.4 unverändert
 
