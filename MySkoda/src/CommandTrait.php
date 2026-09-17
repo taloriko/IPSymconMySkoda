@@ -12,10 +12,6 @@ trait MySkodaCommandTrait
         $this->RegisterAttributeString('LastCommandResult', '');
         $this->RegisterAttributeString('CommandStatusText', '');
         $this->RegisterAttributeString('CommandConfigFingerprint', '');
-
-        // Kept for compatibility with existing 1.1 instances. No delayed confirmation
-        // request is used anymore; the timer always remains disabled.
-        $this->RegisterTimer('CommandConfirmTimer', 0, 'MSKODA_ConfirmPending($_IPS[\'TARGET\']);');
     }
 
     public function ApplyChanges(): void
@@ -30,9 +26,6 @@ trait MySkodaCommandTrait
             $this->WriteAttributeString('CommandStatusText', '');
         }
         $this->WriteAttributeString('CommandConfigFingerprint', $fingerprint);
-
-        // Remove pending states left by an earlier 1.1 build. Commands are now
-        // resolved directly by the HTTP response from the MySkoda server.
         $this->clearPendingCommands();
 
         $this->coreApplyChanges();
@@ -285,16 +278,6 @@ trait MySkodaCommandTrait
         );
     }
 
-    /**
-     * Compatibility method for early 1.1 installations. Delayed command
-     * confirmation is no longer used, therefore this only clears stale state.
-     */
-    public function ConfirmPending(): void
-    {
-        $this->clearPendingCommands();
-        $this->updateCommandStatusVariables();
-    }
-
     private function executeOptimisticCommand(
         string $ident,
         mixed $desiredValue,
@@ -331,11 +314,8 @@ trait MySkodaCommandTrait
         $pending = $this->readPendingCommands();
         unset($pending[$ident]);
         $this->writePendingCommands($pending);
-        $this->SetTimerInterval('CommandConfirmTimer', 0);
 
         if ($ok) {
-            // The command endpoint accepted the requested value. No additional
-            // vehicle-state confirmation is required.
             $this->SetValue($ident, $desiredValue);
             $this->WriteAttributeString('LastCommandResult', 'accepted');
             $this->WriteAttributeString(
@@ -386,7 +366,6 @@ trait MySkodaCommandTrait
         $pending = $this->readPendingCommands();
         unset($pending[$key]);
         $this->writePendingCommands($pending);
-        $this->SetTimerInterval('CommandConfirmTimer', 0);
 
         if ($ok) {
             $this->WriteAttributeString('LastCommandResult', 'accepted');
@@ -427,7 +406,6 @@ trait MySkodaCommandTrait
     private function clearPendingCommands(): void
     {
         $this->WriteAttributeString('PendingCommands', '{}');
-        $this->SetTimerInterval('CommandConfirmTimer', 0);
     }
 
     private function readPendingCommands(): array
