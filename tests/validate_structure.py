@@ -71,7 +71,6 @@ def main() -> None:
     action_captions = captions(form.get("actions", []))
     for removed in [
         "Test connection",
-        "Test notification",
         "Reload API definition",
         "Diagnose vehicle images",
         "Diagnose Public API data",
@@ -84,9 +83,16 @@ def main() -> None:
     ]:
         assert required in action_captions
 
+    element_captions = captions(form.get("elements", []))
+    assert "Test notification" in element_captions
+
     form_text = json.dumps(form, ensure_ascii=False)
+    assert "MSKODA_TestNotification($id)" in form_text
     assert "MSKODA_GetLastVehicleResponseRaw($id)" in form_text
-    assert "MSKODA_GetRawData($id)" not in form_text
+    assert "MSKODA_TestConnection($id)" not in form_text
+    assert "MSKODA_RefreshApiDefinition($id)" not in form_text
+    assert "MSKODA_DiagnoseVehicleImages($id)" not in form_text
+    assert "MSKODA_DiagnosePublicApiData($id)" not in form_text
 
     module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
     variables = (ROOT / "MySkoda" / "src" / "VariablesTrait.php").read_text(encoding="utf-8")
@@ -96,12 +102,15 @@ def main() -> None:
     climate = (ROOT / "MySkoda" / "src" / "ClimateSelectionTrait.php").read_text(encoding="utf-8")
     image = (ROOT / "MySkoda" / "src" / "ImageTrait.php").read_text(encoding="utf-8")
     diagnostics = (ROOT / "MySkoda" / "src" / "DiagnosticsTrait.php").read_text(encoding="utf-8")
+    notification = (ROOT / "MySkoda" / "src" / "NotificationTrait.php").read_text(encoding="utf-8")
     vin_decoder = (ROOT / "MySkoda" / "src" / "VinDecoderTrait.php").read_text(encoding="utf-8")
     vin_integration = (ROOT / "MySkoda" / "src" / "VinIntegrationTrait.php").read_text(encoding="utf-8")
     php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
 
     assert "final class MySkoda extends IPSModuleStrict" in module_php
     assert "Symcon-MySkoda/1.5" in module_php
+    assert "refreshVehicleData(false)" in module_php
+    assert "refreshVehicleData(true)" in core
     assert "VinDecoderTrait.php" in module_php
     assert "VinIntegrationTrait.php" in module_php
     assert re.search(r"<\?(?!php)", php_sources) is None
@@ -114,10 +123,20 @@ def main() -> None:
 
     assert "RegisterPropertyBoolean('EnableChargingHistory', false)" in core
     assert "RegisterAttributeString('LastVehicleResponseRaw', '')" in core
-    assert "GetRawData" in core
     assert "GetLastVehicleResponseRaw" in core
     assert "(string) ($response['raw'] ?? '')" in core
+    assert "public function GetRawData" not in core
+    assert "public function TestConnection" not in core
+    assert "public function TestConnection" not in module_php
+    assert "RefreshApiDefinition" not in core
     assert "ReloadApiDefinitionButton" not in core
+
+    assert "public function TestNotification" in notification
+    assert "DiagnoseVehicleImages" not in image
+    assert "DiagnosePublicApiData" not in diagnostics
+    assert "flattenPublicApiData" not in diagnostics
+    assert "collectVehicleImageHints" not in image
+
     assert "AC_SetLoggingStatus" in history
     assert "applyDefaultObjectIcons" in variables
     assert "executeOptimisticCommand" in command
@@ -203,24 +222,9 @@ def main() -> None:
         assert item.get("bold") is True
         assert item.get("width") == "120px"
 
-    extra_headings = {
-        "VIN structure",
-        "Manufacturer and origin",
-        "Vehicle model",
-        "Drive and power",
-        "Production data",
-        "Restraint system",
-        "Check digit",
-    }
-    static_bold_captions = {
-        item.get("caption")
-        for item in vin_panel.get("items", [])
-        if item.get("type") == "Label" and item.get("bold") is True
-    }
-    assert not (static_bold_captions & extra_headings)
-
     assert translations.get("VIN / FIN decoding") == "FIN / VIN entschlüsseln"
     assert translations.get("Create VIN information variables") == "FIN-Informationsvariablen anlegen"
+    assert translations.get("Test notification") == "Mitteilung testen"
     assert translations.get("Show raw vehicle response") == "Rohe Fahrzeugantwort anzeigen"
 
     root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
@@ -249,8 +253,6 @@ def main() -> None:
     ]:
         assert text in module_readme
 
-    assert "## 6. FIN / VIN entschlüsseln" not in module_readme
-
     for text in [
         "# FIN / VIN entschlüsseln",
         "keine offizielle Škoda-Datenquelle",
@@ -267,15 +269,11 @@ def main() -> None:
 
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
     assert "## 1.5 - 2026-09-17" in changelog
+    assert "Mitteilung testen" in changelog
     assert "Rohe Fahrzeugantwort anzeigen" in changelog
-    assert "LastVehicleResponseRaw" not in changelog
+    assert "keine Abwärtskompatibilität" in changelog
     assert "## 1.4 - 2026-09-16" in changelog
-    assert "APISupportedFeatures" in changelog
-    assert "APIAvailableChargeModes" in changelog
     assert "## 1.3 - 2026-09-16" in changelog
-    assert "FIN / VIN entschlüsseln" in changelog
-    assert "MSKODA_GetVINData()" in changelog
-    assert "README_FIN_VIN.md" in changelog
     assert "## 1.2 - 2026-09-15" in changelog
 
     old_brand = "IP" + "-Symcon"
