@@ -9,8 +9,8 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
 | `name` | Fahrzeugname | ✅ | String | Freitext | `Harry` | Wird in der APP festgelegt "Satus" --> "Details zum Fahrzeug" --> "Name des Fahrzeugs" |
-| `licensePlate` | Kennzeichen | ✅ | String | Freitext | `TÜ-AB 123E` | Wird in der APP festgelegt "Satus" --> "Details zum Fahrzeug" --> "Name des Fahrzeugs"  |
-| `vin` | FIN / VIN | ✅ | String | 17-stellige VIN | `TMB…7514` | Fahrgestellnummer des Fahrzeugs |
+| `licensePlate` | Kennzeichen | ✅ | String | Freitext | `S-AB 123E` | Wird in der APP festgelegt "Satus" --> "Details zum Fahrzeug" --> "Name des Fahrzeugs"  |
+| `vin` | FIN / VIN | ✅ | String | 17-stellige VIN | `TMB…7448` | Fahrgestellnummer des Fahrzeugs |
 | `renderUrl` | Fahrzeugbild | ✅ | String | URL | `https://…/vehicle.png` | Bild von Skoda, optisch passend zur Bestellkonfiguration |
 
 ## vehicle.airConditioning
@@ -18,13 +18,13 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
 | `state` | Klimatisierung | ✅ | String | `OFF` / `COOLING` / `HEATING` / `HEATING_AUXILIARY` / `VENTILATION` | `OFF` | |
-| `airConditioningAtUnlock` | Klimatisierung beim Entriegeln | ✅ | Boolean | `true` / `false` | `true` | |
-| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:39Z` | Keine eigene Variable |
-| `targetTemperature.value` | Solltemperatur | ✅ | Number | 16–30 °C | `22` | Modul: 0,5-°C-Schritte |
-| `targetTemperature.unit` | Einheit Solltemperatur | ✅ | String | z. B. `CELSIUS` | `CELSIUS` | |
-| `windowHeating.enabled` | Scheibenheizung aktiviert | ✅ | Boolean | `true` / `false` | `true` | |
-| `windowHeating.front` | Frontscheibenheizung | ✅ | String | `ON` / `OFF` / `UNKNOWN` | `OFF` | |
-| `windowHeating.rear` | Heckscheibenheizung | ✅ | String | `ON` / `OFF` / `UNKNOWN` | `OFF` | |
+| `airConditioningAtUnlock` | Klimatisierung beim Entriegeln | ✅ | Boolean | `true` / `false` | `true` | Beginnt sofort mit der Klimatisierung beim entriegeln (Auch bei Annäherung, wenn aktiviert)|
+| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:39Z` | Keine eigene Variable unter der Instanz|
+| `targetTemperature.value` | Solltemperatur | ✅ | Number | 16–30 °C | `22` | Modul: 0,5-°C-Schritte (Wird nur gesendet wenn Klima dannach aktiviert wird)|
+| `targetTemperature.unit` | Einheit Solltemperatur | ✅ | String | z. B. `CELSIUS` | `CELSIUS` | Ob hier auch Fahrenheit möglich ist konnte ich nicht testen |
+| `windowHeating.enabled` | Scheibenheizung aktiviert | 🟡 | Boolean | `true` / `false` | `true` | Noch unklar ob es grundsätzlich bei betrieb gesetzt wird oder ob es zum "Intiligenten Klimatisieren gehört" |
+| `windowHeating.front` | Frontscheibenheizung | 🟡 | String | `ON` / `OFF` / `UNKNOWN` | `OFF` | Wir bei mir als `OFF` gemeldet habe dies aber nicht als Austattung hier hätte ich `UNKNOWN` erwartet |
+| `windowHeating.rear` | Heckscheibenheizung | 🟡 | String | `ON` / `OFF` / `UNKNOWN` | `OFF` | Noch nicht getestet |
 
 ## vehicle.charging
 
