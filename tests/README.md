@@ -6,104 +6,104 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 
 ## vehicle
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `name` | Fahrzeugname | ✅ |
-| `licensePlate` | Kennzeichen | ✅ |
-| `vin` | Fahrzeug-Identifikationsnummer | ✅ |
-| `renderUrl` | Fahrzeugbild | ✅ |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `name` | Fahrzeugname | ✅ | |
+| `licensePlate` | Kennzeichen | ✅ | |
+| `vin` | FIN / VIN | ✅ | |
+| `renderUrl` | Fahrzeugbild | ✅ | Wird für das Fahrzeugbild verwendet |
 
 ## vehicle.airConditioning
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `state` | Klimastatus | ✅ |
-| `airConditioningAtUnlock` | Klima beim Entriegeln | ✅ |
-| `carCapturedTimestamp` | Zeitstempel | ✅ |
-| `targetTemperature.value` | Solltemperatur | ✅ |
-| `targetTemperature.unit` | Temperatureinheit | ✅ |
-| `windowHeating.enabled` | Fensterheizung aktiviert | ✅ |
-| `windowHeating.front` | Frontscheibenheizung | ✅ |
-| `windowHeating.rear` | Heckscheibenheizung | ✅ |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `state` | Klimatisierung | ✅ | |
+| `airConditioningAtUnlock` | Klimatisierung beim Entriegeln | ✅ | |
+| `carCapturedTimestamp` | — | ✅ | Keine eigene Variable |
+| `targetTemperature.value` | Solltemperatur | ✅ | |
+| `targetTemperature.unit` | Einheit Solltemperatur | ✅ | |
+| `windowHeating.enabled` | Scheibenheizung aktiviert | ✅ | |
+| `windowHeating.front` | Frontscheibenheizung | ✅ | |
+| `windowHeating.rear` | Heckscheibenheizung | ✅ | |
 
 ## vehicle.charging
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `isVehicleInSavedLocation` | Gespeicherter Ladeort | ✅ |
-| `carCapturedTimestamp` | Zeitstempel | ✅ |
-| `settings.autoUnlockPlugWhenCharged` | Stecker nach Ladeende entriegeln | ✅ |
-| `settings.availableChargeModes` | Verfügbare Lademodi | ✅ |
-| `settings.batteryCareModeTargetValueInPercent` | Ziel Batterieschonmodus | ✅ |
-| `settings.chargingCareMode` | Batterieschonmodus | ✅ |
-| `settings.maxChargeCurrentAc` | Max. AC-Ladestrom | ✅ |
-| `settings.preferredChargeMode` | Bevorzugter Lademodus | ✅ |
-| `settings.targetStateOfChargeInPercent` | Ladelimit | ✅ |
-| `status.battery.remainingCruisingRangeInMeters` | Restreichweite | ✅ |
-| `status.battery.stateOfChargeInPercent` | Batterieladestand | ✅ |
-| `status.chargePowerInKw` | Ladeleistung | ✅ |
-| `status.fullyChargedAt` | Vollständig geladen um | ✅ |
-| `status.remainingTimeToFullyChargedInMinutes` | Restladezeit | ✅ |
-| `status.state` | Ladestatus | ✅ |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `isVehicleInSavedLocation` | An gespeichertem Ladeort | ✅ | |
+| `carCapturedTimestamp` | — | ✅ | Keine eigene Variable |
+| `settings.autoUnlockPlugWhenCharged` | Automatische Steckerentriegelung | ✅ | |
+| `settings.availableChargeModes` | Lademodus | ✅ | Verfügbare Auswahl |
+| `settings.batteryCareModeTargetValueInPercent` | Battery-Care-Ziel | ✅ | |
+| `settings.chargingCareMode` | Battery Care Mode | ✅ | |
+| `settings.maxChargeCurrentAc` | Maximaler AC-Ladestrom | ✅ | |
+| `settings.preferredChargeMode` | Lademodus | ✅ | Aktuell gewählter Modus |
+| `settings.targetStateOfChargeInPercent` | Ladelimit | ✅ | |
+| `status.battery.remainingCruisingRangeInMeters` | Reichweite | ✅ | |
+| `status.battery.stateOfChargeInPercent` | Ladezustand | ✅ | |
+| `status.chargePowerInKw` | Ladeleistung | ✅ | |
+| `status.fullyChargedAt` | Vollgeladen um | ✅ | |
+| `status.remainingTimeToFullyChargedInMinutes` | Restladezeit | ✅ | |
+| `status.state` | Ladestatus | ✅ | |
 
 ## vehicle.chargingProfiles
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `profiles` | Ladeprofile | 🟡 |
-| `carCapturedTimestamp` | Zeitstempel | ✅ |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `profiles` | — | 🟡 | Über `GetChargingProfiles()` abrufbar; im Test leer |
+| `carCapturedTimestamp` | — | ✅ | Keine eigene Variable |
 
 ## vehicle.odometer
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `mileageInKm` | Kilometerstand | ✅ |
-| `carCapturedTimestamp` | Zeitstempel | ✅ |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `mileageInKm` | Kilometerstand | ✅ | |
+| `carCapturedTimestamp` | — | ✅ | Keine eigene Variable |
 
 ## vehicle.operations
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `startCharging` | Laden starten | 🟡 |
-| `stopCharging` | Laden stoppen | 🟡 |
-| `setChargingLimit` | Ladelimit setzen | 🟡 |
-| `setChargeMode` | Lademodus setzen | 🟡 |
-| `updateChargingProfile` | Ladeprofil aktualisieren | 🟡 |
-| `startAirConditioning` | Klimatisierung starten | 🟡 |
-| `stopAirConditioning` | Klimatisierung stoppen | 🟡 |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `startCharging` | Laden | 🟡 | Start-Befehl von API angeboten |
+| `stopCharging` | Laden | 🟡 | Stopp-Befehl von API angeboten |
+| `setChargingLimit` | Ladelimit | 🟡 | Befehl von API angeboten |
+| `setChargeMode` | Lademodus | 🟡 | Befehl von API angeboten |
+| `updateChargingProfile` | — | 🟡 | Befehl von API angeboten |
+| `startAirConditioning` | Klimatisierung | 🟡 | Start-Befehl von API angeboten |
+| `stopAirConditioning` | Klimatisierung | 🟡 | Stopp-Befehl von API angeboten |
 
 ## vehicle.parkingPosition
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `state` | Parkstatus | ✅ |
-| `formattedAddress` | Parkadresse | ✅ |
-| `gpsCoordinates.latitude` | Breitengrad | ✅ |
-| `gpsCoordinates.longitude` | Längengrad | ✅ |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `state` | Parkstatus | ✅ | |
+| `formattedAddress` | Parkadresse | ✅ | |
+| `gpsCoordinates.latitude` | Breitengrad | ✅ | |
+| `gpsCoordinates.longitude` | Längengrad | ✅ | |
 
 ## vehicle.status.overall
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `doorsLocked` | Türen verriegelt | 🟡 |
-| `locked` | Fahrzeug verriegelt | ✅ |
-| `doors` | Türstatus | ✅ |
-| `windows` | Fensterstatus | ✅ |
-| `lights` | Lichtstatus | ✅ |
-| `reliableLockStatus` | Zuverlässiger Verriegelungsstatus | 🟡 |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `doorsLocked` | Türverriegelungsstatus | 🟡 | `YES / NO / OPENED / TRUNK_OPENED / UNKNOWN` |
+| `locked` | Fahrzeugverriegelungsstatus | ✅ | `YES / NO / OPENED / TRUNK_OPENED / UNKNOWN` |
+| `doors` | Türen offen | ✅ | Im Modul als Ja/Nein dargestellt |
+| `windows` | Fenster offen | ✅ | Im Modul als Ja/Nein dargestellt |
+| `lights` | Licht an | ✅ | Im Modul als Ja/Nein dargestellt |
+| `reliableLockStatus` | Zuverlässiger Verriegelungsstatus | 🟡 | `LOCKED / UNLOCKED / UNKNOWN` |
 
 ## vehicle.status.detail
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `sunroof` | Schiebedach | ✅ |
-| `trunk` | Kofferraum | ✅ |
-| `bonnet` | Motorhaube | ✅ |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `sunroof` | Schiebedach offen | ✅ | Im Modul als Ja/Nein dargestellt |
+| `trunk` | Kofferraum offen | ✅ | Im Modul als Ja/Nein dargestellt |
+| `bonnet` | Motorhaube offen | ✅ | Im Modul als Ja/Nein dargestellt |
 
 ## vehicle.status
 
-| API | Deutsch | Enyaq 80<br>2022 |
-|---|---|:---:|
-| `carCapturedTimestamp` | Zeitstempel | ✅ |
+| API | Deutsch | Enyaq 80<br>2022 | Bemerkung |
+|---|---|:---:|---|
+| `carCapturedTimestamp` | — | ✅ | Keine eigene Variable |
 
 Weitere Fahrzeuge werden jeweils als zusätzliche Spalte rechts ergänzt.
