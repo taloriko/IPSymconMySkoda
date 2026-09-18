@@ -25,6 +25,9 @@ trait MySkodaImageTrait
             return false;
         }
         $mediaId = $this->vehicleImageMediaId();
+        if ($mediaId !== false) {
+            IPS_SetPosition($mediaId, 40);
+        }
         if ($mediaId !== false && !$force && $this->vehicleImageBelongsToCurrentVehicle($mediaId)) {
             return true;
         }
@@ -39,7 +42,7 @@ trait MySkodaImageTrait
             IPS_SetParent($mediaId, $this->InstanceID);
             IPS_SetIdent($mediaId, self::VEHICLE_IMAGE_IDENT);
             IPS_SetName($mediaId, $this->Translate(self::VEHICLE_IMAGE_NAME));
-            IPS_SetPosition($mediaId, 970);
+            IPS_SetPosition($mediaId, 40);
         }
         $fileName = 'myskoda_vehicle_' . $this->InstanceID . '.' . $download['extension'];
         $filePath = IPS_GetKernelDir() . 'media' . DIRECTORY_SEPARATOR . $fileName;
