@@ -7,56 +7,56 @@ trait MySkodaDiagnosticsTrait
     private function ensurePublicApiVariables(): void
     {
         $definitions = [
-            $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 25, $this->valuePresentation('barcode')),
-            $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 105, $this->publicApiEnumPresentation('lock', [
+            $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode')),
+            $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 750, $this->publicApiEnumPresentation('lock', [
                 ['LOCKED', 'Locked', 'lock', 0x22C55E],
                 ['UNLOCKED', 'Unlocked', 'lock-open', 0xF59E0B],
                 ['UNKNOWN', 'Unknown', 'circle-question', -1]
             ])),
-            $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 265, $this->valuePresentation('hourglass-half', ' min', 0)),
-            $this->variable('AtSavedChargingLocation', 'At saved charging location', VARIABLETYPE_BOOLEAN, 270, $this->booleanYesNoPresentation(true, 'house')),
-            $this->variable('BatteryCareMode', 'Battery care mode', VARIABLETYPE_STRING, 280, $this->publicApiEnumPresentation('shield', [
+            $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0)),
+            $this->variable('AtSavedChargingLocation', 'At saved charging location', VARIABLETYPE_BOOLEAN, 200, $this->booleanYesNoPresentation(true, 'house')),
+            $this->variable('BatteryCareMode', 'Battery care mode', VARIABLETYPE_STRING, 240, $this->publicApiEnumPresentation('shield', [
                 ['ACTIVATED', 'Activated', 'shield', 0x22C55E],
                 ['DEACTIVATED', 'Deactivated', 'shield', 0xF59E0B],
                 ['ACTIVE', 'Activated', 'shield', 0x22C55E],
                 ['INACTIVE', 'Deactivated', 'shield', 0xF59E0B],
                 ['UNKNOWN', 'Unknown', 'circle-question', -1]
             ])),
-            $this->variable('BatteryCareTargetSOC', 'Battery care target', VARIABLETYPE_INTEGER, 290, $this->valuePresentation('battery-half', ' %', 0)),
-            $this->variable('MaxChargeCurrentAC', 'Maximum AC charging current', VARIABLETYPE_STRING, 295, $this->publicApiEnumPresentation('bolt', [
+            $this->variable('BatteryCareTargetSOC', 'Battery care target', VARIABLETYPE_INTEGER, 230, $this->valuePresentation('battery-half', ' %', 0)),
+            $this->variable('MaxChargeCurrentAC', 'Maximum AC charging current', VARIABLETYPE_STRING, 250, $this->publicApiEnumPresentation('bolt', [
                 ['MAXIMUM', 'Maximum', 'bolt', -1],
                 ['REDUCED', 'Reduced', 'gauge', -1],
                 ['UNKNOWN', 'Unknown', 'circle-question', -1]
             ])),
-            $this->variable('AutoUnlockPlug', 'Automatic plug unlock', VARIABLETYPE_STRING, 297, $this->publicApiEnumPresentation('plug', [
+            $this->variable('AutoUnlockPlug', 'Automatic plug unlock', VARIABLETYPE_STRING, 210, $this->publicApiEnumPresentation('plug', [
                 ['OFF', 'Off', 'lock', -1],
                 ['ON', 'On', 'lock-open', 0x22C55E],
                 ['PERMANENT', 'Permanent', 'lock-open', 0x22C55E],
                 ['UNKNOWN', 'Unknown', 'circle-question', -1]
             ])),
-            $this->variable('TargetTemperatureUnit', 'Target temperature unit', VARIABLETYPE_STRING, 315, $this->valuePresentation('temperature-half')),
-            $this->variable('AirConditioningAtUnlock', 'Air conditioning at unlock', VARIABLETYPE_BOOLEAN, 320, $this->booleanYesNoPresentation(true, 'key')),
-            $this->variable('WindowHeatingEnabled', 'Window heating enabled', VARIABLETYPE_BOOLEAN, 330, $this->booleanYesNoPresentation(true, 'window-maximize')),
-            $this->variable('WindowHeatingFront', 'Front window heating', VARIABLETYPE_STRING, 340, $this->publicApiEnumPresentation('window-maximize', [
+            $this->variable('TargetTemperatureUnit', 'Target temperature unit', VARIABLETYPE_STRING, 130, $this->valuePresentation('temperature-half')),
+            $this->variable('AirConditioningAtUnlock', 'Air conditioning at unlock', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(true, 'key')),
+            $this->variable('WindowHeatingEnabled', 'Window heating enabled', VARIABLETYPE_BOOLEAN, 140, $this->booleanYesNoPresentation(true, 'window-maximize')),
+            $this->variable('WindowHeatingFront', 'Front window heating', VARIABLETYPE_STRING, 150, $this->publicApiEnumPresentation('window-maximize', [
                 ['OFF', 'Off', 'window-maximize', 0x22C55E],
                 ['ON', 'On', 'window-maximize', 0xF59E0B],
                 ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ])),
-            $this->variable('WindowHeatingRear', 'Rear window heating', VARIABLETYPE_STRING, 350, $this->publicApiEnumPresentation('car-rear', [
+            $this->variable('WindowHeatingRear', 'Rear window heating', VARIABLETYPE_STRING, 160, $this->publicApiEnumPresentation('car-rear', [
                 ['OFF', 'Off', 'car-rear', 0x22C55E],
                 ['ON', 'On', 'car-rear', 0xF59E0B],
                 ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ])),
-            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1270, []),
-            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1280, []),
-            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1290, []),
-            $this->variable('APISupportedFeatures', 'API supported features', VARIABLETYPE_STRING, 1300, []),
-            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1310, []),
-            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1320, []),
-            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1330, []),
-            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1340, [])
+            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1000, []),
+            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1010, []),
+            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1020, []),
+            $this->variable('APISupportedFeatures', 'API supported features', VARIABLETYPE_STRING, 1030, []),
+            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 220, []),
+            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 500, []),
+            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1040, []),
+            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1050, [])
         ];
 
         foreach ($definitions as $definition) {
