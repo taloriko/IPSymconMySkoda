@@ -30,9 +30,9 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
-| `isVehicleInSavedLocation` | An gespeichertem Ladeort | ✅ | Boolean | `true` / `false` | `false` | |
+| `isVehicleInSavedLocation` | An gespeichertem Ladeort | ✅ | Boolean | `true` / `false` | `false` | Ist das Fahrzeug an einem Ladeort, der vorherher im Fahrzeug gespeichert und definiert wurde |
 | `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:53:06Z` | Keine eigene Variable |
-| `settings.autoUnlockPlugWhenCharged` | Automatische Steckerentriegelung | ✅ | String | `OFF` / `ON` / `PERMANENT` / `UNKNOWN` | `OFF` | |
+| `settings.autoUnlockPlugWhenCharged` | Automatische Steckerentriegelung | ✅ | String | `OFF` / `ON` / `PERMANENT` / `UNKNOWN` | `OFF` | Wird nach dem Beenden des Ladevorgangs das Kabel an der Seite des Fahrzeuges entriegelt (Wenn aktiviert kann das Kabel gestohlen werden) |
 | `settings.availableChargeModes` | Lademodus | ✅ | Array[String] | `MANUAL` / `TIMER` / `TIMER_CHARGING_WITH_CLIMATISATION` / `PREFERRED_CHARGING_TIMES` / `ONLY_OWN_CURRENT` / `IMMEDIATE_DISCHARGING` / `HOME_STORAGE_CHARGING` | `["MANUAL"]` | Verfügbare Auswahl |
 | `settings.batteryCareModeTargetValueInPercent` | Battery-Care-Ziel | ✅ | Integer | 0–100 % | `80` | |
 | `settings.chargingCareMode` | Battery Care Mode | ✅ | String | `ACTIVATED` / `DEACTIVATED` / `ACTIVE` / `INACTIVE` / `UNKNOWN` | `ACTIVATED` | |
