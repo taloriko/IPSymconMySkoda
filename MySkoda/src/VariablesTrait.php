@@ -41,7 +41,9 @@ trait MySkodaVariablesTrait
                 $this->valuePresentation('gauge-high', ' km', 0),
                 ['THOUSANDS_SEPARATOR' => '.']
             )),
-            $this->variable('Locked', 'Locked', VARIABLETYPE_BOOLEAN, 100, $this->booleanYesNoPresentation(true, 'lock', 'lock-open', 'lock')),
+            $this->variable('DoorsLocked', 'Doors locked', VARIABLETYPE_STRING, 100, $this->valuePresentation('lock')),
+            $this->variable('Locked', 'Locked', VARIABLETYPE_STRING, 101, $this->valuePresentation('lock')),
+            $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 102, $this->valuePresentation('lock')),
             $this->variable('DoorsOpen', 'Doors open', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(false, 'door-closed', 'door-closed', 'door-open')),
             $this->variable('WindowsOpen', 'Windows open', VARIABLETYPE_BOOLEAN, 120, $this->booleanYesNoPresentation(false, 'window-maximize')),
             $this->variable('Charging', 'Charging', VARIABLETYPE_BOOLEAN, 200, $this->booleanActionPresentation('plug')),
@@ -91,6 +93,7 @@ trait MySkodaVariablesTrait
             $this->variable('SunroofOpen', 'Sunroof open', VARIABLETYPE_BOOLEAN, 150, $this->booleanYesNoPresentation(false, 'car-side')),
             $this->variable('LightsOn', 'Lights on', VARIABLETYPE_BOOLEAN, 160, $this->booleanYesNoPresentation(false, 'lightbulb')),
             $this->variable('ParkingState', 'Parking state', VARIABLETYPE_STRING, 170, $this->parkingStatePresentation()),
+            $this->variable('ParkingAddress', 'Parking address', VARIABLETYPE_STRING, 171, $this->valuePresentation('location-dot')),
             $this->variable('ChargingState', 'Charging state', VARIABLETYPE_STRING, 210, $this->chargingStatePresentation()),
             $this->variable('ChargeType', 'Charge type', VARIABLETYPE_STRING, 220, $this->chargeTypePresentation()),
             $this->variable('FullyChargedAt', 'Fully charged at', VARIABLETYPE_INTEGER, 260, [
@@ -227,8 +230,9 @@ trait MySkodaVariablesTrait
             $this->SetValue('Mileage', $mileage);
         }
 
-        $lock = strtoupper((string) $this->path($vehicle, 'status.overall.doorsLocked', $this->path($vehicle, 'status.overall.locked', 'UNKNOWN')));
-        $this->SetValue('Locked', in_array($lock, ['YES', 'LOCKED'], true));
+        $this->SetValue('DoorsLocked', (string) $this->path($vehicle, 'status.overall.doorsLocked', ''));
+        $this->SetValue('Locked', (string) $this->path($vehicle, 'status.overall.locked', ''));
+        $this->SetValue('ReliableLockStatus', (string) $this->path($vehicle, 'status.overall.reliableLockStatus', ''));
         $this->SetValue('DoorsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.doors', 'CLOSED')) === 'OPEN');
         $this->SetValue('WindowsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.windows', 'CLOSED')) === 'OPEN');
 
@@ -273,6 +277,7 @@ trait MySkodaVariablesTrait
         $this->setIfExists('SunroofOpen', strtoupper((string) $this->path($vehicle, 'status.detail.sunroof', 'CLOSED')) === 'OPEN');
         $this->setIfExists('LightsOn', strtoupper((string) $this->path($vehicle, 'status.overall.lights', 'OFF')) === 'ON');
         $this->setIfExists('ParkingState', (string) $this->path($vehicle, 'parkingPosition.state', ''));
+        $this->setIfExists('ParkingAddress', (string) $this->path($vehicle, 'parkingPosition.formattedAddress', ''));
 
         $latitude = $this->firstPath($vehicle, ['parkingPosition.latitude', 'parkingPosition.gpsCoordinates.latitude', 'parkingPosition.gpsCoordinates.lat']);
         $longitude = $this->firstPath($vehicle, ['parkingPosition.longitude', 'parkingPosition.gpsCoordinates.longitude', 'parkingPosition.gpsCoordinates.lon', 'parkingPosition.gpsCoordinates.lng']);
