@@ -38,14 +38,16 @@ trait MySkodaDiagnosticsTrait
             $this->variable('AirConditioningAtUnlock', 'Air conditioning at unlock', VARIABLETYPE_BOOLEAN, 320, $this->booleanYesNoPresentation(true, 'key')),
             $this->variable('WindowHeatingEnabled', 'Window heating enabled', VARIABLETYPE_BOOLEAN, 330, $this->booleanYesNoPresentation(true, 'window-maximize')),
             $this->variable('WindowHeatingFront', 'Front window heating', VARIABLETYPE_STRING, 340, $this->publicApiEnumPresentation('window-maximize', [
-                ['OFF', 'Off', 'window-maximize', -1],
-                ['ON', 'On', 'window-maximize', 0x22C55E],
-                ['UNKNOWN', 'Unknown', 'circle-question', -1]
+                ['OFF', 'Off', 'window-maximize', 0x22C55E],
+                ['ON', 'On', 'window-maximize', 0xF59E0B],
+                ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
+                ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ])),
             $this->variable('WindowHeatingRear', 'Rear window heating', VARIABLETYPE_STRING, 350, $this->publicApiEnumPresentation('car-rear', [
-                ['OFF', 'Off', 'car-rear', -1],
-                ['ON', 'On', 'car-rear', 0x22C55E],
-                ['UNKNOWN', 'Unknown', 'circle-question', -1]
+                ['OFF', 'Off', 'car-rear', 0x22C55E],
+                ['ON', 'On', 'car-rear', 0xF59E0B],
+                ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
+                ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ])),
             $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1270, []),
             $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1280, []),
