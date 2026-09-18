@@ -22,7 +22,7 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 | `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:39Z` | Keine eigene Variable unter der Instanz |
 | `targetTemperature.value` | Solltemperatur | ✅ | Number | 16–30 °C | `22` | Modul: 0,5-°C-Schritte (Wird nur gesendet wenn Klima dannach aktiviert wird)|
 | `targetTemperature.unit` | Einheit Solltemperatur | ✅ | String | `CELSIUS` | `CELSIUS` | Ob hier auch Fahrenheit möglich ist konnte ich nicht testen |
-| `windowHeating.enabled` | Scheibenheizung aktiviert | 🟡 | Boolean | `true` / `false` | `true` | Noch unklar ob es grundsätzlich bei betrieb gesetzt wird oder ob es zum "Intiligenten Klimatisieren gehört" |
+| `windowHeating.enabled` | Scheibenheizung aktiviert | ✅  | Boolean | `true` / `false` | `true` | Nutzung bei Intiligenten Klimatisieren |
 | `windowHeating.front` | Frontscheibenheizung | 🟡 | String | `ON` / `OFF` / `INVALID` / `UNKNOWN` | `OFF` | Wir bei mir als `OFF` gemeldet habe dies aber nicht als Austattung hier hätte ich `UNKNOWN` erwartet |
 | `windowHeating.rear` | Heckscheibenheizung | 🟡 | String | `ON` / `OFF` / `INVALID` / `UNKNOWN` | `OFF` | Noch nicht getestet |
 
@@ -85,7 +85,7 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
-| `doorsLocked` | Türverriegelungsstatus | 🟡 | String | `YES` / `NO` / `OPENED` / `TRUNK_OPENED` / `UNKNOWN` | `YES` | Unterschiede der Verriegelungsmeldungen unklar |
+| `doorsLocked` | Türverriegelungsstatus | ✅  | String | `YES` / `NO` / `OPENED` / `TRUNK_OPENED` / `UNKNOWN` | `YES` | Entspricht dem Wert "Fahrzeugstatus" in der APP |
 | `locked` | Fahrzeugverriegelungsstatus | 🟡 | String | `YES` / `NO` / `OPENED` / `TRUNK_OPENED` / `UNKNOWN` | `YES` | Unterschiede der Verriegelungsmeldungen unklar |
 | `doors` | Türen offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` |  |
 | `windows` | Fenster offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` | |
