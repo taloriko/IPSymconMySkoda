@@ -6,7 +6,7 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 
 | Status | Bedeutung |
 |---|---|
-| **Getestet** | Mit diesem Fahrzeug real geprüft bzw. im echten API-Datensatz vorhanden |
+| **Getestet** | Mit diesem Fahrzeug real geprüft und im echten API-Datensatz vorhanden |
 | **Vermutet** | Von der API angekündigt oder technisch zu erwarten, aber noch nicht abschließend am Fahrzeug geprüft |
 | **Nicht vorhanden** | Bei diesem Fahrzeug nicht vorhanden bzw. nicht von der API geliefert |
 
