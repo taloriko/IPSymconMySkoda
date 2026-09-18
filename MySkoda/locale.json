@@ -212,7 +212,13 @@
       "Visualization": "Visualisierung",
       "The selected notification target does not exist.": "Das gewählte Mitteilungsziel existiert nicht.",
       "The selected object is not a Symcon visualization instance.": "Das gewählte Objekt ist keine Symcon-Visualisierungsinstanz.",
-      "The configured notification target is not a valid visualization instance.": "Das konfigurierte Mitteilungsziel ist keine gültige Visualisierungsinstanz."
+      "The configured notification target is not a valid visualization instance.": "Das konfigurierte Mitteilungsziel ist keine gültige Visualisierungsinstanz.",
+      "Door lock status": "Türverriegelungsstatus",
+      "Vehicle lock status": "Fahrzeugverriegelungsstatus",
+      "Parking address": "Parkadresse",
+      "Unlocked": "Entriegelt",
+      "Door opened": "Tür geöffnet",
+      "Trunk opened": "Kofferraum geöffnet"
     }
   }
 }
