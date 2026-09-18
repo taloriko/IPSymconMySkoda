@@ -218,7 +218,20 @@
       "Parking address": "Parkadresse",
       "Unlocked": "Entriegelt",
       "Door opened": "Tür geöffnet",
-      "Trunk opened": "Kofferraum geöffnet"
+      "Trunk opened": "Kofferraum geöffnet",
+      "Doors": "Türen",
+      "Windows": "Fenster",
+      "Trunk": "Kofferraum",
+      "Bonnet": "Motorhaube",
+      "Sunroof": "Schiebedach",
+      "Lights": "Licht",
+      "Air conditioning state": "Klimastatus",
+      "Closed": "Geschlossen",
+      "Open": "Offen",
+      "Unsupported": "Nicht unterstützt",
+      "Invalid": "Ungültig",
+      "Error": "Fehler",
+      "Other": "Andere"
     }
   }
 }
