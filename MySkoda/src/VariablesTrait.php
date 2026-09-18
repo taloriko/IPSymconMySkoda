@@ -41,9 +41,9 @@ trait MySkodaVariablesTrait
                 $this->valuePresentation('gauge-high', ' km', 0),
                 ['THOUSANDS_SEPARATOR' => '.']
             )),
-            $this->variable('DoorsLocked', 'Doors locked', VARIABLETYPE_STRING, 100, $this->valuePresentation('lock')),
-            $this->variable('Locked', 'Locked', VARIABLETYPE_STRING, 101, $this->valuePresentation('lock')),
-            $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 102, $this->valuePresentation('lock')),
+            $this->variable('DoorsLocked', 'Door lock status', VARIABLETYPE_STRING, 100, $this->doorLockStatePresentation()),
+            $this->variable('Locked', 'Vehicle lock status', VARIABLETYPE_STRING, 101, $this->doorLockStatePresentation()),
+            $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 102, $this->reliableLockStatePresentation()),
             $this->variable('DoorsOpen', 'Doors open', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(false, 'door-closed', 'door-closed', 'door-open')),
             $this->variable('WindowsOpen', 'Windows open', VARIABLETYPE_BOOLEAN, 120, $this->booleanYesNoPresentation(false, 'window-maximize')),
             $this->variable('Charging', 'Charging', VARIABLETYPE_BOOLEAN, 200, $this->booleanActionPresentation('plug')),
@@ -135,6 +135,13 @@ trait MySkodaVariablesTrait
     {
         $ident = (string) $definition['ident'];
         $existingId = @$this->GetIDForIdent($ident);
+        if ($existingId !== false && $ident === 'Locked' && IPS_VariableExists($existingId)) {
+            $existingVariable = IPS_GetVariable($existingId);
+            if ((int) ($existingVariable['VariableType'] ?? -1) !== (int) $definition['type']) {
+                IPS_DeleteVariable($existingId);
+                $existingId = false;
+            }
+        }
         if ($existingId !== false) {
             if (!IPS_VariableExists($existingId)) {
                 $this->LogMessage(sprintf('MySkoda: ident "%s" is already used by another object.', $ident), KL_WARNING);
@@ -163,7 +170,7 @@ trait MySkodaVariablesTrait
                     (int) $definition['position']
                 );
             }
-            if (in_array($ident, ['ParkingState', 'ChargeType'], true)) {
+            if (in_array($ident, ['ParkingState', 'ChargeType', 'DoorsLocked', 'Locked', 'ReliableLockStatus'], true)) {
                 $this->RegisterVariableString(
                     $ident,
                     $this->Translate((string) $definition['name']),
@@ -366,6 +373,36 @@ trait MySkodaVariablesTrait
             'OPTIONS' => json_encode([
                 ['Value' => false, 'Caption' => $this->Translate('No'), 'IconActive' => $falseIcon !== '', 'IconValue' => $falseIcon, 'ColorActive' => true, 'ColorValue' => $falseColor],
                 ['Value' => true, 'Caption' => $this->Translate('Yes'), 'IconActive' => $trueIcon !== '', 'IconValue' => $trueIcon, 'ColorActive' => true, 'ColorValue' => $trueColor]
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        ];
+    }
+
+    private function doorLockStatePresentation(): array
+    {
+        return [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'lock',
+            'COLOR' => -1,
+            'OPTIONS' => json_encode([
+                ['Value' => 'YES', 'Caption' => $this->Translate('Locked'), 'IconActive' => true, 'IconValue' => 'lock', 'ColorActive' => false, 'ColorValue' => -1],
+                ['Value' => 'NO', 'Caption' => $this->Translate('Unlocked'), 'IconActive' => true, 'IconValue' => 'lock-open', 'ColorActive' => false, 'ColorValue' => -1],
+                ['Value' => 'OPENED', 'Caption' => $this->Translate('Door opened'), 'IconActive' => true, 'IconValue' => 'door-open', 'ColorActive' => false, 'ColorValue' => -1],
+                ['Value' => 'TRUNK_OPENED', 'Caption' => $this->Translate('Trunk opened'), 'IconActive' => true, 'IconValue' => 'car-rear', 'ColorActive' => false, 'ColorValue' => -1],
+                ['Value' => 'UNKNOWN', 'Caption' => $this->Translate('Unknown'), 'IconActive' => true, 'IconValue' => 'circle-question', 'ColorActive' => false, 'ColorValue' => -1]
+            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+        ];
+    }
+
+    private function reliableLockStatePresentation(): array
+    {
+        return [
+            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+            'ICON' => 'lock',
+            'COLOR' => -1,
+            'OPTIONS' => json_encode([
+                ['Value' => 'LOCKED', 'Caption' => $this->Translate('Locked'), 'IconActive' => true, 'IconValue' => 'lock', 'ColorActive' => false, 'ColorValue' => -1],
+                ['Value' => 'UNLOCKED', 'Caption' => $this->Translate('Unlocked'), 'IconActive' => true, 'IconValue' => 'lock-open', 'ColorActive' => false, 'ColorValue' => -1],
+                ['Value' => 'UNKNOWN', 'Caption' => $this->Translate('Unknown'), 'IconActive' => true, 'IconValue' => 'circle-question', 'ColorActive' => false, 'ColorValue' => -1]
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ];
     }
