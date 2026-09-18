@@ -11,7 +11,9 @@ trait MySkodaVariablesTrait
         3 => 'PREFERRED_CHARGING_TIMES',
         4 => 'ONLY_OWN_CURRENT',
         5 => 'IMMEDIATE_DISCHARGING',
-        6 => 'HOME_STORAGE_CHARGING'
+        6 => 'HOME_STORAGE_CHARGING',
+        7 => 'OTHER',
+        8 => 'OFF'
     ];
 
     private function registerVariables(): void
@@ -44,8 +46,8 @@ trait MySkodaVariablesTrait
             $this->variable('DoorsLocked', 'Door lock status', VARIABLETYPE_STRING, 100, $this->doorLockStatePresentation()),
             $this->variable('Locked', 'Vehicle lock status', VARIABLETYPE_STRING, 101, $this->doorLockStatePresentation()),
             $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 102, $this->reliableLockStatePresentation()),
-            $this->variable('DoorsOpen', 'Doors open', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(false, 'door-closed', 'door-closed', 'door-open')),
-            $this->variable('WindowsOpen', 'Windows open', VARIABLETYPE_BOOLEAN, 120, $this->booleanYesNoPresentation(false, 'window-maximize')),
+            $this->variable('DoorsOpen', 'Doors', VARIABLETYPE_STRING, 110, $this->openStatePresentation('door-closed', 'door-open')),
+            $this->variable('WindowsOpen', 'Windows', VARIABLETYPE_STRING, 120, $this->openStatePresentation('window-maximize', 'window-maximize')),
             $this->variable('Charging', 'Charging', VARIABLETYPE_BOOLEAN, 200, $this->booleanActionPresentation('plug')),
             $this->variable('ChargePower', 'Charging power', VARIABLETYPE_FLOAT, 230, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
@@ -63,6 +65,7 @@ trait MySkodaVariablesTrait
             ]),
             $this->variable('ChargeMode', 'Charging mode', VARIABLETYPE_INTEGER, 250, $this->chargeModePresentation()),
             $this->variable('Climate', 'Air conditioning', VARIABLETYPE_BOOLEAN, 300, $this->booleanActionPresentation('fan')),
+            $this->variable('ClimateState', 'Air conditioning state', VARIABLETYPE_STRING, 305, $this->climateStatePresentation()),
             $this->variable('TargetTemperature', 'Target temperature', VARIABLETYPE_FLOAT, 310, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
                 'ICON' => 'temperature-half',
@@ -88,10 +91,10 @@ trait MySkodaVariablesTrait
         return [
             $this->variable('VehicleName', 'Vehicle name', VARIABLETYPE_STRING, 10, $this->valuePresentation('car')),
             $this->variable('LicensePlate', 'License plate', VARIABLETYPE_STRING, 20, $this->valuePresentation('id-card')),
-            $this->variable('TrunkOpen', 'Trunk open', VARIABLETYPE_BOOLEAN, 130, $this->booleanYesNoPresentation(false, 'car-rear')),
-            $this->variable('BonnetOpen', 'Bonnet open', VARIABLETYPE_BOOLEAN, 140, $this->booleanYesNoPresentation(false, 'car')),
-            $this->variable('SunroofOpen', 'Sunroof open', VARIABLETYPE_BOOLEAN, 150, $this->booleanYesNoPresentation(false, 'car-side')),
-            $this->variable('LightsOn', 'Lights on', VARIABLETYPE_BOOLEAN, 160, $this->booleanYesNoPresentation(false, 'lightbulb')),
+            $this->variable('TrunkOpen', 'Trunk', VARIABLETYPE_STRING, 130, $this->openStatePresentation('car-rear', 'car-rear')),
+            $this->variable('BonnetOpen', 'Bonnet', VARIABLETYPE_STRING, 140, $this->openStatePresentation('car', 'car')),
+            $this->variable('SunroofOpen', 'Sunroof', VARIABLETYPE_STRING, 150, $this->openStatePresentation('car-side', 'car-side')),
+            $this->variable('LightsOn', 'Lights', VARIABLETYPE_STRING, 160, $this->onOffStatePresentation('lightbulb')),
             $this->variable('ParkingState', 'Parking state', VARIABLETYPE_STRING, 170, $this->parkingStatePresentation()),
             $this->variable('ParkingAddress', 'Parking address', VARIABLETYPE_STRING, 171, $this->valuePresentation('location-dot')),
             $this->variable('ChargingState', 'Charging state', VARIABLETYPE_STRING, 210, $this->chargingStatePresentation()),
@@ -135,7 +138,16 @@ trait MySkodaVariablesTrait
     {
         $ident = (string) $definition['ident'];
         $existingId = @$this->GetIDForIdent($ident);
-        if ($existingId !== false && $ident === 'Locked' && IPS_VariableExists($existingId)) {
+        $breakingTypeIdents = [
+            'Locked',
+            'DoorsOpen',
+            'WindowsOpen',
+            'TrunkOpen',
+            'BonnetOpen',
+            'SunroofOpen',
+            'LightsOn'
+        ];
+        if ($existingId !== false && in_array($ident, $breakingTypeIdents, true) && IPS_VariableExists($existingId)) {
             $existingVariable = IPS_GetVariable($existingId);
             if ((int) ($existingVariable['VariableType'] ?? -1) !== (int) $definition['type']) {
                 IPS_DeleteVariable($existingId);
@@ -154,7 +166,19 @@ trait MySkodaVariablesTrait
                 return;
             }
 
-            if (in_array($ident, ['DoorsLocked', 'ParkingAddress'], true)) {
+            if (in_array($ident, [
+                'DoorsLocked',
+                'Locked',
+                'ReliableLockStatus',
+                'DoorsOpen',
+                'WindowsOpen',
+                'TrunkOpen',
+                'BonnetOpen',
+                'SunroofOpen',
+                'LightsOn',
+                'ParkingAddress',
+                'ClimateState'
+            ], true)) {
                 IPS_SetName($existingId, $this->Translate((string) $definition['name']));
             }
 
@@ -174,7 +198,21 @@ trait MySkodaVariablesTrait
                     (int) $definition['position']
                 );
             }
-            if (in_array($ident, ['ParkingState', 'ParkingAddress', 'ChargeType', 'DoorsLocked', 'Locked', 'ReliableLockStatus'], true)) {
+            if (in_array($ident, [
+                'ParkingState',
+                'ParkingAddress',
+                'ChargeType',
+                'DoorsLocked',
+                'Locked',
+                'ReliableLockStatus',
+                'DoorsOpen',
+                'WindowsOpen',
+                'TrunkOpen',
+                'BonnetOpen',
+                'SunroofOpen',
+                'LightsOn',
+                'ClimateState'
+            ], true)) {
                 $this->RegisterVariableString(
                     $ident,
                     $this->Translate((string) $definition['name']),
@@ -241,11 +279,11 @@ trait MySkodaVariablesTrait
             $this->SetValue('Mileage', $mileage);
         }
 
-        $this->SetValue('DoorsLocked', (string) $this->path($vehicle, 'status.overall.doorsLocked', ''));
-        $this->SetValue('Locked', (string) $this->path($vehicle, 'status.overall.locked', ''));
-        $this->SetValue('ReliableLockStatus', (string) $this->path($vehicle, 'status.overall.reliableLockStatus', ''));
-        $this->SetValue('DoorsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.doors', 'CLOSED')) === 'OPEN');
-        $this->SetValue('WindowsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.windows', 'CLOSED')) === 'OPEN');
+        $this->SetValue('DoorsLocked', strtoupper((string) $this->path($vehicle, 'status.overall.doorsLocked', 'UNKNOWN')));
+        $this->SetValue('Locked', strtoupper((string) $this->path($vehicle, 'status.overall.locked', 'UNKNOWN')));
+        $this->SetValue('ReliableLockStatus', strtoupper((string) $this->path($vehicle, 'status.overall.reliableLockStatus', 'UNKNOWN')));
+        $this->SetValue('DoorsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.doors', 'UNKNOWN')));
+        $this->SetValue('WindowsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.windows', 'UNKNOWN')));
 
         $chargeState = strtoupper((string) $this->path($vehicle, 'charging.status.state', ''));
         $this->SetValue('Charging', in_array($chargeState, ['CHARGING', 'CONSERVING'], true));
@@ -263,8 +301,9 @@ trait MySkodaVariablesTrait
             }
         }
 
-        $climateState = strtoupper((string) $this->path($vehicle, 'airConditioning.state', 'OFF'));
-        $this->SetValue('Climate', in_array($climateState, ['COOLING', 'HEATING', 'HEATING_AUXILIARY', 'VENTILATION'], true));
+        $climateState = strtoupper((string) $this->path($vehicle, 'airConditioning.state', 'UNKNOWN'));
+        $this->SetValue('Climate', in_array($climateState, ['ON', 'COOLING', 'HEATING', 'HEATING_AUXILIARY', 'VENTILATION'], true));
+        $this->SetValue('ClimateState', $climateState);
         $this->setPathValue('TargetTemperature', $vehicle, 'airConditioning.targetTemperature.value', static fn (mixed $v): float => (float) $v);
     }
 
@@ -280,14 +319,14 @@ trait MySkodaVariablesTrait
     {
         $this->setIfExists('VehicleName', (string) $this->path($vehicle, 'name', ''));
         $this->setIfExists('LicensePlate', (string) $this->path($vehicle, 'licensePlate', ''));
-        $this->setIfExists('ChargingState', (string) $this->path($vehicle, 'charging.status.state', ''));
-        $this->setIfExists('ChargeType', (string) $this->path($vehicle, 'charging.status.chargeType', ''));
+        $this->setIfExists('ChargingState', strtoupper((string) $this->path($vehicle, 'charging.status.state', 'UNKNOWN')));
+        $this->setIfExists('ChargeType', strtoupper((string) $this->path($vehicle, 'charging.status.chargeType', 'OFF')));
         $this->setIfExists('FullyChargedAt', $this->toTimestamp($this->path($vehicle, 'charging.status.fullyChargedAt', null)));
-        $this->setIfExists('TrunkOpen', strtoupper((string) $this->path($vehicle, 'status.detail.trunk', 'CLOSED')) === 'OPEN');
-        $this->setIfExists('BonnetOpen', strtoupper((string) $this->path($vehicle, 'status.detail.bonnet', 'CLOSED')) === 'OPEN');
-        $this->setIfExists('SunroofOpen', strtoupper((string) $this->path($vehicle, 'status.detail.sunroof', 'CLOSED')) === 'OPEN');
-        $this->setIfExists('LightsOn', strtoupper((string) $this->path($vehicle, 'status.overall.lights', 'OFF')) === 'ON');
-        $this->setIfExists('ParkingState', (string) $this->path($vehicle, 'parkingPosition.state', ''));
+        $this->setIfExists('TrunkOpen', strtoupper((string) $this->path($vehicle, 'status.detail.trunk', 'UNKNOWN')));
+        $this->setIfExists('BonnetOpen', strtoupper((string) $this->path($vehicle, 'status.detail.bonnet', 'UNKNOWN')));
+        $this->setIfExists('SunroofOpen', strtoupper((string) $this->path($vehicle, 'status.detail.sunroof', 'UNKNOWN')));
+        $this->setIfExists('LightsOn', strtoupper((string) $this->path($vehicle, 'status.overall.lights', 'UNKNOWN')));
+        $this->setIfExists('ParkingState', strtoupper((string) $this->path($vehicle, 'parkingPosition.state', 'UNKNOWN')));
         $this->setIfExists('ParkingAddress', (string) $this->path($vehicle, 'parkingPosition.formattedAddress', ''));
 
         $latitude = $this->firstPath($vehicle, ['parkingPosition.latitude', 'parkingPosition.gpsCoordinates.latitude', 'parkingPosition.gpsCoordinates.lat']);
@@ -381,46 +420,93 @@ trait MySkodaVariablesTrait
         ];
     }
 
-    private function doorLockStatePresentation(): array
+    private function stateValuePresentation(string $icon, array $states): array
     {
+        $options = [];
+        foreach ($states as [$value, $caption, $optionIcon, $color]) {
+            $options[] = [
+                'Value' => $value,
+                'Caption' => $this->Translate($caption),
+                'IconActive' => $optionIcon !== '',
+                'IconValue' => $optionIcon,
+                'ColorActive' => true,
+                'ColorValue' => $color
+            ];
+        }
+
         return [
             'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'lock',
+            'ICON' => $icon,
             'COLOR' => -1,
-            'OPTIONS' => json_encode([
-                ['Value' => 'YES', 'Caption' => $this->Translate('Locked'), 'IconActive' => true, 'IconValue' => 'lock', 'ColorActive' => false, 'ColorValue' => -1],
-                ['Value' => 'NO', 'Caption' => $this->Translate('Unlocked'), 'IconActive' => true, 'IconValue' => 'lock-open', 'ColorActive' => false, 'ColorValue' => -1],
-                ['Value' => 'OPENED', 'Caption' => $this->Translate('Door opened'), 'IconActive' => true, 'IconValue' => 'door-open', 'ColorActive' => false, 'ColorValue' => -1],
-                ['Value' => 'TRUNK_OPENED', 'Caption' => $this->Translate('Trunk opened'), 'IconActive' => true, 'IconValue' => 'car-rear', 'ColorActive' => false, 'ColorValue' => -1],
-                ['Value' => 'UNKNOWN', 'Caption' => $this->Translate('Unknown'), 'IconActive' => true, 'IconValue' => 'circle-question', 'ColorActive' => false, 'ColorValue' => -1]
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+            'OPTIONS' => json_encode($options, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ];
+    }
+
+    private function openStatePresentation(string $closedIcon, string $openIcon): array
+    {
+        return $this->stateValuePresentation($closedIcon, [
+            ['CLOSED', 'Closed', $closedIcon, 0x22C55E],
+            ['OPEN', 'Open', $openIcon, 0xF59E0B],
+            ['UNSUPPORTED', 'Unsupported', 'circle-minus', 0x6B7280],
+            ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+        ]);
+    }
+
+    private function onOffStatePresentation(string $icon): array
+    {
+        return $this->stateValuePresentation($icon, [
+            ['OFF', 'Off', $icon, 0x22C55E],
+            ['ON', 'On', $icon, 0xF59E0B],
+            ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
+            ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+        ]);
+    }
+
+    private function doorLockStatePresentation(): array
+    {
+        return $this->stateValuePresentation('lock', [
+            ['YES', 'Locked', 'lock', 0x22C55E],
+            ['NO', 'Unlocked', 'lock-open', 0xF59E0B],
+            ['OPENED', 'Door opened', 'door-open', 0xF59E0B],
+            ['TRUNK_OPENED', 'Trunk opened', 'car-rear', 0xF59E0B],
+            ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+        ]);
     }
 
     private function reliableLockStatePresentation(): array
     {
-        return [
-            'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-            'ICON' => 'lock',
-            'COLOR' => -1,
-            'OPTIONS' => json_encode([
-                ['Value' => 'LOCKED', 'Caption' => $this->Translate('Locked'), 'IconActive' => true, 'IconValue' => 'lock', 'ColorActive' => false, 'ColorValue' => -1],
-                ['Value' => 'UNLOCKED', 'Caption' => $this->Translate('Unlocked'), 'IconActive' => true, 'IconValue' => 'lock-open', 'ColorActive' => false, 'ColorValue' => -1],
-                ['Value' => 'UNKNOWN', 'Caption' => $this->Translate('Unknown'), 'IconActive' => true, 'IconValue' => 'circle-question', 'ColorActive' => false, 'ColorValue' => -1]
-            ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-        ];
+        return $this->stateValuePresentation('lock', [
+            ['LOCKED', 'Locked', 'lock', 0x22C55E],
+            ['UNLOCKED', 'Unlocked', 'lock-open', 0xF59E0B],
+            ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+        ]);
+    }
+
+    private function climateStatePresentation(): array
+    {
+        return $this->stateValuePresentation('fan', [
+            ['OFF', 'Off', 'power-off', 0x22C55E],
+            ['ON', 'On', 'fan', 0xF59E0B],
+            ['COOLING', 'Cooling', 'snowflake', 0xF59E0B],
+            ['HEATING', 'Heating', 'fire', 0xF59E0B],
+            ['HEATING_AUXILIARY', 'Auxiliary heating', 'fire', 0xF59E0B],
+            ['VENTILATION', 'Ventilation', 'fan', 0xF59E0B],
+            ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
+            ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+        ]);
     }
 
     private function parkingStatePresentation(): array
     {
         $green = 0x22C55E;
         $orange = 0xF59E0B;
+        $gray = 0x6B7280;
         $states = [
             ['PARKED', 'Parked', 'square-parking', $green],
-            ['MOVING', 'Moving', 'car-side', $orange],
             ['IN_MOTION', 'Moving', 'car-side', $orange],
+            ['MOVING', 'Moving', 'car-side', $orange],
             ['DRIVING', 'Driving', 'car-side', $orange],
-            ['UNKNOWN', 'Unknown', 'circle-question', -1]
+            ['UNKNOWN', 'Unknown', 'circle-question', $gray]
         ];
 
         $options = [];
@@ -444,7 +530,8 @@ trait MySkodaVariablesTrait
             'COLOR' => -1,
             'OPTIONS' => json_encode([
                 ['Value' => 'AC', 'Caption' => 'AC', 'IconActive' => true, 'IconValue' => 'wave-sine', 'ColorActive' => false, 'ColorValue' => -1],
-                ['Value' => 'DC', 'Caption' => 'DC', 'IconActive' => true, 'IconValue' => 'equals', 'ColorActive' => false, 'ColorValue' => -1]
+                ['Value' => 'DC', 'Caption' => 'DC', 'IconActive' => true, 'IconValue' => 'equals', 'ColorActive' => false, 'ColorValue' => -1],
+                ['Value' => 'OFF', 'Caption' => $this->Translate('Off'), 'IconActive' => true, 'IconValue' => 'plug', 'ColorActive' => true, 'ColorValue' => 0x22C55E]
             ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         ];
     }
@@ -453,15 +540,16 @@ trait MySkodaVariablesTrait
     {
         $green = 0x22C55E;
         $orange = 0xF59E0B;
+        $gray = 0x6B7280;
+        $red = 0xEF4444;
         $states = [
-            ['CONNECT_CABLE', 'Connect charging cable', 'plug', $orange],
+            ['READY_FOR_CHARGING', 'Ready for charging', 'plug-circle-check', $green],
             ['CHARGING', 'Charging active', 'bolt', $green],
             ['CONSERVING', 'Charge conservation', 'battery-full', $green],
-            ['READY_FOR_CHARGING', 'Ready for charging', 'plug-circle-check', $green],
-            ['DISCHARGING', 'Discharging', 'battery-half', $orange],
+            ['CONNECT_CABLE', 'Connect charging cable', 'plug', $orange],
             ['CHARGING_INTERRUPTED', 'Charging interrupted', 'triangle-exclamation', $orange],
-            ['OFF', 'Off', 'plug', -1],
-            ['UNKNOWN', 'Unknown', 'circle-question', -1]
+            ['ERROR', 'Error', 'circle-exclamation', $red],
+            ['UNKNOWN', 'Unknown', 'circle-question', $gray]
         ];
 
         $options = [];
@@ -501,7 +589,9 @@ trait MySkodaVariablesTrait
             'PREFERRED_CHARGING_TIMES' => $this->Translate('Preferred charging times'),
             'ONLY_OWN_CURRENT' => $this->Translate('Only own current'),
             'IMMEDIATE_DISCHARGING' => $this->Translate('Immediate discharging'),
-            'HOME_STORAGE_CHARGING' => $this->Translate('Home storage charging')
+            'HOME_STORAGE_CHARGING' => $this->Translate('Home storage charging'),
+            'OTHER' => $this->Translate('Other'),
+            'OFF' => $this->Translate('Off')
         ];
         return $known[$mode] ?? ucwords(strtolower(str_replace('_', ' ', $mode)));
     }
