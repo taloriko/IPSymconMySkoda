@@ -19,19 +19,19 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 |---|---|:---:|---|---|---|---|
 | `state` | Klimatisierung | ✅ | String | `OFF` / `COOLING` / `HEATING` / `HEATING_AUXILIARY` / `VENTILATION` | `OFF` | |
 | `airConditioningAtUnlock` | Klimatisierung beim Entriegeln | ✅ | Boolean | `true` / `false` | `true` | Beginnt sofort mit der Klimatisierung beim entriegeln (Auch bei Annäherung, wenn aktiviert)|
-| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:39Z` | Keine eigene Variable unter der Instanz|
+| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:39Z` | Keine eigene Variable unter der Instanz |
 | `targetTemperature.value` | Solltemperatur | ✅ | Number | 16–30 °C | `22` | Modul: 0,5-°C-Schritte (Wird nur gesendet wenn Klima dannach aktiviert wird)|
 | `targetTemperature.unit` | Einheit Solltemperatur | ✅ | String | z. B. `CELSIUS` | `CELSIUS` | Ob hier auch Fahrenheit möglich ist konnte ich nicht testen |
 | `windowHeating.enabled` | Scheibenheizung aktiviert | 🟡 | Boolean | `true` / `false` | `true` | Noch unklar ob es grundsätzlich bei betrieb gesetzt wird oder ob es zum "Intiligenten Klimatisieren gehört" |
 | `windowHeating.front` | Frontscheibenheizung | 🟡 | String | `ON` / `OFF` / `UNKNOWN` | `OFF` | Wir bei mir als `OFF` gemeldet habe dies aber nicht als Austattung hier hätte ich `UNKNOWN` erwartet |
 | `windowHeating.rear` | Heckscheibenheizung | 🟡 | String | `ON` / `OFF` / `UNKNOWN` | `OFF` | Noch nicht getestet |
 
-## vehicle.charging
+## vehicle.charging (FIXME)
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
 | `isVehicleInSavedLocation` | An gespeichertem Ladeort | ✅ | Boolean | `true` / `false` | `false` | Ist das Fahrzeug an einem Ladeort, der vorherher im Fahrzeug gespeichert und definiert wurde |
-| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:53:06Z` | Keine eigene Variable |
+| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:53:06Z` | Keine eigene Variable unter der Instanz |
 | `settings.autoUnlockPlugWhenCharged` | Automatische Steckerentriegelung | ✅ | String | `OFF` / `ON` / `PERMANENT` / `UNKNOWN` | `OFF` | Wird nach dem Beenden des Ladevorgangs das Kabel an der Seite des Fahrzeuges entriegelt (Wenn aktiviert kann das Kabel gestohlen werden) |
 | `settings.availableChargeModes` | Lademodus | ✅ | Array[String] | `MANUAL` / `TIMER` / `TIMER_CHARGING_WITH_CLIMATISATION` / `PREFERRED_CHARGING_TIMES` / `ONLY_OWN_CURRENT` / `IMMEDIATE_DISCHARGING` / `HOME_STORAGE_CHARGING` | `["MANUAL"]` | Verfügbare Auswahl |
 | `settings.batteryCareModeTargetValueInPercent` | Battery-Care-Ziel | ✅ | Integer | 0–100 % | `80` | |
@@ -51,14 +51,14 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
 | `profiles` | — | 🟡 | Array[Object] | leer oder Ladeprofil-Objekte | `[]` | Über `GetChargingProfiles()` abrufbar; im Test leer |
-| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:35.868Z` | Keine eigene Variable |
+| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:35.868Z` | Keine eigene Variable unter der Instanz |
 
 ## vehicle.odometer
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
-| `mileageInKm` | Kilometerstand | ✅ | Number | ≥ 0 km | `112526` | Im Modul als Integer ausgegeben |
-| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:55:40.132Z` | Keine eigene Variable |
+| `mileageInKm` | Kilometerstand | ✅ | Number | ≥ 0 km | `123456` | Im Modul als Integer ausgegeben |
+| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:55:40.132Z` | Keine eigene Variable unter der Instanz |
 
 ## vehicle.operations
 
@@ -77,33 +77,31 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
 | `state` | Parkstatus | ✅ | String | `PARKED` / `MOVING` / `IN_MOTION` / `DRIVING` / `UNKNOWN` | `PARKED` | |
-| `formattedAddress` | Parkadresse | ✅ | String | Freitext | `Musterstraße 1, 12345 Musterstadt` | |
-| `gpsCoordinates.latitude` | Breitengrad | ✅ | Number | −90 bis +90 | `48.123456` | |
-| `gpsCoordinates.longitude` | Längengrad | ✅ | Number | −180 bis +180 | `9.123456` | |
+| `formattedAddress` | Parkadresse | ✅ | String | Freitext | `Musterstraße 1, 12345 Musterstadt` | Nur wenn im Fahrzeug am Benutzer die "Standortfreigabe" aktiviert wurde (Kann je Benutzer unterschiedlich gewählt werden)|
+| `gpsCoordinates.latitude` | Breitengrad | ✅ | Number | −90 bis +90 | `48.123456` | " |
+| `gpsCoordinates.longitude` | Längengrad | ✅ | Number | −180 bis +180 | `9.123456` | " |
 
 ## vehicle.status.overall
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
-| `doorsLocked` | Türverriegelungsstatus | 🟡 | String | `YES` / `NO` / `OPENED` / `TRUNK_OPENED` / `UNKNOWN` | `YES` | Deutsche Anzeige im Modul |
-| `locked` | Fahrzeugverriegelungsstatus | ✅ | String | `YES` / `NO` / `OPENED` / `TRUNK_OPENED` / `UNKNOWN` | `YES` | Deutsche Anzeige im Modul |
-| `doors` | Türen offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` | Im Modul derzeit als Ja/Nein dargestellt |
-| `windows` | Fenster offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` | Im Modul derzeit als Ja/Nein dargestellt |
-| `lights` | Licht an | ✅ | String | `ON` / `OFF` / `INVALID` / `UNKNOWN` | `OFF` | Im Modul derzeit als Ja/Nein dargestellt |
-| `reliableLockStatus` | Zuverlässiger Verriegelungsstatus | 🟡 | String | `LOCKED` / `UNLOCKED` / `UNKNOWN` | `LOCKED` | Deutsche Anzeige im Modul |
+| `doorsLocked` | Türverriegelungsstatus | 🟡 | String | `YES` / `NO` / `OPENED` / `TRUNK_OPENED` / `UNKNOWN` | `YES` | Unterschiede der Verriegelungsmeldungen unklar |
+| `locked` | Fahrzeugverriegelungsstatus | 🟡 | String | `YES` / `NO` / `OPENED` / `TRUNK_OPENED` / `UNKNOWN` | `YES` | Unterschiede der Verriegelungsmeldungen unklar |
+| `doors` | Türen offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` |  |
+| `windows` | Fenster offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` | |
+| `lights` | Licht an | ✅ | String | `ON` / `OFF` / `INVALID` / `UNKNOWN` | `OFF` |  |
+| `reliableLockStatus` | Zuverlässiger Verriegelungsstatus | 🟡 | String | `LOCKED` / `UNLOCKED` / `UNKNOWN` | `LOCKED` | Unterschiede der Verriegelungsmeldungen unklar  |
 
 ## vehicle.status.detail
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
-| `sunroof` | Schiebedach offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` | Im Modul derzeit als Ja/Nein dargestellt |
-| `trunk` | Kofferraum offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` | Im Modul derzeit als Ja/Nein dargestellt |
-| `bonnet` | Motorhaube offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` | Im Modul derzeit als Ja/Nein dargestellt |
+| `sunroof` | Schiebedach offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` |  |
+| `trunk` | Kofferraum offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` |  |
+| `bonnet` | Motorhaube offen | ✅ | String | `OPEN` / `CLOSED` / `UNSUPPORTED` / `UNKNOWN` | `CLOSED` | |
 
 ## vehicle.status
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
-| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:55:40.122Z` | Keine eigene Variable |
-
-Weitere Fahrzeuge werden jeweils als zusätzliche Spalte rechts ergänzt.
+| `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:55:40.122Z` | eine eigene Variable unter der Instanz |
