@@ -2,118 +2,108 @@
 
 Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen Fahrzeugen geprüft wurden.
 
-## Status
-
-| Status | Bedeutung |
-|---|---|
-| **Getestet** | Mit diesem Fahrzeug real geprüft und im echten API-Datensatz vorhanden |
-| **Vermutet** | Von der API angekündigt oder technisch zu erwarten, aber noch nicht abschließend am Fahrzeug geprüft |
-| **Nicht vorhanden** | Bei diesem Fahrzeug nicht vorhanden bzw. nicht von der API geliefert |
-
----
+**Legende:** ✅ Getestet · 🟡 Vermutet · ❌ Nicht vorhanden
 
 ## vehicle
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `name` | Fahrzeugname | Getestet |
-| `licensePlate` | Kennzeichen | Getestet |
-| `vin` | Fahrzeug-Identifikationsnummer (VIN) | Getestet |
-| `renderUrl` | URL des Fahrzeugbilds | Getestet |
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `name` | Fahrzeugname | ✅ |
+| `licensePlate` | Kennzeichen | ✅ |
+| `vin` | Fahrzeug-Identifikationsnummer | ✅ |
+| `renderUrl` | Fahrzeugbild | ✅ |
 
 ## vehicle.airConditioning
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `state` | Status der Klimatisierung | Getestet |
-| `airConditioningAtUnlock` | Klimatisierung beim Entriegeln | Getestet |
-| `carCapturedTimestamp` | Zeitstempel der Fahrzeugdaten | Getestet |
-| `targetTemperature.value` | Solltemperatur | Getestet |
-| `targetTemperature.unit` | Einheit der Solltemperatur | Getestet |
-| `windowHeating.enabled` | Fensterheizung aktiviert | Getestet |
-| `windowHeating.front` | Frontscheibenheizung | Getestet |
-| `windowHeating.rear` | Heckscheibenheizung | Getestet |
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `state` | Klimastatus | ✅ |
+| `airConditioningAtUnlock` | Klima beim Entriegeln | ✅ |
+| `carCapturedTimestamp` | Zeitstempel | ✅ |
+| `targetTemperature.value` | Solltemperatur | ✅ |
+| `targetTemperature.unit` | Temperatureinheit | ✅ |
+| `windowHeating.enabled` | Fensterheizung aktiviert | ✅ |
+| `windowHeating.front` | Frontscheibenheizung | ✅ |
+| `windowHeating.rear` | Heckscheibenheizung | ✅ |
 
 ## vehicle.charging
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `isVehicleInSavedLocation` | Fahrzeug an gespeichertem Ladeort | Getestet |
-| `carCapturedTimestamp` | Zeitstempel der Fahrzeugdaten | Getestet |
-| `settings.autoUnlockPlugWhenCharged` | Ladestecker nach Ladeende automatisch entriegeln | Getestet |
-| `settings.availableChargeModes` | Verfügbare Lademodi | Getestet |
-| `settings.batteryCareModeTargetValueInPercent` | Zielladestand des Batterieschonmodus | Getestet |
-| `settings.chargingCareMode` | Batterieschonmodus | Getestet |
-| `settings.maxChargeCurrentAc` | Maximaler AC-Ladestrom | Getestet |
-| `settings.preferredChargeMode` | Bevorzugter Lademodus | Getestet |
-| `settings.targetStateOfChargeInPercent` | Ladelimit | Getestet |
-| `status.battery.remainingCruisingRangeInMeters` | Verbleibende Reichweite | Getestet |
-| `status.battery.stateOfChargeInPercent` | Batterieladestand | Getestet |
-| `status.chargePowerInKw` | Ladeleistung | Getestet |
-| `status.fullyChargedAt` | Voraussichtlich vollständig geladen um | Getestet |
-| `status.remainingTimeToFullyChargedInMinutes` | Restladezeit bis vollständig geladen | Getestet |
-| `status.state` | Ladestatus | Getestet |
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `isVehicleInSavedLocation` | Gespeicherter Ladeort | ✅ |
+| `carCapturedTimestamp` | Zeitstempel | ✅ |
+| `settings.autoUnlockPlugWhenCharged` | Stecker nach Ladeende entriegeln | ✅ |
+| `settings.availableChargeModes` | Verfügbare Lademodi | ✅ |
+| `settings.batteryCareModeTargetValueInPercent` | Ziel Batterieschonmodus | ✅ |
+| `settings.chargingCareMode` | Batterieschonmodus | ✅ |
+| `settings.maxChargeCurrentAc` | Max. AC-Ladestrom | ✅ |
+| `settings.preferredChargeMode` | Bevorzugter Lademodus | ✅ |
+| `settings.targetStateOfChargeInPercent` | Ladelimit | ✅ |
+| `status.battery.remainingCruisingRangeInMeters` | Restreichweite | ✅ |
+| `status.battery.stateOfChargeInPercent` | Batterieladestand | ✅ |
+| `status.chargePowerInKw` | Ladeleistung | ✅ |
+| `status.fullyChargedAt` | Vollständig geladen um | ✅ |
+| `status.remainingTimeToFullyChargedInMinutes` | Restladezeit | ✅ |
+| `status.state` | Ladestatus | ✅ |
 
 ## vehicle.chargingProfiles
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `profiles` | Ladeprofile | Getestet |
-| `carCapturedTimestamp` | Zeitstempel der Fahrzeugdaten | Getestet |
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `profiles` | Ladeprofile | ✅ |
+| `carCapturedTimestamp` | Zeitstempel | ✅ |
 
 ## vehicle.odometer
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `mileageInKm` | Kilometerstand | Getestet |
-| `carCapturedTimestamp` | Zeitstempel der Fahrzeugdaten | Getestet |
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `mileageInKm` | Kilometerstand | ✅ |
+| `carCapturedTimestamp` | Zeitstempel | ✅ |
 
 ## vehicle.operations
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `startCharging` | Laden starten | Vermutet |
-| `stopCharging` | Laden stoppen | Vermutet |
-| `setChargingLimit` | Ladelimit setzen | Vermutet |
-| `setChargeMode` | Lademodus setzen | Vermutet |
-| `updateChargingProfile` | Ladeprofil aktualisieren | Vermutet |
-| `startAirConditioning` | Klimatisierung starten | Vermutet |
-| `stopAirConditioning` | Klimatisierung stoppen | Vermutet |
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `startCharging` | Laden starten | 🟡 |
+| `stopCharging` | Laden stoppen | 🟡 |
+| `setChargingLimit` | Ladelimit setzen | 🟡 |
+| `setChargeMode` | Lademodus setzen | 🟡 |
+| `updateChargingProfile` | Ladeprofil aktualisieren | 🟡 |
+| `startAirConditioning` | Klimatisierung starten | 🟡 |
+| `stopAirConditioning` | Klimatisierung stoppen | 🟡 |
 
 ## vehicle.parkingPosition
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `state` | Parkstatus | Getestet |
-| `formattedAddress` | Formatierte Parkadresse | Getestet |
-| `gpsCoordinates.latitude` | Breitengrad | Getestet |
-| `gpsCoordinates.longitude` | Längengrad | Getestet |
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `state` | Parkstatus | ✅ |
+| `formattedAddress` | Parkadresse | ✅ |
+| `gpsCoordinates.latitude` | Breitengrad | ✅ |
+| `gpsCoordinates.longitude` | Längengrad | ✅ |
 
 ## vehicle.status.overall
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `doorsLocked` | Verriegelungsstatus der Türen | Getestet |
-| `locked` | Verriegelungsstatus des Fahrzeugs | Getestet |
-| `doors` | Türstatus | Getestet |
-| `windows` | Fensterstatus | Getestet |
-| `lights` | Lichtstatus | Getestet |
-| `reliableLockStatus` | Zuverlässiger Verriegelungsstatus | Getestet |
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `doorsLocked` | Türen verriegelt | ✅ |
+| `locked` | Fahrzeug verriegelt | ✅ |
+| `doors` | Türstatus | ✅ |
+| `windows` | Fensterstatus | ✅ |
+| `lights` | Lichtstatus | ✅ |
+| `reliableLockStatus` | Zuverlässiger Verriegelungsstatus | ✅ |
 
 ## vehicle.status.detail
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `sunroof` | Schiebedachstatus | Getestet |
-| `trunk` | Kofferraumstatus | Getestet |
-| `bonnet` | Motorhaubenstatus | Getestet |
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `sunroof` | Schiebedach | ✅ |
+| `trunk` | Kofferraum | ✅ |
+| `bonnet` | Motorhaube | ✅ |
 
 ## vehicle.status
 
-| Datenpunkt | Deutsch | Škoda Enyaq 80 (2022) |
-|---|---|---|
-| `carCapturedTimestamp` | Zeitstempel der Fahrzeugdaten | Getestet |
-
----
+| API | Deutsch | Enyaq 80<br>2022 |
+|---|---|:---:|
+| `carCapturedTimestamp` | Zeitstempel | ✅ |
 
 Weitere Fahrzeuge werden jeweils als zusätzliche Spalte rechts ergänzt.
