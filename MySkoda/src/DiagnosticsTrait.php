@@ -101,13 +101,7 @@ trait MySkodaDiagnosticsTrait
 
         $reliableLock = $this->path($vehicle, 'status.overall.reliableLockStatus', null);
         if ($reliableLock !== null) {
-            $lockState = strtoupper(trim((string) $reliableLock));
-            $this->SetValue('ReliableLockStatus', $lockState);
-            if ($lockState === 'LOCKED') {
-                $this->SetValue('Locked', true);
-            } elseif ($lockState === 'UNLOCKED') {
-                $this->SetValue('Locked', false);
-            }
+            $this->SetValue('ReliableLockStatus', strtoupper(trim((string) $reliableLock)));
         }
     }
 
