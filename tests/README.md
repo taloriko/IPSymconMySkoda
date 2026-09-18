@@ -50,7 +50,7 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 
 | API | Deutsch | Enyaq 80<br>2022 |
 |---|---|:---:|
-| `profiles` | Ladeprofile | ✅ |
+| `profiles` | Ladeprofile | 🟡 |
 | `carCapturedTimestamp` | Zeitstempel | ✅ |
 
 ## vehicle.odometer
@@ -85,12 +85,12 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 
 | API | Deutsch | Enyaq 80<br>2022 |
 |---|---|:---:|
-| `doorsLocked` | Türen verriegelt | ✅ |
+| `doorsLocked` | Türen verriegelt | 🟡 |
 | `locked` | Fahrzeug verriegelt | ✅ |
 | `doors` | Türstatus | ✅ |
 | `windows` | Fensterstatus | ✅ |
 | `lights` | Lichtstatus | ✅ |
-| `reliableLockStatus` | Zuverlässiger Verriegelungsstatus | ✅ |
+| `reliableLockStatus` | Zuverlässiger Verriegelungsstatus | 🟡 |
 
 ## vehicle.status.detail
 
