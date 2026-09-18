@@ -46,7 +46,7 @@ trait MySkodaCommandTrait
             'ident' => 'PendingCommands',
             'name' => 'Pending commands',
             'type' => VARIABLETYPE_INTEGER,
-            'position' => 950,
+            'position' => 1140,
             'presentation' => [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'ICON' => 'hourglass-half'
@@ -58,7 +58,7 @@ trait MySkodaCommandTrait
             'ident' => 'CommandStatus',
             'name' => 'Command status',
             'type' => VARIABLETYPE_STRING,
-            'position' => 960,
+            'position' => 1150,
             'presentation' => [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'ICON' => 'satellite-dish',
