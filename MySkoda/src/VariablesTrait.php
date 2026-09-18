@@ -154,6 +154,10 @@ trait MySkodaVariablesTrait
                 return;
             }
 
+            if (in_array($ident, ['DoorsLocked', 'ParkingAddress'], true)) {
+                IPS_SetName($existingId, $this->Translate((string) $definition['name']));
+            }
+
             if ($ident === 'TargetSOC') {
                 $this->RegisterVariableInteger(
                     $ident,
@@ -170,7 +174,7 @@ trait MySkodaVariablesTrait
                     (int) $definition['position']
                 );
             }
-            if (in_array($ident, ['ParkingState', 'ChargeType', 'DoorsLocked', 'Locked', 'ReliableLockStatus'], true)) {
+            if (in_array($ident, ['ParkingState', 'ParkingAddress', 'ChargeType', 'DoorsLocked', 'Locked', 'ReliableLockStatus'], true)) {
                 $this->RegisterVariableString(
                     $ident,
                     $this->Translate((string) $definition['name']),
