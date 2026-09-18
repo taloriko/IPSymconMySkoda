@@ -49,14 +49,14 @@ trait MySkodaDiagnosticsTrait
                 ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ])),
-            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1000, []),
-            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1010, []),
-            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1020, []),
-            $this->variable('APISupportedFeatures', 'API supported features', VARIABLETYPE_STRING, 1030, []),
-            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 220, []),
-            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 500, []),
-            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1040, []),
-            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1050, [])
+            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1300, []),
+            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1310, []),
+            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1320, []),
+            $this->variable('APISupportedFeatures', 'API supported features', VARIABLETYPE_STRING, 1330, []),
+            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1340, []),
+            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1350, []),
+            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1360, []),
+            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, [])
         ];
 
         foreach ($definitions as $definition) {
