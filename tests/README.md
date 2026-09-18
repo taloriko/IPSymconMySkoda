@@ -8,10 +8,10 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
-| `name` | Fahrzeugname | ✅ | String | Freitext | `Eny` | |
-| `licensePlate` | Kennzeichen | ✅ | String | Freitext | `TÜ-AB 123E` | |
-| `vin` | FIN / VIN | ✅ | String | 17-stellige VIN | `TMB…7514` | |
-| `renderUrl` | Fahrzeugbild | ✅ | String | URL | `https://…/vehicle.png` | Wird für das Fahrzeugbild verwendet |
+| `name` | Fahrzeugname | ✅ | String | Freitext | `Harry` | Wird in der APP festgelegt "Satus" --> "Details zum Fahrzeug" --> "Name des Fahrzeugs" |
+| `licensePlate` | Kennzeichen | ✅ | String | Freitext | `TÜ-AB 123E` | Wird in der APP festgelegt "Satus" --> "Details zum Fahrzeug" --> "Name des Fahrzeugs"  |
+| `vin` | FIN / VIN | ✅ | String | 17-stellige VIN | `TMB…7514` | Fahrgestellnummer des Fahrzeugs |
+| `renderUrl` | Fahrzeugbild | ✅ | String | URL | `https://…/vehicle.png` | Bild von Skoda, optisch passend zur Bestellkonfiguration |
 
 ## vehicle.airConditioning
 
