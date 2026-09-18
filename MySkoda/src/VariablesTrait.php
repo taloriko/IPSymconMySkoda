@@ -34,26 +34,26 @@ trait MySkodaVariablesTrait
     private function coreVariableDefinitions(): array
     {
         return [
-            $this->variable('StateOfCharge', 'State of charge', VARIABLETYPE_INTEGER, 30, [
+            $this->variable('StateOfCharge', 'State of charge', VARIABLETYPE_INTEGER, 290, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_BATTERY
             ]),
-            $this->variable('Range', 'Range', VARIABLETYPE_INTEGER, 40, $this->valuePresentation('route', ' km', 0)),
-            $this->variable('Mileage', 'Mileage', VARIABLETYPE_INTEGER, 50, array_merge(
+            $this->variable('Range', 'Range', VARIABLETYPE_INTEGER, 280, $this->valuePresentation('route', ' km', 0)),
+            $this->variable('Mileage', 'Mileage', VARIABLETYPE_INTEGER, 400, array_merge(
                 $this->valuePresentation('gauge-high', ' km', 0),
                 ['THOUSANDS_SEPARATOR' => '.']
             )),
-            $this->variable('DoorsLocked', 'Door lock status', VARIABLETYPE_STRING, 100, $this->doorLockStatePresentation()),
-            $this->variable('Locked', 'Vehicle lock status', VARIABLETYPE_STRING, 101, $this->doorLockStatePresentation()),
-            $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 102, $this->reliableLockStatePresentation()),
-            $this->variable('DoorsOpen', 'Doors', VARIABLETYPE_STRING, 110, $this->openStatePresentation('door-closed', 'door-open')),
-            $this->variable('WindowsOpen', 'Windows', VARIABLETYPE_STRING, 120, $this->openStatePresentation('window-maximize', 'window-maximize')),
-            $this->variable('Charging', 'Charging', VARIABLETYPE_BOOLEAN, 200, $this->booleanActionPresentation('plug')),
-            $this->variable('ChargePower', 'Charging power', VARIABLETYPE_FLOAT, 230, [
+            $this->variable('DoorsLocked', 'Door lock status', VARIABLETYPE_STRING, 700, $this->doorLockStatePresentation()),
+            $this->variable('Locked', 'Vehicle lock status', VARIABLETYPE_STRING, 710, $this->doorLockStatePresentation()),
+            $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 750, $this->reliableLockStatePresentation()),
+            $this->variable('DoorsOpen', 'Doors', VARIABLETYPE_STRING, 720, $this->openStatePresentation('door-closed', 'door-open')),
+            $this->variable('WindowsOpen', 'Windows', VARIABLETYPE_STRING, 730, $this->openStatePresentation('window-maximize', 'window-maximize')),
+            $this->variable('Charging', 'Charging', VARIABLETYPE_BOOLEAN, 350, $this->booleanActionPresentation('plug')),
+            $this->variable('ChargePower', 'Charging power', VARIABLETYPE_FLOAT, 300, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_POWER
             ]),
-            $this->variable('TargetSOC', 'Charging limit', VARIABLETYPE_INTEGER, 240, [
+            $this->variable('TargetSOC', 'Charging limit', VARIABLETYPE_INTEGER, 270, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
                 'ICON' => 'battery-half',
                 'MIN' => 50,
@@ -63,10 +63,10 @@ trait MySkodaVariablesTrait
                 'PERCENTAGE' => false,
                 'USAGE_TYPE' => 5
             ]),
-            $this->variable('ChargeMode', 'Charging mode', VARIABLETYPE_INTEGER, 250, $this->chargeModePresentation()),
-            $this->variable('Climate', 'Air conditioning', VARIABLETYPE_BOOLEAN, 300, $this->booleanActionPresentation('fan')),
-            $this->variable('ClimateState', 'Air conditioning state', VARIABLETYPE_STRING, 305, $this->climateStatePresentation()),
-            $this->variable('TargetTemperature', 'Target temperature', VARIABLETYPE_FLOAT, 310, [
+            $this->variable('ChargeMode', 'Charging mode', VARIABLETYPE_INTEGER, 260, $this->chargeModePresentation()),
+            $this->variable('Climate', 'Air conditioning', VARIABLETYPE_BOOLEAN, 105, $this->booleanActionPresentation('fan')),
+            $this->variable('ClimateState', 'Air conditioning state', VARIABLETYPE_STRING, 100, $this->climateStatePresentation()),
+            $this->variable('TargetTemperature', 'Target temperature', VARIABLETYPE_FLOAT, 120, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
                 'ICON' => 'temperature-half',
                 'MIN' => 16,
@@ -78,8 +78,8 @@ trait MySkodaVariablesTrait
                 'PERCENTAGE' => false,
                 'DIGITS' => 1
             ], 22.0),
-            $this->variable('ApiKeyWarning', 'API key warning', VARIABLETYPE_BOOLEAN, 900, $this->booleanYesNoPresentation(false, 'key')),
-            $this->variable('LastUpdate', 'Last update', VARIABLETYPE_INTEGER, 990, [
+            $this->variable('ApiKeyWarning', 'API key warning', VARIABLETYPE_BOOLEAN, 1100, $this->booleanYesNoPresentation(false, 'key')),
+            $this->variable('LastUpdate', 'Last update', VARIABLETYPE_INTEGER, 830, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
             ])
@@ -91,26 +91,26 @@ trait MySkodaVariablesTrait
         return [
             $this->variable('VehicleName', 'Vehicle name', VARIABLETYPE_STRING, 10, $this->valuePresentation('car')),
             $this->variable('LicensePlate', 'License plate', VARIABLETYPE_STRING, 20, $this->valuePresentation('id-card')),
-            $this->variable('TrunkOpen', 'Trunk', VARIABLETYPE_STRING, 130, $this->openStatePresentation('car-rear', 'car-rear')),
-            $this->variable('BonnetOpen', 'Bonnet', VARIABLETYPE_STRING, 140, $this->openStatePresentation('car', 'car')),
-            $this->variable('SunroofOpen', 'Sunroof', VARIABLETYPE_STRING, 150, $this->openStatePresentation('car-side', 'car-side')),
-            $this->variable('LightsOn', 'Lights', VARIABLETYPE_STRING, 160, $this->onOffStatePresentation('lightbulb')),
-            $this->variable('ParkingState', 'Parking state', VARIABLETYPE_STRING, 170, $this->parkingStatePresentation()),
-            $this->variable('ParkingAddress', 'Parking address', VARIABLETYPE_STRING, 171, $this->valuePresentation('location-dot')),
-            $this->variable('ChargingState', 'Charging state', VARIABLETYPE_STRING, 210, $this->chargingStatePresentation()),
-            $this->variable('ChargeType', 'Charge type', VARIABLETYPE_STRING, 220, $this->chargeTypePresentation()),
-            $this->variable('FullyChargedAt', 'Fully charged at', VARIABLETYPE_INTEGER, 260, [
+            $this->variable('TrunkOpen', 'Trunk', VARIABLETYPE_STRING, 810, $this->openStatePresentation('car-rear', 'car-rear')),
+            $this->variable('BonnetOpen', 'Bonnet', VARIABLETYPE_STRING, 820, $this->openStatePresentation('car', 'car')),
+            $this->variable('SunroofOpen', 'Sunroof', VARIABLETYPE_STRING, 800, $this->openStatePresentation('car-side', 'car-side')),
+            $this->variable('LightsOn', 'Lights', VARIABLETYPE_STRING, 740, $this->onOffStatePresentation('lightbulb')),
+            $this->variable('ParkingState', 'Parking state', VARIABLETYPE_STRING, 600, $this->parkingStatePresentation()),
+            $this->variable('ParkingAddress', 'Parking address', VARIABLETYPE_STRING, 610, $this->valuePresentation('location-dot')),
+            $this->variable('ChargingState', 'Charging state', VARIABLETYPE_STRING, 330, $this->chargingStatePresentation()),
+            $this->variable('ChargeType', 'Charge type', VARIABLETYPE_STRING, 340, $this->chargeTypePresentation()),
+            $this->variable('FullyChargedAt', 'Fully charged at', VARIABLETYPE_INTEGER, 310, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
             ]),
-            $this->variable('Latitude', 'Latitude', VARIABLETYPE_FLOAT, 400, $this->valuePresentation('location-dot', '', 6)),
-            $this->variable('Longitude', 'Longitude', VARIABLETYPE_FLOAT, 410, $this->valuePresentation('location-dot', '', 6)),
-            $this->variable('ApiKeyExpiresAtVar', 'API key valid until', VARIABLETYPE_INTEGER, 910, [
+            $this->variable('Latitude', 'Latitude', VARIABLETYPE_FLOAT, 620, $this->valuePresentation('location-dot', '', 6)),
+            $this->variable('Longitude', 'Longitude', VARIABLETYPE_FLOAT, 630, $this->valuePresentation('location-dot', '', 6)),
+            $this->variable('ApiKeyExpiresAtVar', 'API key valid until', VARIABLETYPE_INTEGER, 1110, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
             ]),
-            $this->variable('RequestsRemaining', 'API requests remaining', VARIABLETYPE_INTEGER, 920, $this->valuePresentation('gauge')),
-            $this->variable('PartialErrors', 'API partial errors', VARIABLETYPE_STRING, 930, [
+            $this->variable('RequestsRemaining', 'API requests remaining', VARIABLETYPE_INTEGER, 1120, $this->valuePresentation('gauge')),
+            $this->variable('PartialErrors', 'API partial errors', VARIABLETYPE_STRING, 1130, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'ICON' => 'triangle-exclamation',
                 'MULTILINE' => true
@@ -130,9 +130,10 @@ trait MySkodaVariablesTrait
     }
 
     /**
-     * Creates variables only while their ident is missing. Existing names and positions
-     * remain user-owned. Selected variables are re-registered to refresh module-provided
-     * presentations; a user-defined custom presentation remains untouched.
+     * Creates variables only while their ident is missing. Existing names remain user-owned
+     * except for selected module-managed labels. Positions follow the API/README order.
+     * Selected variables are re-registered to refresh module-provided presentations;
+     * a user-defined custom presentation remains untouched.
      */
     private function registerVariableOnce(array $definition): void
     {
@@ -165,6 +166,8 @@ trait MySkodaVariablesTrait
                 $this->LogMessage(sprintf('MySkoda: variable "%s" has an unexpected type.', $ident), KL_ERROR);
                 return;
             }
+
+            IPS_SetPosition($existingId, (int) $definition['position']);
 
             if (in_array($ident, [
                 'DoorsLocked',
