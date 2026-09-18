@@ -17,14 +17,14 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
-| `state` | Klimatisierung | ✅ | String | `OFF` / `COOLING` / `HEATING` / `HEATING_AUXILIARY` / `VENTILATION` | `OFF` | |
+| `state` | Klimatisierung | ✅ | String | `OFF` / `ON` / `COOLING` / `HEATING` / `HEATING_AUXILIARY` / `VENTILATION` / `INVALID` | `OFF` | |
 | `airConditioningAtUnlock` | Klimatisierung beim Entriegeln | ✅ | Boolean | `true` / `false` | `true` | Beginnt sofort mit der Klimatisierung beim entriegeln (Auch bei Annäherung, wenn aktiviert)|
 | `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:39Z` | Keine eigene Variable unter der Instanz |
 | `targetTemperature.value` | Solltemperatur | ✅ | Number | 16–30 °C | `22` | Modul: 0,5-°C-Schritte (Wird nur gesendet wenn Klima dannach aktiviert wird)|
-| `targetTemperature.unit` | Einheit Solltemperatur | ✅ | String | z. B. `CELSIUS` | `CELSIUS` | Ob hier auch Fahrenheit möglich ist konnte ich nicht testen |
+| `targetTemperature.unit` | Einheit Solltemperatur | ✅ | String | `CELSIUS` | `CELSIUS` | Ob hier auch Fahrenheit möglich ist konnte ich nicht testen |
 | `windowHeating.enabled` | Scheibenheizung aktiviert | 🟡 | Boolean | `true` / `false` | `true` | Noch unklar ob es grundsätzlich bei betrieb gesetzt wird oder ob es zum "Intiligenten Klimatisieren gehört" |
-| `windowHeating.front` | Frontscheibenheizung | 🟡 | String | `ON` / `OFF` / `UNKNOWN` | `OFF` | Wir bei mir als `OFF` gemeldet habe dies aber nicht als Austattung hier hätte ich `UNKNOWN` erwartet |
-| `windowHeating.rear` | Heckscheibenheizung | 🟡 | String | `ON` / `OFF` / `UNKNOWN` | `OFF` | Noch nicht getestet |
+| `windowHeating.front` | Frontscheibenheizung | 🟡 | String | `ON` / `OFF` / `INVALID` / `UNKNOWN` | `OFF` | Wir bei mir als `OFF` gemeldet habe dies aber nicht als Austattung hier hätte ich `UNKNOWN` erwartet |
+| `windowHeating.rear` | Heckscheibenheizung | 🟡 | String | `ON` / `OFF` / `INVALID` / `UNKNOWN` | `OFF` | Noch nicht getestet |
 
 ## vehicle.charging (FIXME)
 
@@ -32,19 +32,19 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 |---|---|:---:|---|---|---|---|
 | `isVehicleInSavedLocation` | An gespeichertem Ladeort | ✅ | Boolean | `true` / `false` | `false` | Ist das Fahrzeug an einem Ladeort, der vorherher im Fahrzeug gespeichert und definiert wurde |
 | `carCapturedTimestamp` | — | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:53:06Z` | Keine eigene Variable unter der Instanz |
-| `settings.autoUnlockPlugWhenCharged` | Automatische Steckerentriegelung | ✅ | String | `OFF` / `ON` / `PERMANENT` / `UNKNOWN` | `OFF` | Wird nach dem Beenden des Ladevorgangs das Kabel an der Seite des Fahrzeuges entriegelt (Wenn aktiviert kann das Kabel gestohlen werden) |
-| `settings.availableChargeModes` | Lademodus | ✅ | Array[String] | `MANUAL` / `TIMER` / `TIMER_CHARGING_WITH_CLIMATISATION` / `PREFERRED_CHARGING_TIMES` / `ONLY_OWN_CURRENT` / `IMMEDIATE_DISCHARGING` / `HOME_STORAGE_CHARGING` | `["MANUAL"]` | Verfügbare Auswahl |
+| `settings.autoUnlockPlugWhenCharged` | Automatische Steckerentriegelung | ✅ | String | `OFF` / `ON` / `PERMANENT` | `OFF` | Wird nach dem Beenden des Ladevorgangs das Kabel an der Seite des Fahrzeuges entriegelt (Wenn aktiviert kann das Kabel gestohlen werden) |
+| `settings.availableChargeModes` | Lademodus | ✅ | Array[String] | `MANUAL` / `TIMER` / `TIMER_CHARGING_WITH_CLIMATISATION` / `PREFERRED_CHARGING_TIMES` / `ONLY_OWN_CURRENT` / `IMMEDIATE_DISCHARGING` / `HOME_STORAGE_CHARGING` / `OTHER` / `OFF` | `["MANUAL"]` | Verfügbare Auswahl |
 | `settings.batteryCareModeTargetValueInPercent` | Battery-Care-Ziel | ✅ | Integer | 0–100 % | `80` | |
-| `settings.chargingCareMode` | Battery Care Mode | ✅ | String | `ACTIVATED` / `DEACTIVATED` / `ACTIVE` / `INACTIVE` / `UNKNOWN` | `ACTIVATED` | |
-| `settings.maxChargeCurrentAc` | Maximaler AC-Ladestrom | ✅ | String | `MAXIMUM` / `REDUCED` / `UNKNOWN` | `MAXIMUM` | |
-| `settings.preferredChargeMode` | Lademodus | ✅ | String | `MANUAL` / `TIMER` / `TIMER_CHARGING_WITH_CLIMATISATION` / `PREFERRED_CHARGING_TIMES` / `ONLY_OWN_CURRENT` / `IMMEDIATE_DISCHARGING` / `HOME_STORAGE_CHARGING` | `MANUAL` | Aktuell gewählter Modus |
+| `settings.chargingCareMode` | Battery Care Mode | ✅ | String | `ACTIVATED` / `DEACTIVATED` | `ACTIVATED` | |
+| `settings.maxChargeCurrentAc` | Maximaler AC-Ladestrom | ✅ | String | `MAXIMUM` / `REDUCED` | `MAXIMUM` | |
+| `settings.preferredChargeMode` | Lademodus | ✅ | String | `MANUAL` / `TIMER` / `TIMER_CHARGING_WITH_CLIMATISATION` / `PREFERRED_CHARGING_TIMES` / `ONLY_OWN_CURRENT` / `IMMEDIATE_DISCHARGING` / `HOME_STORAGE_CHARGING` / `OTHER` / `OFF` | `MANUAL` | Aktuell gewählter Modus |
 | `settings.targetStateOfChargeInPercent` | Ladelimit | ✅ | Integer | 50–100 % | `80` | Modul: 10-%-Schritte |
 | `status.battery.remainingCruisingRangeInMeters` | Reichweite | ✅ | Integer | ≥ 0 m | `385000` | Im Modul in km ausgegeben |
 | `status.battery.stateOfChargeInPercent` | Ladezustand | ✅ | Integer | 0–100 % | `78` | |
 | `status.chargePowerInKw` | Ladeleistung | ✅ | Number | ≥ 0 kW | `0` | Im Modul in W ausgegeben |
 | `status.fullyChargedAt` | Vollgeladen um | ✅ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:38Z` | |
 | `status.remainingTimeToFullyChargedInMinutes` | Restladezeit | ✅ | Integer | ≥ 0 min | `0` | |
-| `status.state` | Ladestatus | ✅ | String | `CONNECT_CABLE` / `CHARGING` / `CONSERVING` / `READY_FOR_CHARGING` / `DISCHARGING` / `CHARGING_INTERRUPTED` / `OFF` / `UNKNOWN` | `CONNECT_CABLE` | |
+| `status.state` | Ladestatus | ✅ | String | `READY_FOR_CHARGING` / `CONNECT_CABLE` / `CONSERVING` / `CHARGING` / `CHARGING_INTERRUPTED` / `ERROR` | `CONNECT_CABLE` | |
 
 ## vehicle.chargingProfiles
 
@@ -76,7 +76,7 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 
 | API | Deutsch | Enyaq 80<br>2022 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|---|---|---|---|
-| `state` | Parkstatus | ✅ | String | `PARKED` / `MOVING` / `IN_MOTION` / `DRIVING` / `UNKNOWN` | `PARKED` | |
+| `state` | Parkstatus | ✅ | String | `PARKED` / `IN_MOTION` | `PARKED` | |
 | `formattedAddress` | Parkadresse | ✅ | String | Freitext | `Musterstraße 1, 12345 Musterstadt` | Nur wenn im Fahrzeug am Benutzer die "Standortfreigabe" aktiviert wurde (Kann je Benutzer unterschiedlich gewählt werden)|
 | `gpsCoordinates.latitude` | Breitengrad | ✅ | Number | −90 bis +90 | `48.123456` | " |
 | `gpsCoordinates.longitude` | Längengrad | ✅ | Number | −180 bis +180 | `9.123456` | " |
