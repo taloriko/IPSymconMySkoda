@@ -71,7 +71,7 @@ trait MySkodaOpenApiTrait
             'ident' => 'NewApiFeatures',
             'name' => 'New API functions',
             'type' => VARIABLETYPE_INTEGER,
-            'position' => 940,
+            'position' => 970,
             'presentation' => [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'ICON' => 'circle-plus'
