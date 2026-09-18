@@ -29,6 +29,7 @@ trait MySkodaVariablesTrait
         }
 
         $this->applyDefaultObjectIcons();
+        $this->applyManagedObjectPositions();
     }
 
     private function coreVariableDefinitions(): array
@@ -48,7 +49,7 @@ trait MySkodaVariablesTrait
             $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 750, $this->reliableLockStatePresentation()),
             $this->variable('DoorsOpen', 'Doors', VARIABLETYPE_STRING, 720, $this->openStatePresentation('door-closed', 'door-open')),
             $this->variable('WindowsOpen', 'Windows', VARIABLETYPE_STRING, 730, $this->openStatePresentation('window-maximize', 'window-maximize')),
-            $this->variable('Charging', 'Charging', VARIABLETYPE_BOOLEAN, 350, $this->booleanActionPresentation('plug')),
+            $this->variable('Charging', 'Charging', VARIABLETYPE_BOOLEAN, 910, $this->booleanActionPresentation('plug')),
             $this->variable('ChargePower', 'Charging power', VARIABLETYPE_FLOAT, 300, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'TEMPLATE' => VARIABLE_TEMPLATE_VALUE_PRESENTATION_POWER
@@ -64,7 +65,7 @@ trait MySkodaVariablesTrait
                 'USAGE_TYPE' => 5
             ]),
             $this->variable('ChargeMode', 'Charging mode', VARIABLETYPE_INTEGER, 260, $this->chargeModePresentation()),
-            $this->variable('Climate', 'Air conditioning', VARIABLETYPE_BOOLEAN, 105, $this->booleanActionPresentation('fan')),
+            $this->variable('Climate', 'Air conditioning', VARIABLETYPE_BOOLEAN, 900, $this->booleanActionPresentation('fan')),
             $this->variable('ClimateState', 'Air conditioning state', VARIABLETYPE_STRING, 100, $this->climateStatePresentation()),
             $this->variable('TargetTemperature', 'Target temperature', VARIABLETYPE_FLOAT, 120, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
@@ -78,8 +79,8 @@ trait MySkodaVariablesTrait
                 'PERCENTAGE' => false,
                 'DIGITS' => 1
             ], 22.0),
-            $this->variable('ApiKeyWarning', 'API key warning', VARIABLETYPE_BOOLEAN, 1100, $this->booleanYesNoPresentation(false, 'key')),
-            $this->variable('LastUpdate', 'Last update', VARIABLETYPE_INTEGER, 830, [
+            $this->variable('ApiKeyWarning', 'API key warning', VARIABLETYPE_BOOLEAN, 930, $this->booleanYesNoPresentation(false, 'key')),
+            $this->variable('LastUpdate', 'Last update', VARIABLETYPE_INTEGER, 920, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
             ])
@@ -105,12 +106,12 @@ trait MySkodaVariablesTrait
             ]),
             $this->variable('Latitude', 'Latitude', VARIABLETYPE_FLOAT, 620, $this->valuePresentation('location-dot', '', 6)),
             $this->variable('Longitude', 'Longitude', VARIABLETYPE_FLOAT, 630, $this->valuePresentation('location-dot', '', 6)),
-            $this->variable('ApiKeyExpiresAtVar', 'API key valid until', VARIABLETYPE_INTEGER, 1110, [
+            $this->variable('ApiKeyExpiresAtVar', 'API key valid until', VARIABLETYPE_INTEGER, 940, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
                 'TEMPLATE' => VARIABLE_TEMPLATE_DATE_TIME
             ]),
-            $this->variable('RequestsRemaining', 'API requests remaining', VARIABLETYPE_INTEGER, 1120, $this->valuePresentation('gauge')),
-            $this->variable('PartialErrors', 'API partial errors', VARIABLETYPE_STRING, 1130, [
+            $this->variable('RequestsRemaining', 'API requests remaining', VARIABLETYPE_INTEGER, 950, $this->valuePresentation('gauge')),
+            $this->variable('PartialErrors', 'API partial errors', VARIABLETYPE_STRING, 960, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
                 'ICON' => 'triangle-exclamation',
                 'MULTILINE' => true
@@ -261,6 +262,14 @@ trait MySkodaVariablesTrait
             if ((string) ($object['ObjectIcon'] ?? '') === '') {
                 IPS_SetIcon($variableId, $icon);
             }
+        }
+    }
+
+    private function applyManagedObjectPositions(): void
+    {
+        $vehicleImageId = @IPS_GetObjectIDByIdent('VehicleImage', $this->InstanceID);
+        if ($vehicleImageId !== false) {
+            IPS_SetPosition($vehicleImageId, 40);
         }
     }
 
