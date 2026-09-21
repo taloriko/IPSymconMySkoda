@@ -51,7 +51,7 @@ function IPS_SetPosition(int $id, int $position): void { ++$GLOBALS['metadataWri
 function IPS_DeleteVariable(int $id): void { throw new RuntimeException('Variable deletion is forbidden in this test.'); }
 function GetValue(int $id): mixed { return $GLOBALS['objects'][$id]['Value']; }
 
-class IPSModuleStrict
+class MySkodaTestHost
 {
     public int $InstanceID = 10;
     public array $properties = [];
@@ -118,6 +118,7 @@ class IPSModuleStrict
     public function RegisterVariableFloat(string $ident, string $name, array $presentation, int $position): void { $this->register($ident, $name, $presentation, $position, 2); }
     public function RegisterVariableString(string $ident, string $name, array $presentation, int $position): void { $this->register($ident, $name, $presentation, $position, 3); }
 }
+class_alias(MySkodaTestHost::class, 'IPSModuleStrict');
 require $root . '/MySkoda/module.php';
 function invoke(MySkoda $module, string $method, mixed ...$args): mixed
 {
