@@ -2,17 +2,12 @@
 
 declare(strict_types=1);
 
-trait MySkodaDiagnosticsTrait
+trait MySkodaPublicApiVariablesTrait
 {
     private function ensurePublicApiVariables(): void
     {
         $definitions = [
             $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode')),
-            $this->variable('ReliableLockStatus', 'Reliable lock status', VARIABLETYPE_STRING, 750, $this->publicApiEnumPresentation('lock', [
-                ['LOCKED', 'Locked', 'lock', 0x22C55E],
-                ['UNLOCKED', 'Unlocked', 'lock-open', 0xF59E0B],
-                ['UNKNOWN', 'Unknown', 'circle-question', -1]
-            ])),
             $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0)),
             $this->variable('AtSavedChargingLocation', 'At saved charging location', VARIABLETYPE_BOOLEAN, 200, $this->booleanYesNoPresentation(true, 'house')),
             $this->variable('BatteryCareMode', 'Battery care mode', VARIABLETYPE_STRING, 240, $this->publicApiEnumPresentation('shield', [
@@ -100,11 +95,6 @@ trait MySkodaDiagnosticsTrait
 
         $errors = isset($raw['errors']) && is_array($raw['errors']) ? $raw['errors'] : [];
         $this->setPublicApiString('APISupportedFeatures', $this->publicApiSupportedFeatures($vehicle, $errors));
-
-        $reliableLock = $this->path($vehicle, 'status.overall.reliableLockStatus', null);
-        if ($reliableLock !== null) {
-            $this->SetValue('ReliableLockStatus', strtoupper(trim((string) $reliableLock)));
-        }
     }
 
     private function setPublicApiString(string $ident, mixed $value, bool $uppercase = false): void

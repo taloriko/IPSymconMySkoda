@@ -8,7 +8,7 @@ require_once __DIR__ . '/src/HistoryTrait.php';
 require_once __DIR__ . '/src/ApiTrait.php';
 require_once __DIR__ . '/src/OpenApiTrait.php';
 require_once __DIR__ . '/src/ImageTrait.php';
-require_once __DIR__ . '/src/DiagnosticsTrait.php';
+require_once __DIR__ . '/src/PublicApiVariablesTrait.php';
 require_once __DIR__ . '/src/NotificationTrait.php';
 require_once __DIR__ . '/src/HelpersTrait.php';
 require_once __DIR__ . '/src/CommandTrait.php';
@@ -24,7 +24,7 @@ final class MySkoda extends IPSModuleStrict
         MySkodaApiTrait,
         MySkodaOpenApiTrait,
         MySkodaImageTrait,
-        MySkodaDiagnosticsTrait,
+        MySkodaPublicApiVariablesTrait,
         MySkodaNotificationTrait,
         MySkodaHelpersTrait,
         MySkodaCommandTrait,

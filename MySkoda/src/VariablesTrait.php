@@ -27,9 +27,6 @@ trait MySkodaVariablesTrait
                 $this->registerVariableOnce($definition);
             }
         }
-
-        $this->applyDefaultObjectIcons();
-        $this->applyManagedObjectPositions();
     }
 
     private function coreVariableDefinitions(): array
@@ -131,31 +128,14 @@ trait MySkodaVariablesTrait
     }
 
     /**
-     * Creates variables only while their ident is missing. Existing names remain user-owned
-     * except for selected module-managed labels. Positions follow the API/README order.
-     * Selected variables are re-registered to refresh module-provided presentations;
-     * a user-defined custom presentation remains untouched.
+     * Creates a missing variable with its initial metadata and value.
+     * Existing objects are validated but never renamed, reordered, re-registered
+     * or deleted. Names, icons and presentations remain user-owned after creation.
      */
     private function registerVariableOnce(array $definition): void
     {
         $ident = (string) $definition['ident'];
         $existingId = @$this->GetIDForIdent($ident);
-        $breakingTypeIdents = [
-            'Locked',
-            'DoorsOpen',
-            'WindowsOpen',
-            'TrunkOpen',
-            'BonnetOpen',
-            'SunroofOpen',
-            'LightsOn'
-        ];
-        if ($existingId !== false && in_array($ident, $breakingTypeIdents, true) && IPS_VariableExists($existingId)) {
-            $existingVariable = IPS_GetVariable($existingId);
-            if ((int) ($existingVariable['VariableType'] ?? -1) !== (int) $definition['type']) {
-                IPS_DeleteVariable($existingId);
-                $existingId = false;
-            }
-        }
         if ($existingId !== false) {
             if (!IPS_VariableExists($existingId)) {
                 $this->LogMessage(sprintf('MySkoda: ident "%s" is already used by another object.', $ident), KL_WARNING);
@@ -165,64 +145,6 @@ trait MySkodaVariablesTrait
             $variable = IPS_GetVariable($existingId);
             if ((int) ($variable['VariableType'] ?? -1) !== (int) $definition['type']) {
                 $this->LogMessage(sprintf('MySkoda: variable "%s" has an unexpected type.', $ident), KL_ERROR);
-                return;
-            }
-
-            IPS_SetPosition($existingId, (int) $definition['position']);
-
-            if (in_array($ident, [
-                'DoorsLocked',
-                'Locked',
-                'ReliableLockStatus',
-                'DoorsOpen',
-                'WindowsOpen',
-                'TrunkOpen',
-                'BonnetOpen',
-                'SunroofOpen',
-                'LightsOn',
-                'ParkingAddress',
-                'ClimateState'
-            ], true)) {
-                IPS_SetName($existingId, $this->Translate((string) $definition['name']));
-            }
-
-            if ($ident === 'TargetSOC') {
-                $this->RegisterVariableInteger(
-                    $ident,
-                    $this->Translate((string) $definition['name']),
-                    (array) $definition['presentation'],
-                    (int) $definition['position']
-                );
-            }
-            if (in_array($ident, ['LastUpdate', 'FullyChargedAt', 'ApiKeyExpiresAtVar'], true)) {
-                $this->RegisterVariableInteger(
-                    $ident,
-                    $this->Translate((string) $definition['name']),
-                    (array) $definition['presentation'],
-                    (int) $definition['position']
-                );
-            }
-            if (in_array($ident, [
-                'ParkingState',
-                'ParkingAddress',
-                'ChargeType',
-                'DoorsLocked',
-                'Locked',
-                'ReliableLockStatus',
-                'DoorsOpen',
-                'WindowsOpen',
-                'TrunkOpen',
-                'BonnetOpen',
-                'SunroofOpen',
-                'LightsOn',
-                'ClimateState'
-            ], true)) {
-                $this->RegisterVariableString(
-                    $ident,
-                    $this->Translate((string) $definition['name']),
-                    (array) $definition['presentation'],
-                    (int) $definition['position']
-                );
             }
             return;
         }
@@ -239,37 +161,23 @@ trait MySkodaVariablesTrait
             default => throw new InvalidArgumentException('Unsupported variable type')
         };
 
-        if ($definition['initialValue'] !== null && @$this->GetIDForIdent($ident) !== false) {
-            $this->SetValue($ident, $definition['initialValue']);
+        $variableId = @$this->GetIDForIdent($ident);
+        if ($variableId === false || !IPS_VariableExists($variableId)) {
+            return;
         }
-    }
 
-    private function applyDefaultObjectIcons(): void
-    {
-        $icons = [
+        $icon = match ($ident) {
             'LastUpdate' => 'clock-rotate-left',
             'FullyChargedAt' => 'battery-full',
-            'ApiKeyExpiresAtVar' => 'arrow-right-to-line'
-        ];
-
-        foreach ($icons as $ident => $icon) {
-            $variableId = @$this->GetIDForIdent($ident);
-            if ($variableId === false || !IPS_VariableExists($variableId)) {
-                continue;
-            }
-
-            $object = IPS_GetObject($variableId);
-            if ((string) ($object['ObjectIcon'] ?? '') === '') {
-                IPS_SetIcon($variableId, $icon);
-            }
+            'ApiKeyExpiresAtVar' => 'arrow-right-to-line',
+            default => ''
+        };
+        if ($icon !== '') {
+            IPS_SetIcon($variableId, $icon);
         }
-    }
 
-    private function applyManagedObjectPositions(): void
-    {
-        $vehicleImageId = @IPS_GetObjectIDByIdent('VehicleImage', $this->InstanceID);
-        if ($vehicleImageId !== false) {
-            IPS_SetPosition($vehicleImageId, 40);
+        if ($definition['initialValue'] !== null) {
+            $this->SetValue($ident, $definition['initialValue']);
         }
     }
 

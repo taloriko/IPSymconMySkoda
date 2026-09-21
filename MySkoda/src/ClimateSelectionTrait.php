@@ -55,9 +55,8 @@ trait MySkodaClimateSelectionTrait
     private function setPathValue(string $ident, array $source, string $path, Closure $convert): void
     {
         if ($ident === 'TargetTemperature' && $this->ReadAttributeBoolean('TargetTemperatureOverride')) {
-            // updateCoreValues() has already written the API climate state before
-            // it reaches the target temperature. If climate became active outside
-            // Symcon, the API is authoritative again immediately.
+            // updateCoreValues() writes the API climate state before the target
+            // temperature. An external climate start restores API authority.
             if ((bool) $this->GetValue('Climate')) {
                 $this->WriteAttributeBoolean('TargetTemperatureOverride', false);
             } else {
@@ -65,9 +64,6 @@ trait MySkodaClimateSelectionTrait
             }
         }
 
-        $value = $this->path($source, $path, null);
-        if ($value !== null) {
-            $this->SetValue($ident, $convert($value));
-        }
+        $this->baseSetPathValue($ident, $source, $path, $convert);
     }
 }

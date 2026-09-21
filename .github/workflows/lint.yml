@@ -11,12 +11,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: PHP syntax
         run: |
-          find MySkoda -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+          find MySkoda tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
       - name: Validate JSON
         run: |
           python3 -m json.tool library.json > /dev/null
           python3 -m json.tool MySkoda/module.json > /dev/null
           python3 -m json.tool MySkoda/form.json > /dev/null
           python3 -m json.tool MySkoda/locale.json > /dev/null
-      - name: Validate Symcon repository structure
+      - name: Validate module structure and documentation
         run: python3 tests/validate_structure.py
+      - name: Test runtime invariants without network
+        run: php -d disable_functions=curl_init,curl_exec tests/runtime_invariants.php

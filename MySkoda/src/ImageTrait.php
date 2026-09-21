@@ -25,9 +25,6 @@ trait MySkodaImageTrait
             return false;
         }
         $mediaId = $this->vehicleImageMediaId();
-        if ($mediaId !== false) {
-            IPS_SetPosition($mediaId, 40);
-        }
         if ($mediaId !== false && !$force && $this->vehicleImageBelongsToCurrentVehicle($mediaId)) {
             return true;
         }

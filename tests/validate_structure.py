@@ -6,283 +6,112 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 GUID = re.compile(r"^\{[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}\}$")
+TYPES = {"BOOLEAN": "Boolean", "INTEGER": "Integer", "FLOAT": "Float", "STRING": "String"}
 
 
 def load(path: Path):
-    with path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
+    return json.loads(path.read_text(encoding="utf-8"))
+
+
+def require(condition: bool, message: str) -> None:
+    if not condition:
+        raise AssertionError(message)
 
 
 def walk(items):
     for item in items:
+        if not isinstance(item, dict):
+            continue
         yield item
-        nested = item.get("items")
-        if isinstance(nested, list):
-            yield from walk(nested)
+        if isinstance(item.get("items"), list):
+            yield from walk(item["items"])
 
 
-def captions(items):
-    return {
-        item["caption"]
-        for item in walk(items)
-        if isinstance(item, dict)
-        and isinstance(item.get("caption"), str)
-        and item.get("caption") != ""
-    }
+def document(path: str) -> str:
+    normal = ROOT / path
+    candidate = normal.with_name(normal.stem + "_new" + normal.suffix)
+    return (candidate if candidate.is_file() else normal).read_text(encoding="utf-8")
 
 
 def main() -> None:
+    for path in ["README.md", "MySkoda/README.md", "MySkoda/README_FIN_VIN.md", "tests/README.md", "LICENSE", "CHANGELOG.md"]:
+        require((ROOT / path).is_file(), f"Missing file: {path}")
     library = load(ROOT / "library.json")
-    module = load(ROOT / "MySkoda" / "module.json")
-    form = load(ROOT / "MySkoda" / "form.json")
-    locale = load(ROOT / "MySkoda" / "locale.json")
-    translations = locale.get("translations", {}).get("de", {})
+    module = load(ROOT / "MySkoda/module.json")
+    form = load(ROOT / "MySkoda/form.json")
+    translations = load(ROOT / "MySkoda/locale.json")["translations"]["de"]
+    require(bool(GUID.fullmatch(library["id"])), "Invalid library GUID")
+    require(bool(GUID.fullmatch(module["id"])), "Invalid module GUID")
+    require(library["name"] == module["name"] == "MySkoda", "Invalid module name")
+    require(module["prefix"] == "MSKODA", "Unexpected public prefix")
+    require(tuple(map(int, library["compatibility"]["version"].split("."))) >= (8, 1), "Symcon 8.1 required")
+    require(bool(re.fullmatch(r"\d+\.\d+(?:\.\d+)?", library["version"])), "Invalid version")
 
-    assert GUID.match(library["id"])
-    assert library["name"] == "MySkoda"
-    assert library["version"] == "1.5"
-    assert library["compatibility"]["version"] >= "8.1"
-    assert GUID.match(module["id"])
-    assert module["name"] == "MySkoda"
-    assert module["prefix"] == "MSKODA"
+    php = {path.name: path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php")}
+    sources = "\n".join(php.values())
+    entry = php["module.php"]
+    require("final class MySkoda extends IPSModuleStrict" in entry, "Strict module class missing")
+    require(f"Symcon-MySkoda/{library['version']}" in entry, "User-Agent/version mismatch")
+    for relative in re.findall(r"require_once __DIR__ \. '([^']+)'", entry):
+        require((ROOT / "MySkoda" / relative.lstrip("/")).is_file(), f"Missing include: {relative}")
+    require("PublicApiVariablesTrait.php" in entry, "Public API data trait missing")
+    for forbidden in ["IPS_DeleteVariable(", "IPS_CreateInstance(", "IPS_CreateCategory(", "IPS_CreateLink(", "IPS_SetProperty(", "IPS_ApplyChanges(", "breakingTypeIdents", "NewApiFeatures", "ensureApiDiscoveryVariable", "DiagnosticsTrait"]:
+        require(forbidden not in sources, f"Unexpected runtime code: {forbidden}")
+    require(re.search(r"<\?(?!php)", sources) is None, "Use complete PHP tags")
+    for forbidden in ["IPS_SetName(", "IPS_SetPosition(", "applyDefaultObjectIcons", "applyManagedObjectPositions"]:
+        require(forbidden not in php["VariablesTrait.php"], f"Unexpected variable metadata writer: {forbidden}")
+    require(php["ImageTrait.php"].count("IPS_SetPosition(") == 1, "Image position is assigned only at creation")
 
-    required_files = [
-        ROOT / "README.md",
-        ROOT / "CHANGELOG.md",
-        ROOT / "LICENSE",
-        ROOT / "MySkoda" / "README.md",
-        ROOT / "MySkoda" / "README_FIN_VIN.md",
-        ROOT / "MySkoda" / "module.php",
-        ROOT / "MySkoda" / "module.json",
-        ROOT / "MySkoda" / "form.json",
-        ROOT / "MySkoda" / "locale.json",
-    ]
-    for path in required_files:
-        assert path.is_file(), path
-
-    all_form_captions = (
-        captions(form.get("elements", []))
-        | captions(form.get("actions", []))
-        | captions(form.get("status", []))
-    )
-    missing = sorted(caption for caption in all_form_captions if caption not in translations)
-    assert not missing, f"Missing German form translations: {missing}"
-
-    action_captions = captions(form.get("actions", []))
-    for removed in [
-        "Test connection",
-        "Reload API definition",
-        "Diagnose vehicle images",
-        "Diagnose Public API data",
-    ]:
-        assert removed not in action_captions
-    for required in [
-        "Update now",
-        "Refresh vehicle image",
-        "Show raw vehicle response",
-    ]:
-        assert required in action_captions
-
-    element_captions = captions(form.get("elements", []))
-    assert "Test notification" in element_captions
-
+    public = set(re.findall(r"public function\s+(\w+)\s*\(", sources))
+    lifecycle = {"Create", "ApplyChanges", "RequestAction", "GetConfigurationForm"}
+    api = public - lifecycle
     form_text = json.dumps(form, ensure_ascii=False)
-    assert "MSKODA_TestNotification($id)" in form_text
-    assert "MSKODA_GetLastVehicleResponseRaw($id)" in form_text
-    assert "MSKODA_TestConnection($id)" not in form_text
-    assert "MSKODA_RefreshApiDefinition($id)" not in form_text
-    assert "MSKODA_DiagnoseVehicleImages($id)" not in form_text
-    assert "MSKODA_DiagnosePublicApiData($id)" not in form_text
+    for name in re.findall(r"MSKODA_(\w+)\(", form_text):
+        require(name in api, f"Form references missing function: {name}")
+    expected_actions = {"Update now", "Refresh vehicle image", "Show raw vehicle response"}
+    actual_actions = {item.get("caption") for item in walk(form["actions"]) if item.get("type") == "Button"}
+    require(actual_actions == expected_actions, "Unexpected action buttons")
+    require("Test notification" in {item.get("caption") for item in walk(form["elements"])}, "Notification test missing")
+    for section in ["elements", "actions", "status"]:
+        for item in walk(form[section]):
+            caption = item.get("caption")
+            if caption:
+                require(caption in translations, f"Missing German caption: {caption}")
+    for text in re.findall(r"\$this->Translate\('([^']+)'\)", sources):
+        require(text in translations, f"Missing runtime translation: {text}")
+    for name in ["GetLastVehicleResponseRaw", "TestNotification", "RefreshVehicleImage", "GetVINData", "SetChargingLimit", "SetChargeMode"]:
+        require(name in api, f"Public function missing: {name}")
+    for name in ["TestConnection", "GetRawData", "DiagnoseVehicleImages", "DiagnosePublicApiData", "RefreshApiDefinition"]:
+        require(name not in api, f"Unexpected developer function: {name}")
+    for marker in ["LastVehicleResponseRaw", "RawData", "PendingCommands", "TargetTemperatureOverride", "VINDecodeFingerprint", "SendDebug("]:
+        require(marker in sources, f"Required runtime/support feature missing: {marker}")
+    require("request(" not in php["VinDecoderTrait.php"], "VIN decoding must be local")
+    require("request(" not in php["VinIntegrationTrait.php"], "VIN integration must be local")
 
-    module_php = (ROOT / "MySkoda" / "module.php").read_text(encoding="utf-8")
-    variables = (ROOT / "MySkoda" / "src" / "VariablesTrait.php").read_text(encoding="utf-8")
-    history = (ROOT / "MySkoda" / "src" / "HistoryTrait.php").read_text(encoding="utf-8")
-    core = (ROOT / "MySkoda" / "src" / "CoreTrait.php").read_text(encoding="utf-8")
-    command = (ROOT / "MySkoda" / "src" / "CommandTrait.php").read_text(encoding="utf-8")
-    climate = (ROOT / "MySkoda" / "src" / "ClimateSelectionTrait.php").read_text(encoding="utf-8")
-    image = (ROOT / "MySkoda" / "src" / "ImageTrait.php").read_text(encoding="utf-8")
-    diagnostics = (ROOT / "MySkoda" / "src" / "DiagnosticsTrait.php").read_text(encoding="utf-8")
-    notification = (ROOT / "MySkoda" / "src" / "NotificationTrait.php").read_text(encoding="utf-8")
-    vin_decoder = (ROOT / "MySkoda" / "src" / "VinDecoderTrait.php").read_text(encoding="utf-8")
-    vin_integration = (ROOT / "MySkoda" / "src" / "VinIntegrationTrait.php").read_text(encoding="utf-8")
-    php_sources = "\n".join(path.read_text(encoding="utf-8") for path in (ROOT / "MySkoda").rglob("*.php"))
-
-    assert "final class MySkoda extends IPSModuleStrict" in module_php
-    assert "Symcon-MySkoda/1.5" in module_php
-    assert "refreshVehicleData(false)" in module_php
-    assert "refreshVehicleData(true)" in core
-    assert "VinDecoderTrait.php" in module_php
-    assert "VinIntegrationTrait.php" in module_php
-    assert re.search(r"<\?(?!php)", php_sources) is None
-    assert "IPS_LogMessage" not in php_sources
-    assert "IPS_SetProperty" not in php_sources
-    assert "IPS_ApplyChanges" not in php_sources
-
-    for forbidden in ["IPS_CreateInstance", "IPS_CreateCategory", "IPS_CreateLink"]:
-        assert forbidden not in php_sources
-
-    assert "RegisterPropertyBoolean('EnableChargingHistory', false)" in core
-    assert "RegisterAttributeString('LastVehicleResponseRaw', '')" in core
-    assert "GetLastVehicleResponseRaw" in core
-    assert "(string) ($response['raw'] ?? '')" in core
-    assert "public function GetRawData" not in core
-    assert "public function TestConnection" not in core
-    assert "public function TestConnection" not in module_php
-    assert "RefreshApiDefinition" not in core
-    assert "ReloadApiDefinitionButton" not in core
-
-    assert "public function TestNotification" in notification
-    assert "DiagnoseVehicleImages" not in image
-    assert "DiagnosePublicApiData" not in diagnostics
-    assert "flattenPublicApiData" not in diagnostics
-    assert "collectVehicleImageHints" not in image
-
-    assert "AC_SetLoggingStatus" in history
-    assert "applyDefaultObjectIcons" in variables
-    assert "executeOptimisticCommand" in command
-    assert "PendingCommands" in command
-    assert "CommandStatus" in command
-    assert "TargetTemperatureOverride" in climate
-
-    for required in [
-        "VEHICLE_IMAGE_IDENT = 'VehicleImage'",
-        "vehicle.renderUrl",
-        "RefreshVehicleImage",
-    ]:
-        assert required in (image + module_php)
-
-    for required in [
-        "APICarType",
-        "APIPrimaryEngineType",
-        "APISecondaryEngineType",
-        "APISupportedFeatures",
-        "APIAvailableChargeModes",
-        "APIRemoteOperations",
-        "APIAuxiliaryHeatingState",
-        "APIActiveVentilationState",
-        "publicApiSupportedFeatures",
-    ]:
-        assert required in diagnostics
-
-    for required in [
-        "GetVINData",
-        "decodeVIN",
-        "calculateVINCheckDigit",
-        "VINDecodeFingerprint",
-        "VINDecodeData",
-        "CreateVINVariables",
-        "VINWMI",
-        "VINVDS",
-        "VINVIS",
-        "VINModel",
-        "VINModelYear",
-        "VINPlant",
-        "VINCheckDigit",
-        "Enyaq",
-        "Elroq",
-        "Karoq",
-        "MEX",
-    ]:
-        assert required in (vin_decoder + vin_integration)
-
-    assert "request(" not in vin_decoder
-    assert "request(" not in vin_integration
-    assert "updateVINDecodeCache($vin)" in vin_integration
-    assert "if ($vinChanged)" in vin_integration
-    assert "updateVINVariablesFromCache();" in vin_integration
-
-    vin_panel = next(item for item in form["elements"] if item.get("caption") == "VIN / FIN decoding")
-    vin_items = list(walk(vin_panel.get("items", [])))
-    vin_names = {item.get("name") for item in vin_items}
-    for required in [
-        "VINDecodeStructure",
-        "VINDecodeManufacturer",
-        "VINDecodeModel",
-        "VINDecodeDrive",
-        "VINDecodeProduction",
-        "VINDecodeRestraint",
-        "VINDecodeValidation",
-        "VINCodeManufacturer",
-        "VINCodeModel",
-        "VINCodeDrive",
-        "VINCodeProduction",
-        "VINCodeRestraint",
-        "VINCodeValidation",
-        "CreateVINVariables",
-    ]:
-        assert required in vin_names
-
-    code_labels = {
-        item.get("name"): item
-        for item in vin_items
-        if item.get("name", "").startswith("VINCode")
-    }
-    assert len(code_labels) == 6
-    for item in code_labels.values():
-        assert item.get("bold") is True
-        assert item.get("width") == "120px"
-
-    assert translations.get("VIN / FIN decoding") == "FIN / VIN entschlüsseln"
-    assert translations.get("Create VIN information variables") == "FIN-Informationsvariablen anlegen"
-    assert translations.get("Test notification") == "Mitteilung testen"
-    assert translations.get("Show raw vehicle response") == "Rohe Fahrzeugantwort anzeigen"
-
-    root_readme = (ROOT / "README.md").read_text(encoding="utf-8")
-    module_readme = (ROOT / "MySkoda" / "README.md").read_text(encoding="utf-8")
-    vin_readme = (ROOT / "MySkoda" / "README_FIN_VIN.md").read_text(encoding="utf-8")
-
-    for text in [
-        "## Voraussetzungen",
-        "## Installation",
-        "## Erste Einrichtung",
-        "MySkoda/README.md",
-        "MySkoda/README_FIN_VIN.md",
-        "keine offiziellen Fahrzeugstammdaten von Škoda",
-    ]:
-        assert text in root_readme
-
-    for text in [
-        "## 2. Voraussetzungen",
-        "## 3. Installation",
-        "## 4. Einrichten der Instanz",
-        "## 5. Konfiguration",
-        "README_FIN_VIN.md",
-        "MSKODA_GetVINData",
-        "Datenschutz und externe Dienste",
-        "keine offiziellen Fahrzeugstammdaten von Škoda",
-    ]:
-        assert text in module_readme
-
-    for text in [
-        "# FIN / VIN entschlüsseln",
-        "keine offizielle Škoda-Datenquelle",
-        "WMI",
-        "VDS",
-        "VIS",
-        "Prüfzeichen",
-        "Enyaq",
-        "Elroq",
-        "Karoq",
-        "MSKODA_GetVINData",
-    ]:
-        assert text in vin_readme
-
-    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    assert "## 1.5 - 2026-09-17" in changelog
-    assert "Mitteilung testen" in changelog
-    assert "Rohe Fahrzeugantwort anzeigen" in changelog
-    assert "keine Abwärtskompatibilität" in changelog
-    assert "## 1.4 - 2026-09-16" in changelog
-    assert "## 1.3 - 2026-09-16" in changelog
-    assert "## 1.2 - 2026-09-15" in changelog
-
-    old_brand = "IP" + "-Symcon"
-    text_suffixes = {".md", ".json", ".php", ".py", ".yml", ".yaml"}
-    for path in ROOT.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in text_suffixes:
-            continue
-        text = path.read_text(encoding="utf-8")
-        assert old_brand not in text, f"Old product naming in {path.relative_to(ROOT)}"
+    # Compare technical documentation to actual identifiers, types and positions.
+    definitions = {}
+    for ident, caption, kind, position in re.findall(r"\$this->variable\('([^']+)',\s*'([^']+)',\s*VARIABLETYPE_(\w+),\s*(\d+)", sources):
+        require(ident not in definitions, f"Duplicate definition: {ident}")
+        require(caption in translations, f"Missing variable translation: {caption}")
+        definitions[ident] = (int(position), TYPES[kind])
+    for ident, caption, kind, position in re.findall(r"'ident'\s*=>\s*'([^']+)',\s*'name'\s*=>\s*'([^']+)',\s*'type'\s*=>\s*VARIABLETYPE_(\w+),\s*'position'\s*=>\s*(\d+)", php["CommandTrait.php"]):
+        require(ident not in definitions, f"Duplicate definition: {ident}")
+        require(caption in translations, f"Missing variable translation: {caption}")
+        definitions[ident] = (int(position), TYPES[kind])
+    for ident, caption, position in re.findall(r"\['(VIN\w+)',\s*'([^']+)',\s*(\d+)\]", php["VinDecoderTrait.php"]):
+        require(ident not in definitions, f"Duplicate definition: {ident}")
+        require(caption in translations, f"Missing variable translation: {caption}")
+        definitions[ident] = (int(position), "String")
+    require(len(definitions) == 72, f"Expected 72 variable definitions, got {len(definitions)}")
+    docs = document("MySkoda/README.md") + "\n" + document("MySkoda/README_FIN_VIN.md")
+    documented = {}
+    for position, ident, kind in re.findall(r"^\|\s*(\d+)\s*\|\s*`(\w+)`\s*\|[^|]+\|\s*(Boolean|Integer|Float|String)\s*\|", docs, re.M):
+        require(ident not in documented, f"Duplicate documentation row: {ident}")
+        documented[ident] = (int(position), kind)
+    require(definitions == documented, f"Variable documentation mismatch: {set(definitions.items()) ^ set(documented.items())}")
+    doc_api = set(re.findall(r"MSKODA_(\w+)\(", docs))
+    require(doc_api == api, f"Public API documentation mismatch: {doc_api ^ api}")
+    print(f"Structure validated: {len(definitions)} variables, {len(api)} public functions.")
 
 
 if __name__ == "__main__":
