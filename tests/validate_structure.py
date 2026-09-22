@@ -27,14 +27,8 @@ def walk(items):
             yield from walk(item["items"])
 
 
-def document(path: str) -> str:
-    normal = ROOT / path
-    candidate = normal.with_name(normal.stem + "_new" + normal.suffix)
-    return (candidate if candidate.is_file() else normal).read_text(encoding="utf-8")
-
-
 def main() -> None:
-    for path in ["README.md", "MySkoda/README.md", "MySkoda/README_FIN_VIN.md", "tests/README.md", "LICENSE", "CHANGELOG.md"]:
+    for path in ["README.md", "MySkoda/README.md", "MySkoda/README_FIN_VIN.md", "tests/README.md", "LICENSE", "CHANGELOG.md", "tests/public_api_contract.json"]:
         require((ROOT / path).is_file(), f"Missing file: {path}")
     library = load(ROOT / "library.json")
     module = load(ROOT / "MySkoda/module.json")
@@ -88,7 +82,7 @@ def main() -> None:
     require("request(" not in php["VinDecoderTrait.php"], "VIN decoding must be local")
     require("request(" not in php["VinIntegrationTrait.php"], "VIN integration must be local")
 
-    # Compare technical documentation to actual identifiers, types and positions.
+    # Assert the public contract independently of manually maintained README layout.
     definitions = {}
     for ident, caption, kind, position in re.findall(r"\$this->variable\('([^']+)',\s*'([^']+)',\s*VARIABLETYPE_(\w+),\s*(\d+)", sources):
         require(ident not in definitions, f"Duplicate definition: {ident}")
@@ -103,14 +97,12 @@ def main() -> None:
         require(caption in translations, f"Missing variable translation: {caption}")
         definitions[ident] = (int(position), "String")
     require(len(definitions) == 72, f"Expected 72 variable definitions, got {len(definitions)}")
-    docs = document("MySkoda/README.md") + "\n" + document("MySkoda/README_FIN_VIN.md")
-    documented = {}
-    for position, ident, kind in re.findall(r"^\|\s*(\d+)\s*\|\s*`(\w+)`\s*\|[^|]+\|\s*(Boolean|Integer|Float|String)\s*\|", docs, re.M):
-        require(ident not in documented, f"Duplicate documentation row: {ident}")
-        documented[ident] = (int(position), kind)
-    require(definitions == documented, f"Variable documentation mismatch: {set(definitions.items()) ^ set(documented.items())}")
-    doc_api = set(re.findall(r"MSKODA_(\w+)\(", docs))
-    require(doc_api == api, f"Public API documentation mismatch: {doc_api ^ api}")
+    contract = load(ROOT / "tests" / "public_api_contract.json")
+    expected_variables = {ident: tuple(spec) for ident, spec in contract["variables"].items()}
+    require(definitions == expected_variables, f"Variable contract mismatch: {set(definitions.items()) ^ set(expected_variables.items())}")
+    expected_functions = set(contract["public_functions"])
+    require(len(expected_functions) == len(contract["public_functions"]), "Duplicate public function in contract")
+    require(api == expected_functions, f"Public API contract mismatch: {api ^ expected_functions}")
     print(f"Structure validated: {len(definitions)} variables, {len(api)} public functions.")
 
 

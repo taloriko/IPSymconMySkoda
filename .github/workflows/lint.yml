@@ -18,7 +18,8 @@ jobs:
           python3 -m json.tool MySkoda/module.json > /dev/null
           python3 -m json.tool MySkoda/form.json > /dev/null
           python3 -m json.tool MySkoda/locale.json > /dev/null
-      - name: Validate module structure and documentation
+          python3 -m json.tool tests/public_api_contract.json > /dev/null
+      - name: Validate module structure and public API contract
         run: python3 tests/validate_structure.py
       - name: Test runtime invariants without network
         run: php -d disable_functions=curl_init,curl_exec tests/runtime_invariants.php
