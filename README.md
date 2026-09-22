@@ -33,8 +33,6 @@ Die FIN/VIN-Entschlüsselung ist bewusst nur eine Zusatzfunktion. Details zur Ze
 Der API-Key wird in der MySkoda App unter **Profil → Smart Home → Schlüssel erstellen** erzeugt.
  - Dort steht auch die FIN/VIN (Fahrzeug-Fahrgestellnummer) zum kopieren
 
-Offizielle API-Dokumentation: <https://public.api.connect.skoda-auto.cz/docs>
-
 ## Installation
 
 ### Module Store
