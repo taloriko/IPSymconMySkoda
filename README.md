@@ -73,15 +73,17 @@ Battery Care Mode, maximaler AC-Ladestrom, automatische Steckerentriegelung und 
 
 ## In der App verfügbar, aber nicht in der Public API
 
-Einige Funktionen der MySkoda App sind im öffentlichen API-Vertrag derzeit nicht enthalten und können deshalb vom Modul nicht bereitgestellt werden, darunter Klima-Timer/Abfahrtszeiten, intelligentes Heizen/Klimatisieren, Sitzheizung im Zusammenhang mit der Klimatisierung, Battery Care Mode, reduzierte AC-Ladeleistung und automatisches Entriegeln des AC-Ladekabels.
+Einige Funktionen der MySkoda App sind im öffentlichen API-Vertrag derzeit nicht enthalten und können deshalb vom Modul nicht bereitgestellt werden, darunter setzen von Klima-Timer/Abfahrtszeiten, intelligentes Heizen/Klimatisieren, Sitzheizung im Zusammenhang mit der Klimatisierung, Battery Care Mode, reduzierte AC-Ladeleistung und automatisches Entriegeln des AC-Ladekabels.
 
 Das Modul verwendet für Fahrzeugdaten und Remote-Funktionen ausschließlich die offizielle MyŠkoda Public API. Private oder interne App-Schnittstellen werden nicht verwendet.
 
-## Dokumentation
+## Technische Dokumentation
 
-Die vollständige Modul-Dokumentation mit Konfiguration, Variablen, PHP-Befehlen, Fehlersuche und Datenschutz befindet sich unter [MySkoda/README.md](MySkoda/README.md).
+- [Modul, Konfiguration, Datenpunkte und PHP-Funktionen](MySkoda/README.md)
+- [Lokale FIN/VIN-Interpretation](MySkoda/README_FIN_VIN.md)
+- [Fahrzeug-Kompatibilität und Tests](tests/README.md)
 
-Die technische Dokumentation der optionalen FIN/VIN-Entschlüsselung befindet sich unter [MySkoda/README_FIN_VIN.md](MySkoda/README_FIN_VIN.md).
+Die externe [Public-API-Dokumentation](https://public.api.connect.skoda-auto.cz/docs) beschreibt den API-Vertrag. Die dokumentierten Modul-Funktionen ergeben sich aus dem Quellcode dieser Library.
 
 ## Fehler melden
 
