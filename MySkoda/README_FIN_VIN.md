@@ -4,292 +4,118 @@ Die MySkoda-Instanz kann die konfigurierte 17-stellige FIN/VIN lokal zerlegen un
 
 > **Hinweis:** Die FIN-/VIN-Entschlüsselung ist keine offizielle Škoda-Datenquelle. Die Zuordnungen werden anhand öffentlich verfügbarer Herstellerinformationen, technischer Unterlagen, Typgenehmigungsdaten und nachvollziehbarer FIN-Beispiele interpretiert. Unbekannte oder nicht eindeutig belegte Codes werden bewusst nicht geraten.
 
-## Verhalten im Modul
+## 1. Verarbeitung
 
-Nach dem Speichern der Instanzkonfiguration wird die FIN lokal ausgewertet. Die entschlüsselten Werte werden direkt im Abschnitt **FIN / VIN entschlüsseln** angezeigt.
+Die konfigurierte FIN wird getrimmt und in Großschreibung ausgewertet. Zulässig sind 17 Zeichen aus `A–H`, `J–N`, `P`, `R–Z` und `0–9`. Die Syntaxprüfung schließt I, O und Q aus. Eine Prüfzifferabweichung wird angezeigt, verhindert aber nicht allein den Fahrzeugabruf.
 
-Über **FIN-Informationsvariablen anlegen** können die Ergebnisse zusätzlich als reine String-Variablen unterhalb der Instanz angelegt werden. Es werden keine Icons, Profile oder besonderen Darstellungen verwendet.
+Die Interpretation wird anhand eines Fingerprints der FIN zwischengespeichert. Bei unveränderter FIN und vorhandenem Cache erfolgt keine Neuberechnung. In der Konfiguration werden die verwendeten Codes und ihre Interpretation gemeinsam angezeigt.
 
-Die FIN-Auswertung wird über einen eigenen Fingerprint zwischengespeichert. Sie wird nur beim erstmaligen Anlegen bzw. bei einer geänderten FIN neu berechnet. Der normale zyklische MySkoda-Abruf verändert diese Werte nicht.
+| Stellen | Inhalt im Decoder |
+|---|---|
+| 1–3 | WMI / Herstellerzuordnung |
+| 4–9 | VDS / fahrzeugbeschreibender Bereich |
+| 10–17 | VIS / fahrzeugunterscheidender Bereich |
+| 4 | Karosserie-, Lenkungs- und Antriebszuordnung, soweit modellabhängig hinterlegt |
+| 5 | Motor-/Leistungscode, soweit hinterlegt |
+| 6 | Rückhaltesystemcode |
+| 7–8 | Modell-/Baureihencode |
+| 9 | Prüfzeichen |
+| 10 | Modelljahrcode |
+| 11 | Produktionswerkcode |
+| 12–17 | Seriennummer |
 
-Bereits angelegte FIN-Variablen bleiben bestehen, auch wenn die Option später deaktiviert wird. Bei einem späteren FIN-Wechsel werden vorhandene FIN-Variablen weiterhin aktualisiert.
+## 2. Hersteller und Modelle
 
-Die entschlüsselten Daten können außerdem mit folgendem Modulaufruf als JSON gelesen werden:
+Für `TMB` ist Škoda Auto / Tschechien hinterlegt; für `MEX` Škoda Auto Volkswagen India / Indien. Dies ist die lokale Herstellerzuordnung, keine unabhängige Bestätigung eines konkreten Produktionsorts.
+
+| WMI | Modellcode | Hinterlegte Interpretation |
+|---|---|---|
+| TMB | `6Y`, `5J`, `NJ`, `PJ` | Fabia I, Fabia II / Roomster, Fabia III, Fabia IV |
+| TMB | `1U`, `1Z`, `5E`, `NX` | Octavia I, II, III, IV |
+| TMB | `3U`, `3T`, `3V`, `NZ` | Superb I, II, III, IV |
+| TMB | `5L`, `NU`, `NS`, `PS` | Yeti, Karoq, Kodiaq I, Kodiaq II |
+| TMB | `NW`, `AA`, `NH`, `NK` | Scala / Kamiq, Citigo, Rapid, Rapid |
+| TMB | `NY` | Enyaq / Elroq; weitere Differenzierung nach Karosseriecode und Modelljahr |
+| MEX | `PA`, `PB`, `PC` | Kushaq, Slavia, Kylaq |
+
+Für `NY` werden die Karosseriecodelisten E/F/G/H/J/K/L/M dem Enyaq zugeordnet. N/P/R/S werden ab interpretiertem Modelljahr 2025 dem Elroq zugeordnet. Andernfalls bleibt die Angabe `Enyaq / Elroq` mehrdeutig. Nicht hinterlegte WMI- oder Modellcodes liefern keine sichere Modellzuordnung.
+
+## 3. Modellabhängige Auswertung
+
+Beim Enyaq stehen E/F für Coupé mit Heckantrieb und G/H für Coupé mit Allradantrieb. J/K stehen für SUV mit Heckantrieb, L/M für SUV mit Allradantrieb. Der erste Buchstabe jedes Paares wird als Linkslenker und der zweite als Rechtslenker interpretiert. Beim Elroq gilt dieses Muster für N/P mit Heckantrieb und R/S mit Allradantrieb. Beim Karoq werden J/K dem Frontantrieb und L/M dem Allradantrieb zugeordnet.
+
+| Modell | Motorcode → hinterlegte Leistung in kW |
+|---|---|
+| Enyaq | A → 109; B → 132; C → 150; E → 195; F → 220; H → 210; J → 250 |
+| Elroq | G → 125; C → 150; H → 210; F → 220; J → 250 |
+| Karoq | E → 140 / 2.0 TSI; G → 85 / 1.6 TDI; J → 110 / 2.0 TDI; M → 140 / 2.0 TDI; P → 85 / 1.0 TSI; R → 110 / 1.5 TSI |
+
+Die PS-Anzeige wird aus der hinterlegten kW-Leistung berechnet. Die Variantenbezeichnung berücksichtigt beim Enyaq zusätzlich Modelljahr und Antrieb: bis 2023 werden die hinterlegten iV-Varianten unterschieden; H steht anschließend für 85 beziehungsweise 85x und J für RS. Beim Elroq werden 50, 60, 85, 85x und RS anhand der hinterlegten Motor- und Antriebskombinationen unterschieden. Nicht eindeutig abgedeckte Kombinationen bleiben leer.
+
+Für Octavia IV sind einzelne Kombinationen hinterlegt: Karosseriecode J, Motorcode R und Rückhaltecode 8. Die Funktion ist kein vollständiger Motoren- oder Ausstattungskatalog.
+
+Rückhaltesysteme werden nur für die ausdrücklich hinterlegten Modell-/Codekombinationen ausgegeben. Beim Enyaq und Elroq werden die Codes 7 und 9 verarbeitet; beim Karoq sind 2, 4, 5, 6, 7, 8 und 9 hinterlegt. Daraus darf keine Aussage über weitere, nicht codierte Ausstattung abgeleitet werden.
+
+## 4. Modelljahr, Werk und Prüfzeichen
+
+Der Modelljahrcode wird mit der Folge `ABCDEFGHJKLMNPRSTVWXY123456789` ausgewertet. Der Decoder prüft daraus resultierende Jahre der Zyklen ab 1980, 2010 und 2040 gegen hinterlegte Baureihen-Zeiträume. Ist keine passende Zuordnung möglich, wird als Rückfall das letzte zulässige Jahr bis zum aktuellen Kalenderjahr plus eins verwendet. Modelljahr und Erstzulassung sind nicht identisch. Ein Rückfallwert ist kein unabhängiger Nachweis des Baujahrs.
+
+Für TMB sind die Werkscodes 0–4 und Y mit Mladá Boleslav sowie 5–9 mit Kvasiny hinterlegt. F wird nur in Verbindung mit Modellcode NY als Mladá Boleslav interpretiert. Andere Werkcodes bleiben unbekannt.
+
+Das Prüfzeichen wird durch Buchstabenabbildung und Gewichtung `8,7,6,5,4,3,2,10,0,9,8,7,6,5,4,3,2` berechnet. Der Rest modulo 11 ergibt das Prüfzeichen; Rest 10 wird als X ausgegeben. Stelle 9 hat Gewicht 0. Der berechnete Wert wird mit dem vorhandenen Prüfzeichen verglichen. Die Anzeige unterscheidet `gültig` und `nicht bestätigt`; sie ersetzt keinen Hersteller- oder Fahrzeugnachweis.
+
+## 5. Optionale FIN-Variablen
+
+Die Option `CreateVINVariables` steuert ausschließlich die Anlage. Die Variablen werden als reine Strings ohne Icons und besondere Darstellungen erstellt. Vorhandene Namen, Positionen und Darstellungen bleiben benutzerverwaltet. Werte werden nur bei Erstanlage oder geänderter FIN beschrieben. Beim Deaktivieren der Option bleiben die Variablen erhalten und werden bei späterem FIN-Wechsel weiter aktualisiert.
+
+| Position | Ident | Anzeige | Typ | Bedeutung |
+|---:|---|---|---|---|
+| 1100 | `VINWMI` | FIN WMI | String | Stellen 1–3 |
+| 1110 | `VINVDS` | FIN VDS | String | Stellen 4–9 |
+| 1120 | `VINVIS` | FIN VIS | String | Stellen 10–17 |
+| 1130 | `VINManufacturer` | FIN Hersteller | String | hinterlegte Herstellerzuordnung |
+| 1140 | `VINCountry` | FIN Land | String | Land der Herstellerzuordnung |
+| 1150 | `VINModel` | FIN Modell | String | interpretierte Baureihe, gegebenenfalls mehrdeutig |
+| 1160 | `VINModelCode` | FIN Modellcode | String | Stellen 7–8 |
+| 1170 | `VINBody` | FIN Karosserie | String | modellabhängige Karosseriezuordnung |
+| 1180 | `VINSteering` | FIN Lenkung | String | Links-/Rechtslenker, soweit hinterlegt |
+| 1190 | `VINDrive` | FIN Antrieb | String | Antriebsart, soweit hinterlegt |
+| 1200 | `VINPower` | FIN Leistung | String | interpretierte Leistung in kW und PS |
+| 1210 | `VINVariant` | FIN Variante | String | Variantenbezeichnung, soweit hinterlegt |
+| 1220 | `VINRestraint` | FIN Rückhaltesystem | String | Rückhaltecode-Interpretation |
+| 1230 | `VINModelYear` | FIN Modelljahr | String | interpretiertes Modelljahr |
+| 1240 | `VINPlant` | FIN Produktionswerk | String | Werkcode-Interpretation |
+| 1250 | `VINSerialNumber` | FIN Seriennummer | String | Stellen 12–17 |
+| 1260 | `VINCheckDigit` | FIN Prüfziffer | String | vorhandenes Prüfzeichen und Vergleichsergebnis |
+
+Bei ungültiger Syntax werden ableitbare WMI/VDS/VIS-Abschnitte separat behandelt und Interpretationsfelder leer ausgegeben. Bei syntaktisch gültiger, aber nicht abgedeckter FIN bleiben nicht interpretierbare Felder leer oder mehrdeutig.
+
+## 6. PHP-Schnittstelle
 
 ```php
 $json = MSKODA_GetVINData(12345);
+$data = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 ```
 
-## Aufbau der FIN
+Die Funktion liefert die zwischengespeicherte Interpretation und löst keine API-Anfrage aus. Das JSON enthält unter anderem `vin`, `validSyntax`, `wmi`, `vds` und `vis`. Bei gültiger Syntax kommen Codes, interpretierte Felder, `modelYear`, `checkDigit`, `calculatedCheckDigit`, `checkDigitValid` und die zerlegten `parts` hinzu. Vor der Verarbeitung einzelner Felder ist ihre Verfügbarkeit zu prüfen.
 
-Das Modul zerlegt eine 17-stellige FIN in folgende Bereiche:
+## 7. Grenzen und Quellen
 
-| Position | Bereich | Verwendung im Modul |
-|---|---|---|
-| 1–3 | WMI | Hersteller-/Herkunftskennung |
-| 4–8 | VDS | modellabhängige Fahrzeugbeschreibung |
-| 9 | Sicherheits-/Prüfzeichen | Vergleich mit berechneter Prüfziffer |
-| 10 | Modelljahr | Modelljahrcode |
-| 11 | Werk | Produktionswerk, soweit bekannt |
-| 12–17 | Seriennummer | laufende Fahrzeugnummer |
+Die implementierten Tabellen sind in [VinDecoderTrait.php](src/VinDecoderTrait.php) und die Einbindung in [VinIntegrationTrait.php](src/VinIntegrationTrait.php) nachvollziehbar. Das ist die technische Quelle für das Verhalten dieser Modulversion. Nicht hinterlegte Fahrzeuge, Modelljahre und Codes werden dadurch nicht automatisch unterstützt. Änderungen in Herstellerzuordnungen werden nicht aus dem Internet nachgeladen.
 
-Škoda beschreibt die Stellen 4–9 als Vehicle Descriptor Section. Nach Škoda können dort je nach Baureihe unter anderem Karosserie, Motor/Antrieb, Rückhaltesystem und Fahrzeugtyp codiert sein. Deshalb werden die Stellen 4–8 im Modul **nicht global**, sondern nur mit baureihenbezogenen Tabellen interpretiert.
+Aktuell verwendete bzw. zur Gegenprüfung geeignete Quellen sind unter anderem:
 
-## 1. Formale Prüfung
+- Škoda Storyboard – **What can VIN codes tell you?**  
+  <https://www.skoda-storyboard.com/en/skoda-world/what-can-vin-codes-tell-you/>
+- Škoda Storyboard – technische Daten der Enyaq-Antriebsvarianten  
+  <https://www.skoda-storyboard.com/en/press-kits/skoda-enyaq-iv-press-kit-2/electric-powertrain-three-battery-sizes-and-five-power-levels/>
+- 49 CFR § 565.15 – Referenz für Modelljahrcodes und das gewichtete Prüfzifferverfahren  
+  <https://www.law.cornell.edu/cfr/text/49/565.15>
+- Škoda-/Rettungs- und Typgenehmigungsunterlagen sowie öffentlich zugängliche nationale Typgenehmigungsdaten für die Gegenprüfung einzelner Baureihen
 
-Vor der Interpretation wird die FIN normalisiert und geprüft:
+## 8. Was kann nicht aus der FIN abgeleitet wird
 
-- führende und nachfolgende Leerzeichen werden entfernt
-- Buchstaben werden in Großschreibung verarbeitet
-- Länge muss genau 17 Zeichen betragen
-- zulässig sind `A-H`, `J-N`, `P`, `R-Z` und `0-9`
-- die Buchstaben `I`, `O` und `Q` sind nicht zulässig
-
-Verwendetes Muster:
-
-```text
-^[A-HJ-NPR-Z0-9]{17}$
-```
-
-Bei einer formal ungültigen FIN werden keine Fahrzeugmerkmale geraten.
-
-## 2. Herstellerkennung WMI – Stellen 1 bis 3
-
-Aktuell kennt das Modul insbesondere:
-
-| WMI | Interpretation |
-|---|---|
-| `TMB` | Škoda Auto, Tschechien |
-| `MEX` | Škoda Auto Volkswagen India, Indien |
-
-Ein unbekannter WMI macht die FIN nicht automatisch formal ungültig. Das Modul lässt die Herstellerzuordnung dann leer, statt eine Marke zu erfinden.
-
-## 3. Modell-/Baureihencode – Stellen 7 und 8
-
-Für `TMB` sind aktuell unter anderem folgende Baureihencodes hinterlegt:
-
-| Code | Baureihe |
-|---|---|
-| `6Y` | Fabia I |
-| `5J` | Fabia II / Roomster |
-| `NJ` | Fabia III |
-| `PJ` | Fabia IV |
-| `1U` | Octavia I |
-| `1Z` | Octavia II |
-| `5E` | Octavia III |
-| `NX` | Octavia IV |
-| `3U` | Superb I |
-| `3T` | Superb II |
-| `3V` | Superb III |
-| `NZ` | Superb IV |
-| `5L` | Yeti |
-| `NU` | Karoq |
-| `NS` | Kodiaq I |
-| `PS` | Kodiaq II |
-| `NW` | Scala / Kamiq |
-| `AA` | Citigo |
-| `NH`, `NK` | Rapid |
-| `NY` | Enyaq / Elroq; weitere VDS-Stellen werden zur Unterscheidung verwendet |
-
-Für `MEX` sind aktuell hinterlegt:
-
-| Code | Baureihe |
-|---|---|
-| `PA` | Kushaq |
-| `PB` | Slavia |
-| `PC` | Kylaq |
-
-Ein Modellcode allein reicht nicht in jedem Fall für eine eindeutige Fahrzeugbestimmung. Besonders `NY` wird von Enyaq und Elroq verwendet. Das Modul kombiniert deshalb Modellcode, Modelljahr und weitere VDS-Zeichen.
-
-## 4. Modelljahr – Stelle 10
-
-Stelle 10 wird als Modelljahr interpretiert. Der bekannte 30-Jahres-Zyklus wird mit dem zeitlichen Bereich der jeweiligen Baureihe kombiniert, damit beispielsweise `N` bei einem Enyaq als Modelljahr 2022 und nicht als 1992 interpretiert wird.
-
-Aktuelle Folge ab 2010:
-
-| Code | Modelljahr | Code | Modelljahr |
-|---|---:|---|---:|
-| `A` | 2010 | `L` | 2020 |
-| `B` | 2011 | `M` | 2021 |
-| `C` | 2012 | `N` | 2022 |
-| `D` | 2013 | `P` | 2023 |
-| `E` | 2014 | `R` | 2024 |
-| `F` | 2015 | `S` | 2025 |
-| `G` | 2016 | `T` | 2026 |
-| `H` | 2017 | `V` | 2027 |
-| `J` | 2018 | `W` | 2028 |
-| `K` | 2019 | `X` | 2029 |
-
-Danach folgen `Y` für 2030 und `1` bis `9` für 2031 bis 2039.
-
-**Modelljahr ist nicht gleich Produktionsdatum oder Erstzulassung.** Ein Fahrzeug des Modelljahres 2022 kann beispielsweise bereits 2021 produziert worden sein.
-
-## 5. Produktionswerk – Stelle 11
-
-Für europäische `TMB`-FINs werden aktuell folgende bekannte Zuordnungen verwendet:
-
-| Code | Interpretation |
-|---|---|
-| `0`–`4` | Mladá Boleslav |
-| `5`–`9` | Kvasiny |
-| `Y` | Mladá Boleslav |
-| `F` bei `NY` | Mladá Boleslav |
-
-Wenn eine Zuordnung nicht hinreichend belegt ist, bleibt das Produktionswerk leer.
-
-## 6. Seriennummer – Stellen 12 bis 17
-
-Die letzten sechs Stellen werden als Serien-/Produktionsnummer ausgegeben. Aus dieser Nummer wird **kein** Produktionsdatum berechnet.
-
-## 7. Sicherheits-/Prüfzeichen – Stelle 9
-
-Škoda bezeichnet Stelle 9 als Sicherheitscode. Das Modul berechnet zusätzlich die verbreitete VIN-Prüfziffer nach dem gewichteten Modulo-11-Verfahren und vergleicht sie mit Stelle 9.
-
-Gewichte:
-
-```text
-Position: 1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17
-Gewicht:  8  7  6  5  4  3  2 10  0  9  8  7  6  5  4  3  2
-```
-
-Der Rest der Summe modulo 11 ergibt `0` bis `9`; der Wert 10 wird als `X` dargestellt.
-
-Wichtig: Dieses Prüfverfahren ist als standardisierte VIN-Prüfziffer insbesondere aus nordamerikanischen Vorgaben dokumentiert. Da Škoda für europäische Fahrzeuge von einem Sicherheitscode spricht, behandelt das Modul eine Abweichung bewusst als **„nicht bestätigt“** und nicht pauschal als Beweis für eine ungültige FIN.
-
-## 8. Detaillierte VDS-Auswertung
-
-### Enyaq
-
-Bei als Enyaq erkannten `NY`-FINs werden aktuell zusätzlich Karosserie, Lenkung und Antriebsart aus Stelle 4 ausgewertet:
-
-| Code | Karosserie | Lenkung | Antrieb |
-|---|---|---|---|
-| `E` | Coupé | links | Heck |
-| `F` | Coupé | rechts | Heck |
-| `G` | Coupé | links | Allrad |
-| `H` | Coupé | rechts | Allrad |
-| `J` | SUV | links | Heck |
-| `K` | SUV | rechts | Heck |
-| `L` | SUV | links | Allrad |
-| `M` | SUV | rechts | Allrad |
-
-Bekannte Leistungskennungen an Stelle 5:
-
-| Code | Leistung |
-|---|---:|
-| `A` | 109 kW |
-| `B` | 132 kW |
-| `C` | 150 kW |
-| `E` | 195 kW |
-| `F` | 220 kW |
-| `H` | 210 kW |
-| `J` | 250 kW |
-
-Für frühe Modelljahre werden daraus unter anderem die Varianten Enyaq iV 50, 60, 80, 80x und RS abgeleitet. Neuere Zuordnungen werden nur ausgegeben, wenn Code und Antriebsart zusammenpassen.
-
-### Elroq
-
-Elroq und Enyaq teilen den Modellcode `NY`. Für Elroq werden aktuell die Karosserie-/Antriebscodes `N`, `P`, `R` und `S` in Verbindung mit neueren Modelljahren ausgewertet.
-
-Bekannte Leistungskennungen:
-
-| Code | Leistung | mögliche Variante |
-|---|---:|---|
-| `G` | 125 kW | Elroq 50 |
-| `C` | 150 kW | Elroq 60 |
-| `H` | 210 kW | Elroq 85 / 85x abhängig vom Antrieb |
-| `F` | 220 kW | Elroq 85x bei passender Allradkennung |
-| `J` | 250 kW | Elroq RS bei passender Allradkennung |
-
-### Karoq
-
-Für Karoq `NU` werden aktuell folgende Karosserie-/Antriebscodes ausgewertet:
-
-| Code | Lenkung | Antrieb |
-|---|---|---|
-| `J` | links | Front |
-| `K` | rechts | Front |
-| `L` | links | Allrad |
-| `M` | rechts | Allrad |
-
-Bekannte Motorcodes:
-
-| Code | Leistung | Motor |
-|---|---:|---|
-| `E` | 140 kW | 2.0 TSI |
-| `G` | 85 kW | 1.6 TDI |
-| `J` | 110 kW | 2.0 TDI |
-| `M` | 140 kW | 2.0 TDI |
-| `P` | 85 kW | 1.0 TSI |
-| `R` | 110 kW | 1.5 TSI |
-
-Zusätzlich werden bekannte Rückhaltesystemcodes ausgewertet.
-
-### Octavia IV
-
-Für Octavia IV `NX` ist derzeit nur eine begrenzte, konkret belegte Teilmenge der VDS-Auswertung hinterlegt. Nicht dokumentierte Kombinationen werden bewusst nicht ergänzt.
-
-## 9. Optionale Variablen
-
-Wenn **FIN-Informationsvariablen anlegen** aktiviert ist, können folgende String-Variablen entstehen:
-
-| Ident | Inhalt |
-|---|---|
-| `VINWMI` | WMI |
-| `VINVDS` | VDS |
-| `VINVIS` | VIS |
-| `VINManufacturer` | Hersteller |
-| `VINCountry` | Herkunftsland |
-| `VINModel` | Modell/Baureihe |
-| `VINModelCode` | Modellcode |
-| `VINBody` | Karosserie |
-| `VINSteering` | Links-/Rechtslenker |
-| `VINDrive` | Antriebsart |
-| `VINPower` | Leistung |
-| `VINVariant` | Modellvariante |
-| `VINRestraint` | Rückhaltesystem |
-| `VINModelYear` | Modelljahr |
-| `VINPlant` | Produktionswerk |
-| `VINSerialNumber` | Seriennummer |
-| `VINCheckDigit` | Prüfzeichen und Prüfergebnis |
-
-Alle Variablen sind reine Strings ohne Icon und ohne spezielle Darstellung.
-
-## 10. Beispiel
-
-Beispiel-FIN:
-
-```text
-TMBJC7NY5NF017514
-```
-
-Zerlegung:
-
-```text
-TMB | J | C | 7 | NY | 5 | N | F | 000001
-```
-
-Aktuelle Interpretation des Moduls:
-
-```text
-Hersteller: Škoda Auto
-Land: Tschechien
-Modell: Enyaq
-Karosserie: SUV
-Lenkung: Linkslenker
-Antrieb: Heckantrieb
-Leistung: 150 kW / 204 PS
-Variante: Enyaq iV 80
-Modelljahr: 2022
-Produktionswerk: Mladá Boleslav
-Seriennummer: 000001
-Prüfzeichen: 5, Berechnung: 5
-```
-
-## 11. Was bewusst nicht aus der FIN abgeleitet wird
-
-Ohne zusätzliche offizielle Fahrzeugdaten werden insbesondere nicht behauptet:
-
+Beispiele:
 - exaktes Produktionsdatum
 - Erstzulassung
 - PR-Codes oder komplette Werksausstattung
@@ -305,18 +131,3 @@ Ohne zusätzliche offizielle Fahrzeugdaten werden insbesondere nicht behauptet:
 - offene Rückrufe oder TPI-Anwendbarkeit
 
 Diese Informationen können zu einer FIN in Hersteller- oder Servicedatenbanken vorhanden sein, sind aber nicht zwangsläufig direkt in den 17 FIN-Zeichen codiert.
-
-## 12. Quellen und Pflege der Zuordnungen
-
-Die Tabellen werden konservativ gepflegt. Bevor ein neuer Code aufgenommen wird, sollte er möglichst durch mehrere voneinander unabhängige Hinweise oder durch eine belastbare Hersteller-/Typgenehmigungsquelle bestätigt werden.
-
-Aktuell verwendete bzw. zur Gegenprüfung geeignete Quellen sind unter anderem:
-
-- Škoda Storyboard – **What can VIN codes tell you?**  
-  <https://www.skoda-storyboard.com/en/skoda-world/what-can-vin-codes-tell-you/>
-- Škoda Storyboard – technische Daten der Enyaq-Antriebsvarianten  
-  <https://www.skoda-storyboard.com/en/press-kits/skoda-enyaq-iv-press-kit-2/electric-powertrain-three-battery-sizes-and-five-power-levels/>
-- 49 CFR § 565.15 – Referenz für Modelljahrcodes und das gewichtete Prüfzifferverfahren  
-  <https://www.law.cornell.edu/cfr/text/49/565.15>
-- Škoda-/Rettungs- und Typgenehmigungsunterlagen sowie öffentlich zugängliche nationale Typgenehmigungsdaten für die Gegenprüfung einzelner Baureihen
-- dokumentierte reale FIN-Beispiele aus Fahrzeugforen nur ergänzend; solche Beispiele werden nicht allein als Herstellerbeleg behandelt
