@@ -6,6 +6,7 @@ trait MySkodaPublicApiVariablesTrait
 {
     private function ensurePublicApiVariables(): void
     {
+        $initialInformation = $this->Translate('Not retrieved yet');
         $definitions = [
             $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode')),
             $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0)),
@@ -44,14 +45,14 @@ trait MySkodaPublicApiVariablesTrait
                 ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ])),
-            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1300, []),
-            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1310, []),
-            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1320, []),
-            $this->variable('APISupportedFeatures', 'API supported features', VARIABLETYPE_STRING, 1330, []),
-            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1340, []),
-            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1350, []),
-            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1360, []),
-            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, [])
+            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1300, [], $initialInformation),
+            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1310, [], $initialInformation),
+            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1320, [], $initialInformation),
+            $this->variable('APISupportedFeatures', 'API supported features', VARIABLETYPE_STRING, 1330, [], $initialInformation),
+            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1340, [], $initialInformation),
+            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1350, [], $initialInformation),
+            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1360, [], $initialInformation),
+            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, [], $initialInformation)
         ];
 
         foreach ($definitions as $definition) {
@@ -70,6 +71,7 @@ trait MySkodaPublicApiVariablesTrait
         if ($vehicle === []) {
             return;
         }
+        $errors = isset($raw['errors']) && is_array($raw['errors']) ? $raw['errors'] : [];
 
         $this->setPublicApiString('VIN', $this->path($vehicle, 'vin', null));
         $this->setPublicApiString('TargetTemperatureUnit', $this->path($vehicle, 'airConditioning.targetTemperature.unit', null));
@@ -83,18 +85,61 @@ trait MySkodaPublicApiVariablesTrait
         $this->setPublicApiString('BatteryCareMode', $this->path($vehicle, 'charging.settings.chargingCareMode', null), true);
         $this->setPublicApiString('MaxChargeCurrentAC', $this->path($vehicle, 'charging.settings.maxChargeCurrentAc', null), true);
         $this->setPublicApiInteger('RemainingChargingTime', $this->path($vehicle, 'charging.status.remainingTimeToFullyChargedInMinutes', null));
-        $this->setPublicApiString('APICarType', $this->path($vehicle, 'fuelStatus.carType', ''), true);
-        $this->setPublicApiString('APIPrimaryEngineType', $this->path($vehicle, 'fuelStatus.primaryEngineRange.engineType', ''), true);
-        $this->setPublicApiString('APISecondaryEngineType', $this->path($vehicle, 'fuelStatus.secondaryEngineRange.engineType', ''), true);
-        $this->setPublicApiString('APIAuxiliaryHeatingState', $this->path($vehicle, 'auxiliaryHeating.state', ''), true);
-        $this->setPublicApiString('APIActiveVentilationState', $this->path($vehicle, 'activeVentilation.state', ''), true);
-        $this->setPublicApiString('APIAvailableChargeModes', $this->publicApiValueAsString($this->path($vehicle, 'charging.settings.availableChargeModes', [])));
+        $this->setPublicApiInformation('APICarType', $this->path($vehicle, 'fuelStatus.carType', null), $errors, 'FUEL_STATUS', true);
+        $this->setPublicApiInformation('APIPrimaryEngineType', $this->path($vehicle, 'fuelStatus.primaryEngineRange.engineType', null), $errors, 'FUEL_STATUS', true);
+        $this->setPublicApiInformation('APISecondaryEngineType', $this->path($vehicle, 'fuelStatus.secondaryEngineRange.engineType', null), $errors, 'FUEL_STATUS', true);
+        $this->setPublicApiInformation('APIAuxiliaryHeatingState', $this->path($vehicle, 'auxiliaryHeating.state', null), $errors, 'AUXILIARY_HEATING', true);
+        $this->setPublicApiInformation('APIActiveVentilationState', $this->path($vehicle, 'activeVentilation.state', null), $errors, 'ACTIVE_VENTILATION', true);
+        $this->setPublicApiInformation('APIAvailableChargeModes', $this->path($vehicle, 'charging.settings.availableChargeModes', null), $errors, 'CHARGING');
 
-        $operations = $this->path($vehicle, 'operations', $this->path($vehicle, 'remoteOperations', []));
-        $this->setPublicApiString('APIRemoteOperations', $this->publicApiValueAsString($operations));
+        $operations = $this->path($vehicle, 'operations', $this->path($vehicle, 'remoteOperations', null));
+        $this->setPublicApiInformation('APIRemoteOperations', $operations);
+        $this->setPublicApiInformation('APISupportedFeatures', $this->publicApiSupportedFeatures($vehicle, $errors));
+    }
 
-        $errors = isset($raw['errors']) && is_array($raw['errors']) ? $raw['errors'] : [];
-        $this->setPublicApiString('APISupportedFeatures', $this->publicApiSupportedFeatures($vehicle, $errors));
+    /**
+     * Stores API information or an explicit, localized explanation in the value.
+     * An absent field alone never establishes that a feature is unsupported.
+     * Only exact component error types from this response refine that reason.
+     */
+    private function setPublicApiInformation(
+        string $ident,
+        mixed $value,
+        array $errors = [],
+        string $errorPrefix = '',
+        bool $uppercase = false
+    ): void {
+        if (@$this->GetIDForIdent($ident) === false) {
+            return;
+        }
+
+        $text = $this->publicApiValueAsString($value);
+        if ($text !== '') {
+            $this->SetValue($ident, $uppercase ? strtoupper($text) : $text);
+            return;
+        }
+
+        $reason = $value === []
+            ? $this->Translate('No entries')
+            : $this->Translate('Not provided');
+        if ($errorPrefix !== '') {
+            $types = [];
+            foreach ($errors as $error) {
+                if (is_array($error) && is_string($error['type'] ?? null)) {
+                    $types[strtoupper(trim($error['type']))] = true;
+                }
+            }
+
+            if (isset($types[$errorPrefix . '_UNSUPPORTED'])) {
+                $reason = $this->Translate('Unsupported');
+            } elseif (isset($types[$errorPrefix . '_DISABLED'])) {
+                $reason = $this->Translate('Service disabled');
+            } elseif (isset($types[$errorPrefix . '_UNAVAILABLE'])) {
+                $reason = $this->Translate('Temporarily unavailable');
+            }
+        }
+
+        $this->SetValue($ident, $reason);
     }
 
     private function setPublicApiString(string $ident, mixed $value, bool $uppercase = false): void
@@ -197,10 +242,10 @@ trait MySkodaPublicApiVariablesTrait
         ];
 
         foreach ($errors as $error) {
-            if (!is_array($error)) {
+            if (!is_array($error) || !is_string($error['type'] ?? null)) {
                 continue;
             }
-            $type = strtoupper(trim((string) ($error['type'] ?? '')));
+            $type = strtoupper(trim($error['type']));
             if ($type === '' || str_ends_with($type, '_UNSUPPORTED')) {
                 continue;
             }

@@ -213,7 +213,12 @@
       "Unsupported": "Nicht unterstützt",
       "Invalid": "Ungültig",
       "Error": "Fehler",
-      "Other": "Andere"
+      "Other": "Andere",
+      "Not retrieved yet": "Noch nicht abgefragt",
+      "Not provided": "Nicht geliefert",
+      "No entries": "Keine Einträge",
+      "Service disabled": "Dienst deaktiviert",
+      "Temporarily unavailable": "Vorübergehend nicht verfügbar"
     }
   }
 }

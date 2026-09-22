@@ -22,3 +22,5 @@ jobs:
         run: python3 tests/validate_structure.py
       - name: Test runtime invariants without network
         run: php -d disable_functions=curl_init,curl_exec tests/runtime_invariants.php
+      - name: Test API information values without network
+        run: php -d disable_functions=curl_init,curl_exec tests/api_information_values.php
