@@ -1,69 +1,8 @@
 # MySkoda
 
-MySkoda ist ein Gerätemodul für Symcon zur Anbindung eines Škoda-Fahrzeugs an die offizielle **MyŠkoda Public API**. Eine Instanz repräsentiert genau eine FIN/VIN.
+MySkoda ist ein Gerätemodul für Symcon. Eine Instanz repräsentiert ein Fahrzeug anhand seiner FIN/VIN und verwendet ausschließlich die offizielle MyŠkoda Public API. Das Modul legt eigene Variablen und bei verfügbarer Render-URL ein Bildmedium unterhalb der Instanz an.
 
-Der tatsächlich verfügbare Funktionsumfang hängt vom Fahrzeug, dessen Ausstattung und den für das Fahrzeug freigegebenen MyŠkoda-Diensten ab. Das Modul wurde praktisch mit einem **Škoda Enyaq 80** getestet.
-
-## 1. Funktionsumfang
-
-- Fahrzeugdaten über FIN/VIN und MySkoda API-Key
-- zyklischer Abruf mit einstellbarem Abfrageintervall
-- Berücksichtigung der von der API gelieferten Rate-Limit-Informationen und `Retry-After`
-- stabile Variablen-Idents als Schnittstelle für Skripte und weitere Module
-- optionale Detail-, Standort- und Diagnosevariablen
-- lokale FIN/VIN-Entschlüsselung in der Instanzkonfiguration
-- optionale FIN-Informationsvariablen als reine String-Variablen
-- automatische Prüfung der öffentlichen OpenAPI-Definition auf neue, noch nicht integrierte API-Operationen
-- optionale API-Key-Ablaufwarnung per Symcon-Mitteilung
-- optionale Archivierung ausgewählter Fahrzeugwerte nach ausdrücklicher Aktivierung
-
-Die Details zur FIN/VIN-Zerlegung, den ausgewerteten Stellen, bekannten Škoda-Codes, Prüflogik und Grenzen der Interpretation sind in [README_FIN_VIN.md](README_FIN_VIN.md) dokumentiert.
-
-> **Hinweis zur FIN/VIN-Entschlüsselung:** Die daraus abgeleiteten Angaben sind keine offiziellen Fahrzeugstammdaten von Škoda. Sie werden anhand öffentlich verfügbarer Informationen interpretiert und können bei einzelnen Fahrzeugen unvollständig oder mehrdeutig sein.
-
-### Lesbare Fahrzeugdaten
-
-Soweit vom Fahrzeug und der API geliefert, werden unter anderem verarbeitet:
-
-- Ladezustand, Reichweite und Kilometerstand
-- Verriegelungs-, Tür- und Fensterstatus
-- Ladeleistung, Ladelimit und Lademodus
-- Klimatisierungsstatus und Solltemperatur
-- Fahrzeugname und Kennzeichen
-- Standortdaten
-- weitere Status- und Diagnoseinformationen
-
-### Steuerbare Funktionen
-
-Soweit vom Fahrzeug und der API unterstützt:
-
-- Laden starten und stoppen
-- Ladelimit ändern
-- Lademodus ändern
-- Klimatisierung starten und stoppen
-- Solltemperatur der Klimatisierung ändern
-- Ladeprofile über die öffentliche PHP-Schnittstelle aktualisieren
-- Standheizung über die öffentliche PHP-Schnittstelle starten und stoppen
-- aktive Lüftung über die öffentliche PHP-Schnittstelle starten und stoppen
-
-Die Remote-Steuerung kann in der Instanz vollständig deaktiviert werden.
-
-### In der App verfügbar, aber nicht in der Public API
-
-Folgende Funktionen sind in der MySkoda App verfügbar, aber im offiziellen **Public-API-Vertrag 1.0.0** derzeit nicht enthalten und können deshalb vom Modul nicht bereitgestellt werden:
-
-- Camping Mode
-- Klima-Timer / Abfahrtszeiten
-- intelligentes Heizen / intelligentes Klimatisieren
-- Scheibenheizung im Zusammenhang mit der Klimatisierung
-- Sitzheizung Fahrer und Beifahrer im Zusammenhang mit der Klimatisierung
-- Battery Care Mode
-- reduzierte AC-Ladeleistung / Begrenzung des AC-Ladestroms
-- automatisches Entriegeln des AC-Ladekabels
-
-Das Modul verwendet für Fahrzeugdaten und Remote-Funktionen ausschließlich die offizielle MyŠkoda Public API. Private oder interne App-Schnittstellen werden nicht verwendet.
-
-## 2. Voraussetzungen
+## 1. Voraussetzungen
 
 - Symcon **8.1 oder neuer**
 - 17-stellige FIN/VIN
@@ -74,10 +13,9 @@ Das Modul verwendet für Fahrzeugdaten und Remote-Funktionen ausschließlich die
 - Archive Control nur bei Verwendung der optionalen Archivierung
 
 Der API-Key wird in der MySkoda App unter **Profil → Smart Home → Schlüssel erstellen** erzeugt.
+Dort kann auch die FIN/VIN (Fahrzeug-Fahrgestellnummer) kopiert werden.
 
-Offizielle API-Dokumentation: <https://public.api.connect.skoda-auto.cz/docs>
-
-## 3. Installation
+## 2. Installation
 
 ### Module Store
 
@@ -93,196 +31,243 @@ https://github.com/taloriko/IPSymconMySkoda
 
 Anschließend kann unter **Instanz hinzufügen** eine Instanz **MySkoda** angelegt werden.
 
-## 4. Einrichten der Instanz
+## 3. Konfiguration
 
-1. In der MySkoda App einen API-Key erstellen.
-2. Eine Instanz **MySkoda** anlegen.
-3. FIN/VIN und API-Token eintragen.
-4. Konfiguration übernehmen.
-5. Über **Verbindung testen** prüfen, ob Fahrzeugdaten empfangen werden.
-6. Optional FIN-Informationsvariablen, Archivierung, Mitteilungen sowie Detail- und Diagnosevariablen aktivieren.
-
-Das Standard-Abfrageintervall beträgt **300 Sekunden**. In der Konfiguration sind Werte von **180 bis 3600 Sekunden** möglich.
-
-## 5. Konfiguration
-
-| Einstellung | Funktion | Standard |
-|---|---|---:|
-| FIN / VIN | 17-stellige Fahrzeug-Identifikationsnummer | leer |
-| FIN-Informationsvariablen | legt die lokal entschlüsselten FIN-Informationen als String-Variablen an | aus |
-| API-Token | MyŠkoda Public API-Key | leer |
-| Abfrageintervall | automatischer Fahrzeugabruf in Sekunden | 300 s |
-| Remote-Steuerung | erlaubt die vom Modul bereitgestellten Remote-Befehle | an |
-| Klima ohne externe Stromversorgung | erlaubt Klimatisierung ohne angeschlossene externe Stromversorgung | an |
-| S-PIN | wird für die Standheizung verwendet | leer |
-| Fahrzeugdaten archivieren | richtet das Logging ausgewählter Fahrzeugwerte einmalig ein | aus |
-| API-Key-Ablaufwarnung | sendet bei höchstens 30 Tagen Restlaufzeit eine Mitteilung | aus |
-| Visualisierung für Mitteilungen | Zielinstanz für Symcon-Mitteilungen | keine |
-| Detail-/Diagnosevariablen | legt zusätzliche Status- und Diagnosevariablen an | aus |
-
-Die Schaltflächen in der Konfiguration ermöglichen zusätzlich:
-
-- **Verbindung testen**
-- **Jetzt aktualisieren**
-- **Mitteilung testen**
-- **API-Definition neu laden**
-- **Fahrzeugbilder diagnostizieren**
-- **Fahrzeugbild aktualisieren**
-- **Public-API-Daten diagnostizieren**
-
-## 6. Statusvariablen und Darstellungen
-
-Das Modul legt ausschließlich eigene Variablen unterhalb der MySkoda-Instanz an. Es werden keine Dummy-Instanzen, Kategorien oder Links erzeugt.
-
-Vorhandene Variablen bleiben benutzerverwaltet. Namen, Positionen und andere benutzerseitig veränderbare Objekteigenschaften werden bei späteren Aktualisierungen nicht fortlaufend überschrieben.
-
-### 6.1 Standard-Datenpunkte
-
-| Ident | Deutsche Anzeige | Typ | Bedienbar | Beschreibung |
-|---|---|---|---:|---|
-| `StateOfCharge` | Ladezustand | Integer | Nein | Batterieladezustand in Prozent |
-| `Range` | Reichweite | Integer | Nein | verbleibende Reichweite in km |
-| `Mileage` | Kilometerstand | Integer | Nein | Kilometerstand |
-| `Locked` | Verriegelt | Boolean | Nein | Verriegelungsstatus |
-| `DoorsOpen` | Türen offen | Boolean | Nein | mindestens eine Tür offen |
-| `WindowsOpen` | Fenster offen | Boolean | Nein | mindestens ein Fenster offen |
-| `Charging` | Laden | Boolean | Ja | Laden starten/stoppen bzw. aktueller Ladezustand |
-| `ChargePower` | Ladeleistung | Float | Nein | aktuelle Ladeleistung |
-| `TargetSOC` | Ladelimit | Integer | Ja | 50 bis 100 % in 10-%-Schritten |
-| `ChargeMode` | Lademodus | Integer | Ja | vom Fahrzeug unterstützter Lademodus |
-| `Climate` | Klimatisierung | Boolean | Ja | Klimatisierung starten/stoppen bzw. aktueller Zustand |
-| `TargetTemperature` | Solltemperatur | Float | Ja | 16 bis 30 °C in 0,5-°C-Schritten |
-| `ApiKeyWarning` | API-Key Warnung | Boolean | Nein | API-Key läuft innerhalb von 30 Tagen ab |
-| `NewApiFeatures` | Neue API-Funktionen | Integer | Nein | Anzahl unbekannter Operationen der aktuellen OpenAPI-Definition |
-| `LastUpdate` | Letzte Aktualisierung | Integer | Nein | Zeitpunkt des letzten erfolgreichen Fahrzeugabrufs |
-
-### 6.2 Optionale FIN-Informationsvariablen
-
-Wenn **FIN-Informationsvariablen anlegen** aktiviert wird, legt das Modul die entschlüsselten FIN-Daten als einfache String-Variablen an. Es werden keine Icons, Profile oder besonderen Darstellungen verwendet.
-
-Die Variablen werden bei der Erstanlage und anschließend nur bei Änderung der konfigurierten FIN aktualisiert. Der normale zyklische Fahrzeugabruf verändert sie nicht. Bereits angelegte FIN-Variablen bleiben beim späteren Deaktivieren der Option bestehen.
-
-Die genaue Liste der FIN-Variablen und deren Bedeutung ist in [README_FIN_VIN.md](README_FIN_VIN.md) beschrieben.
-
-### 6.3 Optionale Detail- und Diagnosevariablen
-
-Bei aktivierter Option **Detail- und Diagnosevariablen anlegen** werden zusätzliche Status- und Diagnosevariablen angelegt, unter anderem Fahrzeugname, Kennzeichen, Kofferraum-/Haubenstatus, Ladeinformationen, Standortdaten, API-Restkontingent, `PendingCommands` und `CommandStatus`.
-
-Einmal angelegte Detailvariablen werden beim Deaktivieren der Option nicht gelöscht.
-
-### 6.4 Profile und Darstellungen
-
-Das Modul verwendet die nativen Darstellungen von Symcon. Es werden keine benutzerdefinierten Variablenprofile angelegt.
-
-Der Lademodus wird nur gesendet, wenn er in der vom Fahrzeug gemeldeten Liste `charging.settings.availableChargeModes` enthalten ist.
-
-## 7. Befehlslogik für Remote-Befehle
-
-Bei den über Variablen bedienbaren Remote-Funktionen wird der gewünschte Wert beim Absenden sofort lokal angezeigt.
-
-Während der synchronen HTTP-Anfrage wird der betroffene Datenpunkt als Pending geführt. Danach gilt:
-
-- **erfolgreiche 2xx-Antwort**: Der gewünschte Wert bleibt gesetzt und Pending wird beendet.
-- **Fehlerantwort oder Übertragungsfehler**: Der vorherige lokale Wert wird wiederhergestellt und Pending wird beendet.
-
-Der normale zyklische Fahrzeugabruf läuft unabhängig davon weiter. Liefert das Portal später einen anderen Fahrzeugzustand, wird dieser beim regulären Abruf übernommen.
-
-`PendingCommands` zeigt die Anzahl der aktuell laufenden Befehlsanfragen. `CommandStatus` zeigt das Ergebnis des letzten Befehls. Bei einem Fehler wird zusätzlich der von API oder Transport gelieferte Fehlertext ausgegeben.
-
-## 8. API-Diagnose und neue API-Funktionen
-
-Nach einer erfolgreichen Fahrzeugabfrage prüft das Modul zusätzlich die öffentliche OpenAPI-Definition der MyŠkoda Public API. Die Definition wird intern bis zu 24 Stunden zwischengespeichert.
-
-`NewApiFeatures` zeigt die Anzahl der API-Operationen, die der aktuellen Modulversion noch nicht bekannt sind:
-
-- `0` – keine unbekannte Operation erkannt
-- `> 0` – die öffentliche API enthält zusätzliche, noch nicht integrierte Operationen
-
-Neue Operationen werden nicht automatisch als Variablen oder Befehle angelegt.
-
-## 9. Archivierung
-
-Die Archivierung ist standardmäßig **aus** und wird nur nach ausdrücklicher Aktivierung eingerichtet.
-
-Einmalig werden folgende Variablen für das Logging im Archive Control aktiviert:
-
-- `StateOfCharge` – Ladezustand
-- `TargetSOC` – Ladelimit
-- `ChargePower` – Ladeleistung
-- `Mileage` – Kilometerstand
-
-Der Kilometerstand wird als Zähler eingerichtet. Werte `<= 0` werden nicht übernommen. Nach der erstmaligen Einrichtung verändert das Modul spätere Benutzeranpassungen im Archive Control nicht mehr.
-
-## 10. Visualisierung
-
-Die vom Modul angelegten Variablen können direkt in den Symcon-Visualisierungen verwendet werden.
-
-Für eine zusätzliche Fahrzeugdarstellung kann optional das separate Modul [IPSymconEVTile](https://github.com/taloriko/IPSymconEVTile) verwendet werden. MySkoda selbst legt keine zusätzliche Objektstruktur für die Visualisierung an.
-
-## 11. PHP-Befehlsreferenz
-
-In den Beispielen ist `12345` die Instanz-ID der MySkoda-Instanz.
-
-| Befehl | Rückgabe | Funktion |
+| Eigenschaft | Einstellung | Standard / Verhalten |
 |---|---|---|
-| `MSKODA_Update(12345);` | `void` | Fahrzeugdaten sofort aktualisieren |
-| `MSKODA_TestConnection(12345);` | `bool` | Verbindung und Fahrzeugabruf testen |
-| `MSKODA_GetRawData(12345);` | `string` | letzte vollständige Fahrzeugantwort als JSON ausgeben |
-| `MSKODA_GetVINData(12345);` | `string` | lokal entschlüsselte FIN-Informationen als JSON ausgeben |
-| `MSKODA_GetChargingProfiles(12345);` | `string` | Ladeprofile aus den zuletzt empfangenen Fahrzeugdaten als JSON ausgeben |
-| `MSKODA_GetRemoteOperations(12345);` | `string` | vom Fahrzeug gemeldete Remote-Operationen als JSON ausgeben |
-| `MSKODA_SetChargingLimit(12345, 80);` | `bool` | Ladelimit setzen |
-| `MSKODA_SetChargeMode(12345, 'MANUAL');` | `bool` | Lademodus setzen |
-| `MSKODA_UpdateChargingProfile(12345, 1, $profileJson);` | `bool` | Ladeprofil aktualisieren |
-| `MSKODA_StartAuxiliaryHeating(12345, 22.0, 30, 'HEATING');` | `bool` | Standheizung starten; S-PIN erforderlich |
-| `MSKODA_StopAuxiliaryHeating(12345);` | `bool` | Standheizung stoppen |
-| `MSKODA_StartVentilation(12345);` | `bool` | aktive Lüftung starten |
-| `MSKODA_StopVentilation(12345);` | `bool` | aktive Lüftung stoppen |
-| `MSKODA_RefreshApiDefinition(12345);` | `bool` | öffentliche OpenAPI-Definition neu laden |
-| `MSKODA_TestNotification(12345);` | `bool` | konfigurierte Symcon-Mitteilung testen |
-| `MSKODA_DiagnoseVehicleImages(12345);` | `string` | Diagnose der von der API gelieferten Fahrzeugbilder |
-| `MSKODA_RefreshVehicleImage(12345);` | `bool` | lokales Fahrzeugbild aktualisieren |
-| `MSKODA_DiagnosePublicApiData(12345);` | `string` | genutzte und ungenutzte Public-API-Datenpfade ausgeben |
+| `VIN` | FIN/VIN | leer; 17 Zeichen, keine Buchstaben I, O oder Q |
+| `APIToken` | API-Token | leer |
+| `Interval` | Abfrageintervall | 300 s; Formularbereich 180–3600 s; Laufzeitminimum 180 s |
+| `EnableRemote` | Remote-Steuerung | an; steuert Bedienaktionen und die Ausführung von Remote-Befehlen |
+| `ClimateWithoutExternalPower` | Klima ohne externe Versorgung | an; wird beim Klimastart nur mitgesendet, wenn das Fahrzeug das entsprechende API-Feld liefert |
+| `SPIN` | S-PIN | leer; für den Start der Standheizung |
+| `ShowDetails` | Detail- und Diagnosevariablen anlegen | aus; legt bei Aktivierung fehlende Detailvariablen an |
+| `CreateVINVariables` | FIN-Informationsvariablen anlegen | aus; legt 17 lokale String-Variablen an |
+| `EnableChargingHistory` | Fahrzeugdaten archivieren | aus; richtet Archivierung einmalig ein |
+| `NotifyKeyExpiry` | API-Key-Ablaufwarnung | aus; Mitteilung bei höchstens 30 Tagen Restlaufzeit |
+| `NotificationInstanceID` | Visualisierung für Mitteilungen | 0; Kachel-Visualisierung oder WebFront auswählen |
 
-## 12. Instanzstatus und Fehlersuche
+Die Schaltflächen **Jetzt aktualisieren**, **Fahrzeugbild aktualisieren**, **Rohe Fahrzeugantwort anzeigen** und **Mitteilung testen** gehören zum Benutzerbetrieb. **Jetzt aktualisieren** ist an die verfügbare Verbindung gebunden und verwendet denselben Fahrzeugabruf wie der zyklische Timer. Es umgeht die API-Wartezeiten nicht.
 
-| Code | Bedeutung |
+## 4. Variablen und Objektverwaltung
+
+Die Standardkonfiguration erzeugt 37 Variablen. `ShowDetails` ergänzt 18 Variablen; `CreateVINVariables` ergänzt 17 Variablen. Bei Aktivierung beider Optionen entstehen 72 Variablen. Das optionale Bildmedium zählt nicht als Variable.
+
+Fehlende Variablen erhalten bei der Anlage den vorgesehenen Datentyp, Namen, die Position und Darstellung. Existierende Variablen werden nicht erneut registriert, umbenannt, umsortiert oder automatisch gelöscht. Auch ein nachträglich geleertes Icon bleibt leer. Bei einer Typ- oder Ident-Kollision wird eine Meldung protokolliert; das betroffene Objekt wird nicht automatisch ersetzt.
+
+Das Ausschalten einer Erstellungsoption löscht vorhandene Variablen nicht. Laufende API-Werte werden weiterhin aktualisiert. FIN-Variablen werden nur bei ihrer Erstanlage und bei Änderung der konfigurierten FIN beschrieben. Remote-Bedienaktionen folgen weiterhin `EnableRemote`.
+
+Die folgenden Positionen sind die Vorgaben für die **Erstanlage**. Reihenfolge: API-Fahrzeugdaten, abgeleitete Betriebsdaten, lokale FIN-Daten, zusätzliche API-Fahrzeuginformationen. **Standard** bedeutet immer angelegt; **Detail** erfordert `ShowDetails` für die Anlage. Die Anzeige ist deutsch, während die Idents als Programmierschnittstelle unverändert bleiben.
+
+### 4.1 API-Fahrzeugdaten
+
+API-Pfade beziehen sich, sofern nicht anders angegeben, auf `vehicle` der Fahrzeugantwort.
+
+| Position | Ident | Anzeige | Typ | Anlage | Quelle / Bedeutung |
+|---:|---|---|---|---|---|
+| 10 | `VehicleName` | Fahrzeugname | String | Detail | `name` |
+| 20 | `LicensePlate` | Kennzeichen | String | Detail | `licensePlate` |
+| 30 | `VIN` | FIN / VIN | String | Standard | `vin` aus der API, nicht aus der lokalen Interpretation |
+| 100 | `ClimateState` | Klimastatus | String | Standard | `airConditioning.state` |
+| 110 | `AirConditioningAtUnlock` | Klimatisierung beim Entriegeln | Boolean | Standard | `airConditioning.airConditioningAtUnlock` |
+| 120 | `TargetTemperature` | Solltemperatur | Float | Standard | `airConditioning.targetTemperature.value`; bedienbar |
+| 130 | `TargetTemperatureUnit` | Einheit Solltemperatur | String | Standard | `airConditioning.targetTemperature.unit` |
+| 140 | `WindowHeatingEnabled` | Scheibenheizung aktiviert | Boolean | Standard | `airConditioning.windowHeating.enabled` |
+| 150 | `WindowHeatingFront` | Frontscheibenheizung | String | Standard | `airConditioning.windowHeating.front` |
+| 160 | `WindowHeatingRear` | Heckscheibenheizung | String | Standard | `airConditioning.windowHeating.rear` |
+| 200 | `AtSavedChargingLocation` | An gespeichertem Ladeort | Boolean | Standard | `charging.isVehicleInSavedLocation` |
+| 210 | `AutoUnlockPlug` | Automatische Steckerentriegelung | String | Standard | `charging.settings.autoUnlockPlugWhenCharged` |
+| 230 | `BatteryCareTargetSOC` | Battery-Care-Ziel | Integer | Standard | `charging.settings.batteryCareModeTargetValueInPercent`; % |
+| 240 | `BatteryCareMode` | Battery Care Mode | String | Standard | `charging.settings.chargingCareMode` |
+| 250 | `MaxChargeCurrentAC` | Maximaler AC-Ladestrom | String | Standard | `charging.settings.maxChargeCurrentAc`; Status, kein Amperewert |
+| 260 | `ChargeMode` | Lademodus | Integer | Standard | Index für `charging.settings.preferredChargeMode`; bedienbar |
+| 270 | `TargetSOC` | Ladelimit | Integer | Standard | `charging.settings.targetStateOfChargeInPercent`; %; bedienbar |
+| 280 | `Range` | Reichweite | Integer | Standard | `charging.status.battery.remainingCruisingRangeInMeters`; gerundet in km |
+| 290 | `StateOfCharge` | Ladezustand | Integer | Standard | `charging.status.battery.stateOfChargeInPercent`; % |
+| 300 | `ChargePower` | Ladeleistung | Float | Standard | `charging.status.chargePowerInKw`; mit 1000 multipliziert, gespeichert in W |
+| 310 | `FullyChargedAt` | Vollgeladen um | Integer | Detail | `charging.status.fullyChargedAt`; Unix-Zeitstempel |
+| 320 | `RemainingChargingTime` | Restladezeit | Integer | Standard | `charging.status.remainingTimeToFullyChargedInMinutes`; min |
+| 330 | `ChargingState` | Ladestatus | String | Detail | `charging.status.state` |
+| 340 | `ChargeType` | Ladeart | String | Detail | `charging.status.chargeType` |
+| 400 | `Mileage` | Kilometerstand | Integer | Standard | `odometer.mileageInKm`; gerundet, nur Werte größer 0 übernommen |
+| 600 | `ParkingState` | Parkstatus | String | Detail | `parkingPosition.state` |
+| 610 | `ParkingAddress` | Parkadresse | String | Detail | `parkingPosition.formattedAddress` |
+| 620 | `Latitude` | Breitengrad | Float | Detail | `parkingPosition.gpsCoordinates.latitude`; auch flache Koordinaten und `lat` werden gelesen |
+| 630 | `Longitude` | Längengrad | Float | Detail | `parkingPosition.gpsCoordinates.longitude`; auch flache Koordinaten, `lon` und `lng` werden gelesen |
+| 700 | `DoorsLocked` | Türverriegelungsstatus | String | Standard | `status.overall.doorsLocked` |
+| 710 | `Locked` | Fahrzeugverriegelungsstatus | String | Standard | `status.overall.locked` |
+| 720 | `DoorsOpen` | Türen | String | Standard | `status.overall.doors` |
+| 730 | `WindowsOpen` | Fenster | String | Standard | `status.overall.windows` |
+| 740 | `LightsOn` | Licht | String | Detail | `status.overall.lights` |
+| 750 | `ReliableLockStatus` | Zuverlässiger Verriegelungsstatus | String | Standard | `status.overall.reliableLockStatus` |
+| 800 | `SunroofOpen` | Schiebedach | String | Detail | `status.detail.sunroof` |
+| 810 | `TrunkOpen` | Kofferraum | String | Detail | `status.detail.trunk` |
+| 820 | `BonnetOpen` | Motorhaube | String | Detail | `status.detail.bonnet` |
+
+Die drei Verriegelungswerte werden getrennt aus den jeweiligen Feldern gelesen. Es findet keine Priorisierung oder gegenseitige Ersetzung statt.
+
+### 4.2 Abgeleitete Betriebs- und Diagnosewerte
+
+| Position | Ident | Anzeige | Typ | Anlage | Bedeutung |
+|---:|---|---|---|---|---|
+| 900 | `Climate` | Klimatisierung | Boolean | Standard | aus Klimastatus abgeleitet; Start/Stopp bedienbar |
+| 910 | `Charging` | Laden | Boolean | Standard | wahr bei `CHARGING` oder `CONSERVING`; Start/Stopp bedienbar |
+| 920 | `LastUpdate` | Letzte Aktualisierung | Integer | Standard | lokaler Unix-Zeitstempel des letzten erfolgreichen Fahrzeugabrufs |
+| 930 | `ApiKeyWarning` | API-Key Warnung | Boolean | Standard | bekanntes Ablaufdatum erreicht oder höchstens 30 Tage entfernt |
+| 940 | `ApiKeyExpiresAtVar` | API-Key gültig bis | Integer | Detail | aus HTTP-Header `x-api-key-expires-at`; Unix-Zeitstempel |
+| 950 | `RequestsRemaining` | Verbleibende API-Anfragen | Integer | Detail | gespeichertes Restkontingent beim Fahrzeugabruf |
+| 960 | `PartialErrors` | API-Teilfehler | String | Detail | `errors` der Antwort als JSON; leer, wenn keine Teilfehler vorliegen |
+| 980 | `PendingCommands` | Ausstehende Befehle | Integer | Detail | Anzahl aktuell laufender Befehlsanfragen |
+| 990 | `CommandStatus` | Befehlsstatus | String | Detail | Übertragungsstatus oder Ergebnis des letzten Befehls |
+
+`Climate` ist wahr bei `ON`, `COOLING`, `HEATING`, `HEATING_AUXILIARY` oder `VENTILATION`. Für genaue Zustandsauswertungen ist `ClimateState` zu verwenden. Entsprechend ist `ChargingState` aussagekräftiger als der Bedien-Boolean `Charging`.
+
+### 4.3 Lokale FIN-Informationen
+
+Die 17 optionalen String-Variablen liegen auf den Positionen 1100 bis 1260. Ihre vollständige Tabelle und der lokale Decoder sind in [README_FIN_VIN.md](README_FIN_VIN.md) beschrieben. Sie verwenden keine Icons oder besonderen Darstellungen.
+
+### 4.4 Zusätzliche API-Fahrzeuginformationen
+
+Diese Standardvariablen sind reine Strings ohne Icons und besondere Darstellungen. Sie werden aus den zuletzt empfangenen API-Daten aktualisiert; sie sind nicht Teil der lokalen FIN-Interpretation.
+
+| Position | Ident | Anzeige | Typ | Anlage | Quelle / Bedeutung |
+|---:|---|---|---|---|---|
+| 1300 | `APICarType` | API Fahrzeugtyp | String | Standard | `fuelStatus.carType` |
+| 1310 | `APIPrimaryEngineType` | API Primärer Antriebstyp | String | Standard | `fuelStatus.primaryEngineRange.engineType` |
+| 1320 | `APISecondaryEngineType` | API Sekundärer Antriebstyp | String | Standard | `fuelStatus.secondaryEngineRange.engineType` |
+| 1330 | `APISupportedFeatures` | API Unterstützte Funktionen | String | Standard | aus vorhandenen API-Bereichen und bestimmten Fehlerkategorien abgeleitet |
+| 1340 | `APIAvailableChargeModes` | API Verfügbare Lademodi | String | Standard | `charging.settings.availableChargeModes` als kompakte Liste |
+| 1350 | `APIRemoteOperations` | API Remote-Operationen | String | Standard | `operations`, alternativ `remoteOperations`; Liste oder JSON |
+| 1360 | `APIAuxiliaryHeatingState` | API Standheizungsstatus | String | Standard | `auxiliaryHeating.state` |
+| 1370 | `APIActiveVentilationState` | API Lüftungsstatus | String | Standard | `activeVentilation.state` |
+
+`APISupportedFeatures` ist ein abgeleiteter Hinweis auf API-Bereiche und kein vollständiger Ausstattungsnachweis. Scalar-Listen werden mit Kommas verbunden, strukturierte Werte als JSON ausgegeben.
+
+## 5. Zustände und Einheiten
+
+| Datenpunktgruppe | In den Darstellungen hinterlegte Werte |
+|---|---|
+| Türen, Fenster, Schiebedach, Kofferraum, Motorhaube | `CLOSED`, `OPEN`, `UNSUPPORTED`, `UNKNOWN` |
+| `DoorsLocked`, `Locked` | `YES`, `NO`, `OPENED`, `TRUNK_OPENED`, `UNKNOWN` |
+| `ReliableLockStatus` | `LOCKED`, `UNLOCKED`, `UNKNOWN` |
+| Licht und Scheibenheizung | `OFF`, `ON`, `INVALID`, `UNKNOWN` |
+| `ClimateState` | `OFF`, `ON`, `COOLING`, `HEATING`, `HEATING_AUXILIARY`, `VENTILATION`, `INVALID`, `UNKNOWN` |
+| `ChargingState` | `READY_FOR_CHARGING`, `CHARGING`, `CONSERVING`, `CONNECT_CABLE`, `CHARGING_INTERRUPTED`, `ERROR`, `UNKNOWN` |
+| `ParkingState` | `PARKED`, `IN_MOTION`, `MOVING`, `DRIVING`, `UNKNOWN` |
+| `ChargeType` | `AC`, `DC`, `OFF` |
+| `BatteryCareMode` | `ACTIVATED`, `DEACTIVATED`, `ACTIVE`, `INACTIVE`, `UNKNOWN` |
+| `MaxChargeCurrentAC` | `MAXIMUM`, `REDUCED`, `UNKNOWN` |
+| `AutoUnlockPlug` | `OFF`, `ON`, `PERMANENT`, `UNKNOWN` |
+
+Dies sind die im Modul bekannten Anzeigeoptionen, keine Zusage, dass ein Fahrzeug alle Werte liefert. Unbekannte String-Zustände bleiben als API-Wert auswertbar. API-Enums werden überwiegend in Großschreibung übernommen.
+
+Fehlende Daten sind nicht mit einem bestätigten Fahrzeugzustand gleichzusetzen: Einige Statusfelder erhalten `UNKNOWN`, manche numerischen Werte behalten den letzten Wert, andere Detailwerte werden leer oder 0 gesetzt. Zahlen und Booleans haben keine allgemeine Unbekannt-Darstellung. Für die Einordnung sind `LastUpdate`, `PartialErrors` und die Rohantwort maßgeblich. `LastUpdate` ist nicht der Erfassungszeitpunkt im Fahrzeug. Die API-Felder `carCapturedTimestamp` erhalten keine eigenen Variablen.
+
+Die Bedienoberfläche für Temperatur ist auf 16–30 °C in Schritten von 0,5 eingestellt. Der Code übernimmt die API-Temperatureinheit für Befehle, rechnet den Zahlenwert jedoch nicht zwischen Celsius und Fahrenheit um. Ein durchgängiger Fahrenheit-Betrieb wird damit nicht zugesichert.
+
+### Lademodus
+
+| Variablenwert | API-Wert |
 |---:|---|
-| `102` | verbunden / bereit |
-| `104` | inaktiv |
-| `201` | FIN oder API-Token fehlt oder ist ungültig |
-| `202` | API- oder Verbindungsfehler |
-| `203` | Rate-Limit / Wartezeit aktiv |
+| 0 | `MANUAL` |
+| 1 | `TIMER` |
+| 2 | `TIMER_CHARGING_WITH_CLIMATISATION` |
+| 3 | `PREFERRED_CHARGING_TIMES` |
+| 4 | `ONLY_OWN_CURRENT` |
+| 5 | `IMMEDIATE_DISCHARGING` |
+| 6 | `HOME_STORAGE_CHARGING` |
+| 7 | `OTHER` |
+| 8 | `OFF` |
 
-Typische Prüfungen:
+Die interne Verfügbarkeitsliste enthält die gemeldeten `availableChargeModes` und den aktuellen Modus. Ist diese Liste nicht leer, werden andere Modi abgelehnt. Bei leerer Liste kann jeder im Modul bekannte Modus angefragt werden; über die tatsächliche Annahme entscheidet die API. Ein unbekannter API-Modus wird im Debug protokolliert und ersetzt den bisherigen Integer-Wert nicht.
 
-- FIN/VIN und API-Token prüfen und anschließend **Verbindung testen** ausführen.
-- Bei Status `203` das API-Rate-Limit bzw. die Wartezeit abwarten.
-- Bei zurückspringenden Befehlswerten `CommandStatus` prüfen.
-- Standortdaten sind nur verfügbar, wenn die MyŠkoda Public API sie für Fahrzeug und Benutzer liefert.
+## 6. Remote-Befehle
 
-Bei Fehlermeldungen niemals API-Key, S-PIN oder vollständige FIN öffentlich veröffentlichen.
+Die Bedienvariablen sind `Charging`, `TargetSOC`, `ChargeMode`, `Climate` und `TargetTemperature`. `EnableRemote` muss eingeschaltet sein. Andere Fahrzeugwerte sind nicht bedienbar.
 
-## 13. Datenschutz und externe Dienste
+Beim Absenden wird der gewünschte Wert lokal gesetzt. Während der synchronen HTTP-Anfrage wird Pending geführt. Eine erfolgreiche 2xx-Antwort beendet Pending und hält den gewünschten Wert. Bei Übertragungsfehlern, Fehlerantworten oder Ausnahmen wird der vorherige Wert wiederhergestellt. Der nächste reguläre Fahrzeugabruf übernimmt wieder den Zustand der API. **Eine erfolgreiche Übertragung ist keine Bestätigung der Ausführung im Fahrzeug.**
 
-Das Modul kommuniziert direkt mit der offiziellen MyŠkoda Public API. Für fahrzeugbezogene API-Anfragen werden die konfigurierte FIN/VIN und der API-Token verwendet.
+Ist die Klimatisierung aus, wird die Solltemperatur nur lokal vorgemerkt und beim nächsten Start mitgeschickt. Solange die Klimatisierung aus bleibt, überschreibt die Abfrage diese Auswahl nicht. Ein erfolgreicher eigener Klimastart oder eine als aktiv gemeldete Klimatisierung hebt die Vormerkung auf. Bei aktiver Klimatisierung sendet eine Temperaturänderung erneut den Klimastart mit Zieltemperatur.
 
-Remote-Befehle werden ausschließlich durch eine Benutzeraktion, ein Benutzerskript oder einen Aufruf der dokumentierten öffentlichen Modulmethoden ausgelöst.
+Das Ladelimit wird auf 50–100 % begrenzt. Die Oberfläche verwendet 10-%-Schritte; programmgesteuerte Werte werden nicht zusätzlich auf dieses Raster gerundet. Entsprechendes gilt für das Temperatur-Raster der Oberfläche.
 
-Zusätzlich lädt das Modul die öffentliche OpenAPI-Definition von Škoda. Für diesen Abruf wird kein Fahrzeug-API-Key übertragen.
+Beispiel für die Bedienung über eine Variablenaktion:
 
-Das Fahrzeugbild wird ausschließlich von der URL geladen, die von der offiziellen MyŠkoda Public API für das konfigurierte Fahrzeug geliefert wird, und lokal in Symcon gespeichert.
+```php
+$instanceId = 12345;
+$climateId = IPS_GetObjectIDByIdent('Climate', $instanceId);
+RequestAction($climateId, true);
+```
 
-FIN/VIN, API-Token und optional die S-PIN werden als Instanzkonfiguration in Symcon gespeichert. Zugangsdaten sollten nicht in Fehlermeldungen, Screenshots oder öffentlichen Supportbeiträgen veröffentlicht werden.
+Battery Care Mode, reduzierter AC-Ladestrom, automatische Steckerentriegelung und Scheibenheizung sind im Modul lesbare Zustände. Dafür stellt das Modul keine Schreibmethoden bereit. Klima-Timer und Sitzheizungssteuerung gehören ebenfalls nicht zur implementierten Bedienung.
 
-## 14. Versionshistorie
+## 7. Öffentliche PHP-Funktionen
 
-Die Versionshistorie der Library befindet sich in [CHANGELOG.md](../CHANGELOG.md).
+`12345` steht in den Beispielen für die Instanz-ID. JSON-Rückgaben sind Strings. Ein `bool`-Ergebnis für einen Remote-Befehl bezieht sich auf die Übertragung beziehungsweise API-Annahme.
 
-## 15. Lizenz und Markenhinweis
+| Aufruf | Rückgabe | Funktion |
+|---|---|---|
+| `MSKODA_Update(12345);` | void | regulären Fahrzeugabruf ausführen; Rate-Limit beachten |
+| `MSKODA_GetLastVehicleResponseRaw(12345);` | string | unveränderten Body der letzten ausgeführten Fahrzeugabfrage lesen |
+| `MSKODA_GetVINData(12345);` | string | lokal interpretierte FIN-Daten als JSON lesen |
+| `MSKODA_GetChargingProfiles(12345);` | string | kompletten gespeicherten Bereich `vehicle.chargingProfiles` als JSON lesen |
+| `MSKODA_GetRemoteOperations(12345);` | string | gespeicherte Remote-Operationen als JSON lesen |
+| `MSKODA_SetChargingLimit(12345, 80);` | bool | Ladelimit setzen |
+| `MSKODA_SetChargeMode(12345, 'MANUAL');` | bool | bekannten und erlaubten Lademodus setzen |
+| `MSKODA_UpdateChargingProfile(12345, 1, $profileJson);` | bool | Ladeprofil anhand des OpenAPI-Schemas übertragen |
+| `MSKODA_StartAuxiliaryHeating(12345, 22.0, 30, 'HEATING');` | bool | Standheizung starten; Temperatur, Dauer in Minuten, Modus; S-PIN erforderlich |
+| `MSKODA_StopAuxiliaryHeating(12345);` | bool | Standheizung stoppen |
+| `MSKODA_StartVentilation(12345);` | bool | aktive Lüftung starten |
+| `MSKODA_StopVentilation(12345);` | bool | aktive Lüftung stoppen |
+| `MSKODA_TestNotification(12345);` | bool | Mitteilung an die konfigurierte Visualisierung senden |
+| `MSKODA_RefreshVehicleImage(12345);` | bool | Bild aus der gespeicherten Render-URL erneut laden |
 
-Copyright © 2026 **taloriko**.
+Die lesenden Cache-Funktionen verursachen keine Fahrzeuganfrage. `RefreshVehicleImage` lädt das Bild, ruft jedoch nicht selbst neue Fahrzeugdaten ab. `StartAuxiliaryHeating` verwendet standardmäßig 22 °C, 30 Minuten und `HEATING`; als weiterer Modus wird `VENTILATION` gesendet. Die Dauer wird in Sekunden übertragen, mindestens 60 Sekunden.
 
-Dieses Projekt wird unter der [MIT-Lizenz](../LICENSE) veröffentlicht.
+## 8. API-Anbindung und Zwischenspeicher
 
-Dieses Projekt ist eine unabhängige Community-Integration und weder ein offizielles Produkt von Škoda Auto a.s. noch mit Škoda Auto a.s. verbunden oder von Škoda Auto a.s. unterstützt.
+API-Basis: `https://public.api.connect.skoda-auto.cz`. Fahrzeugabruf: `GET /api/v1/vehicles/{vin}`. Fahrzeuganfragen tragen den Header `X-API-Key`. Verbindungsaufbau und Gesamtanfrage haben Zeitlimits von 5 beziehungsweise 25 Sekunden.
+
+Die öffentliche OpenAPI-Definition `/v3/api-docs` wird ohne Fahrzeug-Key abgerufen und bis zu 24 Stunden zwischengespeichert. Sie wird für Operationen und Payloads von Ladelimit, Lademodus und Ladeprofilen benötigt. Bei fehlgeschlagenem Neuladen wird ein vorhandener Cache weiterverwendet. Fehlt eine erforderliche Operation, wird der entsprechende Befehl abgelehnt.
+
+`RawData` enthält den zuletzt gültigen Arbeitsdatensatz. `LastVehicleResponseRaw` enthält getrennt davon den ursprünglichen Body der letzten tatsächlich ausgeführten Fahrzeugabfrage, auch bei einer späteren Fehlerantwort. Eine wegen Wartezeit gar nicht ausgeführte Anfrage ersetzt diesen Body nicht.
+
+Das Modul berücksichtigt numerische Rate-Limit-Header und numerisches `Retry-After`. Für zyklische Abrufe werden zwei verbleibende Anfragen reserviert; Befehle können das verbleibende Kontingent nutzen, solange keine Wartezeit aktiv ist. Der sichtbare Restkontingent-Wert wird beim Fahrzeugabruf aktualisiert und ist keine sekundengenau synchronisierte Kontingentanzeige.
+
+## 9. Fahrzeugbild
+
+`vehicle.renderUrl` liefert die Bildquelle. Das Modul akzeptiert HTTPS-URLs des Hosts `iprenders.blob.core.windows.net`, prüft das Bildformat und lehnt Inhalte über 15 MB nach dem Download ab. PNG, JPEG, GIF und ICO werden erkannt. Ein API-Key wird beim Bildabruf nicht mitgesendet.
+
+Das Bildmedium trägt den Ident `VehicleImage` und erhält bei seiner Anlage Position 40. Spätere Namens- oder Positionsänderungen bleiben erhalten. Ein verfügbares Bild mit passendem FIN-Fingerprint wird bei regulären Abrufen wiederverwendet. Bei neuer FIN oder manueller Bildaktualisierung wird der Inhalt des bestehenden Mediums erneuert, soweit eine gültige Render-URL und ein erfolgreicher Download vorliegen.
+
+## 10. Archivierung und Mitteilungen
+
+Archivierung ist standardmäßig aus. Nach ausdrücklicher Aktivierung richtet das Modul einmalig Logging für `StateOfCharge`, `TargetSOC`, `ChargePower` und `Mileage` ein. `Mileage` wird als Zähler mit Ignorieren von Nullwerten konfiguriert; nötigenfalls wird eine Neuberechnung angestoßen. Nach dieser Einrichtung bleiben spätere Archive-Control-Anpassungen unberührt. Ein Ausschalten der Erstellungsoption deaktiviert bestehendes Logging nicht automatisch.
+
+Bei bekanntem API-Key-Ablaufdatum wird ab 30 Tagen Restlaufzeit gewarnt, auch wenn der Key bereits abgelaufen ist. Mitteilungen sind optional. Eine erfolgreich gesendete Ablaufwarnung wird für dasselbe Ablaufdatum nicht erneut gesendet; fehlgeschlagene Versuche werden höchstens einmal pro Tag wiederholt. **Mitteilung testen** ist davon unabhängig.
+
+## 11. Diagnose und Status
+
+| Status | Bedeutung |
+|---:|---|
+| 102 | verbunden / bereit |
+| 104 | als inaktiv definierter Status |
+| 201 | FIN/VIN oder API-Token fehlt beziehungsweise ist ungültig |
+| 202 | Verbindungs- oder API-Fehler |
+| 203 | Rate-Limit beziehungsweise Wartezeit aktiv |
+
+Für eine Fehlerprüfung sind Instanzstatus, Verbindungsrückmeldung, `PartialErrors`, `PendingCommands`, `CommandStatus` und der Symcon-Debugbereich vorgesehen. Die Anzeige **Rohe Fahrzeugantwort anzeigen** formatiert gültiges JSON zur Lesbarkeit. Die zugehörige PHP-Funktion liefert dagegen den exakten gespeicherten Text.
+
+Bei API-Störungen ist der letzte gültige Arbeitsdatensatz weiterhin vorhanden; er ist dadurch nicht automatisch aktuell. Fehlende Fahrzeugbereiche oder nicht bestätigte Zustände dürfen nicht als erfolgreich ausgeführter Befehl interpretiert werden.
+
+## 12. Datenschutz und externe Dienste
+
+Das Modul kommuniziert für Fahrzeugdaten und Remote-Befehle mit der Public API, für das Schema mit deren OpenAPI-Endpunkt und für das Bild mit dem oben genannten Renderhost. Die FIN-Interpretation benötigt keinen externen Dienst. FIN/VIN und API-Key werden für Fahrzeuganfragen verwendet; die S-PIN ist Bestandteil des Standheizungs-Startbefehls.
+
+Die reguläre HTTP-Debugzeile maskiert die konfigurierte FIN im Anfragepfad. Das ist keine vollständige Anonymisierung aller möglichen Fehlertexte. Insbesondere ist die rohe Fahrzeugantwort bewusst **nicht anonymisiert**. Sie kann Kennzeichen, FIN, Standort, Render-URLs und weitere persönliche Daten enthalten. Vor Weitergabe müssen diese Angaben geprüft und entfernt werden. API-Key und S-PIN dürfen niemals veröffentlicht werden.
+
+## 13. Quellcode und Tests
+
+Die Modulklasse in [module.php](module.php) kombiniert die Zuständigkeiten für Konfiguration, Variablen, HTTP, Remote-Befehle, OpenAPI, Bilder, Mitteilungen, Archivierung und FIN-Interpretation. Normale zusätzliche API-Daten werden in [PublicApiVariablesTrait.php](src/PublicApiVariablesTrait.php) verarbeitet.
+
+[Automatisierte Prüfungen und Fahrzeug-Testnachweise](../tests/README_new.md) ergänzen die [externe Public-API-Dokumentation](https://public.api.connect.skoda-auto.cz/docs). Automatisierte Prüfungen ersetzen keinen Test in einer realen Symcon-Instanz mit dem jeweiligen Fahrzeug.
