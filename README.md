@@ -1,19 +1,18 @@
 # MySkoda für Symcon
 
-MySkoda bindet Škoda-Fahrzeuge über die offizielle **MyŠkoda Public API** in Symcon ein. Das Modul stellt Fahrzeug-, Lade-, Klima-, Standort- und Diagnosedaten als Symcon-Variablen bereit und unterstützt – soweit von Fahrzeug und API freigegeben – ausgewählte Remote-Funktionen.
+MySkoda verbindet ein Škoda-Fahrzeug über die offizielle MyŠkoda Public API mit Symcon. Eine Instanz steht für eine FIN/VIN. Fahrzeugdaten werden zyklisch abgefragt und über feste Variablen-Idents bereitgestellt. Die tatsächlich verfügbaren Daten und Befehle hängen vom Fahrzeug und den freigeschalteten Diensten ab.
 
 ## Funktionen
 
-- Fahrzeugdaten über FIN/VIN und MySkoda API-Key
+- Fahrzeugdaten aus der Offiziellen Skoda API (über FIN/VIN und MySkoda API-Key)
 - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
 - Ladeleistung, Ladelimit und Lademodus
 - Klimatisierung und Solltemperatur
 - Laden starten/stoppen, Ladelimit und Lademodus ändern
-- Klimatisierung, Standheizung und Lüftung steuern, soweit unterstützt
+- Klimatisierung, Standheizung und Lüftung steuern
 - optionale Detail-, Standort- und Diagnosevariablen
 - optionale Archivierung ausgewählter Fahrzeugwerte
 - API-Key-Ablaufwarnung per Symcon-Mitteilung
-- Prüfung der öffentlichen OpenAPI-Definition auf neue API-Funktionen
 - lokales Fahrzeugbild aus der von MyŠkoda gelieferten Render-URL
 - lokale FIN/VIN-Entschlüsselung mit optionalen String-Variablen
 
@@ -32,6 +31,7 @@ Die FIN/VIN-Entschlüsselung ist bewusst nur eine Zusatzfunktion. Details zur Ze
 - Archive Control nur bei Verwendung der optionalen Archivierung
 
 Der API-Key wird in der MySkoda App unter **Profil → Smart Home → Schlüssel erstellen** erzeugt.
+ - Dort steht auch die FIN/VIN (Fahrzeug-Fahrgestellnummer) zum kopieren
 
 Offizielle API-Dokumentation: <https://public.api.connect.skoda-auto.cz/docs>
 
@@ -63,14 +63,13 @@ Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul berücksichtigt d
 
 ## Verhalten bei Remote-Befehlen
 
-Schreibbare Werte werden beim Absenden sofort lokal gesetzt. Während der HTTP-Anfrage wird der Datenpunkt intern als Pending geführt.
+Beim Senden eines Befehls wird der gewünschte Wert sofort angezeigt. Während der HTTP-Anfrage ist der Befehl ausstehend. Eine erfolgreiche HTTP-Antwort beendet diesen Zustand und lässt den gewünschten Wert stehen. Bei Fehlern wird der vorherige Wert wiederhergestellt. Die reguläre Fahrzeugabfrage übernimmt anschließend wieder den API-Zustand.
 
-- Bei erfolgreicher 2xx-Antwort bleibt der gewünschte Wert gesetzt.
-- Bei Fehlerantwort oder Übertragungsfehler wird der vorherige Wert wiederhergestellt.
+**Die Annahme durch die API bestätigt nicht die tatsächliche Ausführung im Fahrzeug.** Die optionalen Variablen `PendingCommands` und `CommandStatus` zeigen Übertragung und Ergebnis an.
 
-Der normale zyklische Fahrzeugabruf läuft unabhängig davon weiter und übernimmt später wieder den vom Portal gemeldeten Fahrzeugzustand.
+Bei ausgeschalteter Klimatisierung wird eine gewählte Solltemperatur lokal vorgemerkt. Sie wird mit dem nächsten Klimastart gesendet. Ein externer Klimastart stellt die Übernahme der API-Solltemperatur wieder her. Bei bereits aktiver Klimatisierung wird die Temperaturänderung unmittelbar als Klimastart mit Zieltemperatur gesendet.
 
-Bei aktivierten Detail- und Diagnosevariablen zeigen `PendingCommands` und `CommandStatus` den aktuellen bzw. letzten Befehlsstatus.
+Battery Care Mode, maximaler AC-Ladestrom, automatische Steckerentriegelung und Scheibenheizungszustände werden, soweit geliefert, **gelesen**. Das Modul bietet dafür keine Schreibbefehle. Ein lesbarer Status ist nicht mit einer steuerbaren Funktion gleichzusetzen.
 
 ## In der App verfügbar, aber nicht in der Public API
 
