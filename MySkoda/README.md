@@ -238,7 +238,19 @@ Das Modul berücksichtigt numerische Rate-Limit-Header und numerisches `Retry-Af
 
 `vehicle.renderUrl` liefert die Bildquelle. Das Modul akzeptiert HTTPS-URLs des Hosts `iprenders.blob.core.windows.net`, prüft das Bildformat und lehnt Inhalte über 15 MB nach dem Download ab. PNG, JPEG, GIF und ICO werden erkannt. Ein API-Key wird beim Bildabruf nicht mitgesendet.
 
-Das Bildmedium trägt den Ident `VehicleImage` und erhält bei seiner Anlage Position 40. Spätere Namens- oder Positionsänderungen bleiben erhalten. Ein verfügbares Bild mit passendem FIN-Fingerprint wird bei regulären Abrufen wiederverwendet. Bei neuer FIN oder manueller Bildaktualisierung wird der Inhalt des bestehenden Mediums erneuert, soweit eine gültige Render-URL und ein erfolgreicher Download vorliegen.
+Das direkt von der Public API gelieferte Bildmedium trägt weiterhin den Ident `VehicleImage` und erhält bei seiner Anlage Position 40. Spätere Namens- oder Positionsänderungen bleiben erhalten. Ein verfügbares Bild mit passendem FIN-Fingerprint wird bei regulären Abrufen wiederverwendet. Bei neuer FIN oder manueller Bildaktualisierung wird der Inhalt des bestehenden Mediums erneuert, soweit eine gültige Render-URL und ein erfolgreicher Download vorliegen.
+
+Zusätzlich prüft das Modul bei dem von Škoda verwendeten `iprenders`-Namensschema die weiteren unmodifizierten Fahrzeugansichten. Ein zusätzliches Medium wird nur angelegt, wenn die abgeleitete URL tatsächlich ein gültiges Bild liefert:
+
+| Position | Ident | Ansicht |
+|---:|---|---|
+| 41 | `VehicleImageFront` | Außen vorn |
+| 42 | `VehicleImageRear` | Außen hinten |
+| 43 | `VehicleImageInteriorFront` | Innenraum vorn |
+| 44 | `VehicleImageInteriorSide` | Innenraum Seite |
+| 45 | `VehicleImageInteriorBoot` | Kofferraum |
+
+Die Außen-Seitenansicht ist bereits das reguläre `VehicleImage`, sofern sie wie derzeit von `vehicle.renderUrl` geliefert wird. MyŠkoda kennt daneben die Ansichten `HOME`, `CHARGING_LIGHT`, `CHARGING_DARK`, `PLUGGED_IN_LIGHT` und `PLUGGED_IN_DARK`. Diese sind zusammengesetzte App-Darstellungen aus dem Fahrzeugbild und zusätzlichen Layout- beziehungsweise Kabel-Overlays und werden deshalb nicht als eigenständige Fahrzeugmedien angelegt. Fehlende Zusatzansichten werden nach der ersten Prüfung nicht bei jedem regulären Fahrzeugabruf erneut angefragt; die Schaltfläche **Fahrzeugbild aktualisieren** prüft alle Varianten erneut.
 
 ## 10. Archivierung und Mitteilungen
 

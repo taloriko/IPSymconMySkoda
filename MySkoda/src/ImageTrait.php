@@ -7,6 +7,38 @@ trait MySkodaImageTrait
     private const VEHICLE_IMAGE_IDENT = 'VehicleImage';
     private const VEHICLE_IMAGE_NAME = 'Vehicle image';
     private const VEHICLE_IMAGE_MAX_BYTES = 15_000_000;
+    private const VEHICLE_IMAGE_VARIANTS = [
+        'EXTERIOR_FRONT' => [
+            'ident' => 'VehicleImageFront',
+            'name' => 'Vehicle image front',
+            'position' => 41,
+            'suffix' => '19201080dayvext_front1080.png'
+        ],
+        'EXTERIOR_REAR' => [
+            'ident' => 'VehicleImageRear',
+            'name' => 'Vehicle image rear',
+            'position' => 42,
+            'suffix' => '19201080dayvext_rear1080.png'
+        ],
+        'INTERIOR_FRONT' => [
+            'ident' => 'VehicleImageInteriorFront',
+            'name' => 'Vehicle image interior front',
+            'position' => 43,
+            'suffix' => '19201080studiovint_front1080.png'
+        ],
+        'INTERIOR_SIDE' => [
+            'ident' => 'VehicleImageInteriorSide',
+            'name' => 'Vehicle image interior side',
+            'position' => 44,
+            'suffix' => '19201080studiovint_side1080.png'
+        ],
+        'INTERIOR_BOOT' => [
+            'ident' => 'VehicleImageInteriorBoot',
+            'name' => 'Vehicle image interior boot',
+            'position' => 45,
+            'suffix' => '19201080studiovint_boot1080.png'
+        ]
+    ];
 
     public function RefreshVehicleImage(): bool
     {
@@ -24,25 +56,85 @@ trait MySkodaImageTrait
             $this->SendDebug('Vehicle image', 'Rejected unexpected render host.', 0);
             return false;
         }
-        $mediaId = $this->vehicleImageMediaId();
+
+        $primaryResult = $this->syncVehicleImageMedium(
+            self::VEHICLE_IMAGE_IDENT,
+            self::VEHICLE_IMAGE_NAME,
+            40,
+            $url,
+            'vehicle.renderUrl',
+            $force
+        );
+
+        $variantFingerprint = hash(
+            'sha256',
+            $this->vehicleImageFingerprint() . '|' . $url
+        );
+        $scanVariants = $force
+            || $variantFingerprint !== $this->ReadAttributeString('VehicleImageVariantsFingerprint');
+
+        if (!$scanVariants) {
+            return $primaryResult;
+        }
+
+        foreach ($this->derivedVehicleRenderUrls($url) as $viewType => $variant) {
+            $this->syncVehicleImageMedium(
+                $variant['ident'],
+                $variant['name'],
+                $variant['position'],
+                $variant['url'],
+                'vehicle.renderUrl:' . $viewType,
+                true
+            );
+        }
+
+        $this->WriteAttributeString('VehicleImageVariantsFingerprint', $variantFingerprint);
+        return $primaryResult;
+    }
+
+    private function syncVehicleImageMedium(
+        string $ident,
+        string $name,
+        int $position,
+        string $url,
+        string $sourceField,
+        bool $force
+    ): bool {
+        if (!$this->isAllowedVehicleImageUrl($url)) {
+            $this->SendDebug($ident, 'Rejected unexpected render host.', 0);
+            return false;
+        }
+
+        $mediaId = $this->vehicleImageMediaId($ident);
         if ($mediaId !== false && !$force && $this->vehicleImageBelongsToCurrentVehicle($mediaId)) {
             return true;
         }
+
         $download = $this->downloadVehicleImage($url);
         if ($download === null) {
             return false;
         }
+
         $created = false;
         if ($mediaId === false) {
             $mediaId = IPS_CreateMedia(1);
             $created = true;
             IPS_SetParent($mediaId, $this->InstanceID);
-            IPS_SetIdent($mediaId, self::VEHICLE_IMAGE_IDENT);
-            IPS_SetName($mediaId, $this->Translate(self::VEHICLE_IMAGE_NAME));
-            IPS_SetPosition($mediaId, 40);
+            IPS_SetIdent($mediaId, $ident);
+            IPS_SetName($mediaId, $this->Translate($name));
+            IPS_SetPosition($mediaId, $position);
         }
-        $fileName = 'myskoda_vehicle_' . $this->InstanceID . '.' . $download['extension'];
-        $filePath = IPS_GetKernelDir() . 'media' . DIRECTORY_SEPARATOR . $fileName;
+
+        $fileStem = $ident === self::VEHICLE_IMAGE_IDENT
+            ? 'myskoda_vehicle_' . $this->InstanceID
+            : 'myskoda_vehicle_' . $this->InstanceID . '_' . strtolower($ident);
+        $filePath = IPS_GetKernelDir()
+            . 'media'
+            . DIRECTORY_SEPARATOR
+            . $fileStem
+            . '.'
+            . $download['extension'];
+
         try {
             if (!IPS_SetMediaFile($mediaId, $filePath, false)) {
                 throw new RuntimeException('Could not assign the local media file.');
@@ -52,7 +144,7 @@ trait MySkodaImageTrait
             }
             IPS_SetInfo($mediaId, json_encode([
                 'managedBy' => 'MySkoda',
-                'sourceField' => 'vehicle.renderUrl',
+                'sourceField' => $sourceField,
                 'vehicleFingerprint' => $this->vehicleImageFingerprint(),
                 'updatedAt' => time()
             ], JSON_UNESCAPED_SLASHES) ?: '');
@@ -61,11 +153,69 @@ trait MySkodaImageTrait
             if ($created && IPS_MediaExists($mediaId)) {
                 IPS_DeleteMedia($mediaId, true);
             }
-            $this->SendDebug('Vehicle image', $error->getMessage(), 0);
+            $this->SendDebug($ident, $error->getMessage(), 0);
             return false;
         }
-        $this->SendDebug('Vehicle image', sprintf('VehicleImage updated (%d bytes).', strlen($download['content'])), 0);
+
+        $this->SendDebug(
+            $ident,
+            sprintf('%s updated (%d bytes).', $ident, strlen($download['content'])),
+            0
+        );
         return true;
+    }
+
+    private function derivedVehicleRenderUrls(string $sourceUrl): array
+    {
+        $result = [];
+        foreach (self::VEHICLE_IMAGE_VARIANTS as $viewType => $definition) {
+            $url = $this->deriveVehicleRenderUrl($sourceUrl, $definition['suffix']);
+            if ($url === '' || $url === $sourceUrl) {
+                continue;
+            }
+            $result[$viewType] = [
+                'ident' => $definition['ident'],
+                'name' => $definition['name'],
+                'position' => $definition['position'],
+                'url' => $url
+            ];
+        }
+        return $result;
+    }
+
+    private function deriveVehicleRenderUrl(string $sourceUrl, string $suffix): string
+    {
+        $parts = parse_url($sourceUrl);
+        if (!is_array($parts)) {
+            return '';
+        }
+
+        $path = (string) ($parts['path'] ?? '');
+        if ($path === '') {
+            return '';
+        }
+
+        $pattern = '~-19201080(?:dayvext_(?:front|side|rear)|studiovint_(?:front|side|boot))1080\.png$~i';
+        $newPath = preg_replace($pattern, '-' . $suffix, $path, 1, $count);
+        if (!is_string($newPath) || $count !== 1) {
+            return '';
+        }
+
+        $scheme = (string) ($parts['scheme'] ?? '');
+        $host = (string) ($parts['host'] ?? '');
+        if ($scheme === '' || $host === '') {
+            return '';
+        }
+
+        $url = $scheme . '://' . $host;
+        if (isset($parts['port'])) {
+            $url .= ':' . (int) $parts['port'];
+        }
+        $url .= $newPath;
+        if (isset($parts['query']) && $parts['query'] !== '') {
+            $url .= '?' . $parts['query'];
+        }
+        return $url;
     }
 
     private function vehicleRenderUrl(): string
@@ -78,20 +228,20 @@ trait MySkodaImageTrait
         return is_string($url) ? trim($url) : '';
     }
 
-    private function vehicleImageMediaId(): int|false
+    private function vehicleImageMediaId(string $ident = self::VEHICLE_IMAGE_IDENT): int|false
     {
-        $objectId = @IPS_GetObjectIDByIdent(self::VEHICLE_IMAGE_IDENT, $this->InstanceID);
+        $objectId = @IPS_GetObjectIDByIdent($ident, $this->InstanceID);
         if ($objectId === false) {
             return false;
         }
         $object = IPS_GetObject($objectId);
         if ((int) ($object['ObjectType'] ?? -1) !== 5) {
-            $this->SendDebug('Vehicle image', 'Object ident VehicleImage already exists but is not a media object.', 0);
+            $this->SendDebug($ident, 'Object ident already exists but is not a media object.', 0);
             return false;
         }
         $media = IPS_GetMedia($objectId);
         if ((int) ($media['MediaType'] ?? -1) !== 1) {
-            $this->SendDebug('Vehicle image', 'Object ident VehicleImage already exists but is not an image medium.', 0);
+            $this->SendDebug($ident, 'Object ident already exists but is not an image medium.', 0);
             return false;
         }
         return $objectId;

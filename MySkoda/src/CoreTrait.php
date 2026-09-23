@@ -35,6 +35,7 @@ trait MySkodaCoreTrait
         $this->RegisterAttributeString('ConnectionState', 'not_configured');
         $this->RegisterAttributeString('ConnectionMessage', '');
         $this->RegisterAttributeString('ConfigFingerprint', '');
+        $this->RegisterAttributeString('VehicleImageVariantsFingerprint', '');
         $this->RegisterAttributeInteger('KeyExpiryNotifiedFor', 0);
         $this->RegisterAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
         $this->RegisterAttributeBoolean('ChargingHistoryInitialized', false);
