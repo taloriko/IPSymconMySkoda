@@ -1,184 +1,184 @@
 {
   "elements": [
     {
-      "type": "ExpansionPanel",
-      "caption": "Connection",
-      "expanded": true,
-      "items": [
-        {
-          "type": "Label",
-          "caption": "Vehicle data is read directly from the official MySkoda Public API."
+          "type": "ExpansionPanel",
+          "caption": "Connection",
+          "expanded": true,
+          "items": [
+            {
+              "type": "Label",
+              "caption": "Vehicle data is read directly from the official MySkoda Public API."
+            },
+            {
+              "type": "Label",
+              "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key. Then enter VIN and API token here."
+            },
+            {
+              "type": "ValidationTextBox",
+              "name": "VIN",
+              "caption": "VIN",
+              "validate": "^[A-HJ-NPR-Z0-9]{17}$"
+            },
+            {
+              "type": "PasswordTextBox",
+              "name": "APIToken",
+              "caption": "API token"
+            },
+            {
+              "type": "Label",
+              "name": "ConnectionFeedback",
+              "caption": "Connection has not been tested yet.",
+              "bold": true
+            }
+          ]
         },
-        {
-          "type": "Label",
-          "caption": "Create the API key in the MySkoda app: Profile -> Smart Home -> Create Key. Then enter VIN and API token here."
+    {
+          "type": "ExpansionPanel",
+          "caption": "Polling and control",
+          "expanded": false,
+          "items": [
+            {
+              "type": "NumberSpinner",
+              "name": "Interval",
+              "caption": "Polling interval",
+              "suffix": " s",
+              "minimum": 180,
+              "maximum": 3600
+            },
+            {
+              "type": "Label",
+              "caption": "Recommended: 300 seconds. The module observes the rate-limit information returned by the API."
+            },
+            {"type": "CheckBox", "name": "EnableRemote", "caption": "Enable remote control"},
+            {"type": "CheckBox", "name": "ClimateWithoutExternalPower", "caption": "Allow air conditioning without external power"},
+            {"type": "PasswordTextBox", "name": "SPIN", "caption": "S-PIN (optional, auxiliary heating only)"}
+          ]
         },
-        {
-          "type": "ValidationTextBox",
-          "name": "VIN",
-          "caption": "VIN",
-          "validate": "^[A-HJ-NPR-Z0-9]{17}$"
+    {
+          "type": "ExpansionPanel",
+          "caption": "Archiving",
+          "expanded": false,
+          "items": [
+            {"type": "CheckBox", "name": "EnableChargingHistory", "caption": "Archive vehicle data"},
+            {
+              "type": "Label",
+              "caption": "After explicit activation, archive logging is configured once for state of charge, charging limit, charging power and mileage. Later Archive Control changes remain untouched."
+            }
+          ]
         },
-        {
-          "type": "PasswordTextBox",
-          "name": "APIToken",
-          "caption": "API token"
+    {
+          "type": "ExpansionPanel",
+          "caption": "Notifications",
+          "expanded": false,
+          "items": [
+            {
+              "type": "CheckBox",
+              "name": "NotifyKeyExpiry",
+              "caption": "Send a Symcon notification when the API key has 30 days or less remaining"
+            },
+            {
+              "type": "SelectInstance",
+              "name": "NotificationInstanceID",
+              "caption": "Visualization for notifications",
+              "validModules": []
+            },
+            {
+              "type": "Label",
+              "name": "NotificationTargetFeedback",
+              "caption": "Select a Tile Visualization or WebFront for notifications."
+            },
+            {
+              "type": "Button",
+              "caption": "Test notification",
+              "onClick": "echo MSKODA_TestNotification($id) ? 'Mitteilung gesendet.' : 'Mitteilung konnte nicht gesendet werden. Ausgewählte Visualisierung und registrierte Mobilgeräte prüfen.';"
+            }
+          ]
         },
-        {
-          "type": "Label",
-          "name": "ConnectionFeedback",
-          "caption": "Connection has not been tested yet.",
-          "bold": true
+    {
+          "type": "ExpansionPanel",
+          "caption": "Additional data",
+          "expanded": false,
+          "items": [
+            {"type": "CheckBox", "name": "ShowDetails", "caption": "Create detail and diagnostic variables"},
+            {"type": "Label", "caption": "Missing detail variables are created when enabled. Existing variables are kept when this option is disabled."}
+          ]
+        },
+    {
+          "type": "ExpansionPanel",
+          "caption": "VIN / FIN decoding",
+          "expanded": false,
+          "items": [
+            {
+              "type": "Label",
+              "name": "VINDecodeStructure",
+              "caption": "Enter and apply a valid VIN to decode it.",
+              "bold": true
+            },
+            {
+              "type": "RowLayout",
+              "items": [
+                {"type": "Label", "name": "VINCodeManufacturer", "caption": "", "bold": true, "width": "120px"},
+                {"type": "Label", "name": "VINDecodeManufacturer", "caption": "Manufacturer"}
+              ]
+            },
+            {
+              "type": "RowLayout",
+              "items": [
+                {"type": "Label", "name": "VINCodeModel", "caption": "", "bold": true, "width": "120px"},
+                {"type": "Label", "name": "VINDecodeModel", "caption": "Model"}
+              ]
+            },
+            {
+              "type": "RowLayout",
+              "items": [
+                {"type": "Label", "name": "VINCodeDrive", "caption": "", "bold": true, "width": "120px"},
+                {"type": "Label", "name": "VINDecodeDrive", "caption": "Drive"}
+              ]
+            },
+            {
+              "type": "RowLayout",
+              "items": [
+                {"type": "Label", "name": "VINCodeProduction", "caption": "", "bold": true, "width": "120px"},
+                {"type": "Label", "name": "VINDecodeProduction", "caption": "Production"}
+              ]
+            },
+            {
+              "type": "RowLayout",
+              "items": [
+                {"type": "Label", "name": "VINCodeRestraint", "caption": "", "bold": true, "width": "120px"},
+                {"type": "Label", "name": "VINDecodeRestraint", "caption": "Restraint system"}
+              ]
+            },
+            {
+              "type": "RowLayout",
+              "items": [
+                {"type": "Label", "name": "VINCodeValidation", "caption": "", "bold": true, "width": "120px"},
+                {"type": "Label", "name": "VINDecodeValidation", "caption": "Check digit"}
+              ]
+            },
+            {
+              "type": "Label",
+              "caption": "The VIN interpretation is not an official Skoda data source. It is derived from publicly available information and may be incomplete or ambiguous for individual vehicles."
+            },
+            {
+              "type": "CheckBox",
+              "name": "CreateVINVariables",
+              "caption": "Create VIN information variables"
+            },
+            {
+              "type": "Label",
+              "caption": "VIN information is decoded locally from the VIN. Variables are updated only when they are created or the configured VIN changes."
+            }
+          ]
+        },
+    {
+          "type": "ExpansionPanel",
+          "caption": "Help and documentation",
+          "expanded": false,
+          "items": [
+            {"type": "Label", "caption": "Documentation and source code: github.com/taloriko/IPSymconMySkoda"}
+          ]
         }
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "VIN / FIN decoding",
-      "expanded": true,
-      "items": [
-        {
-          "type": "Label",
-          "name": "VINDecodeStructure",
-          "caption": "Enter and apply a valid VIN to decode it.",
-          "bold": true
-        },
-        {
-          "type": "RowLayout",
-          "items": [
-            {"type": "Label", "name": "VINCodeManufacturer", "caption": "", "bold": true, "width": "120px"},
-            {"type": "Label", "name": "VINDecodeManufacturer", "caption": "Manufacturer"}
-          ]
-        },
-        {
-          "type": "RowLayout",
-          "items": [
-            {"type": "Label", "name": "VINCodeModel", "caption": "", "bold": true, "width": "120px"},
-            {"type": "Label", "name": "VINDecodeModel", "caption": "Model"}
-          ]
-        },
-        {
-          "type": "RowLayout",
-          "items": [
-            {"type": "Label", "name": "VINCodeDrive", "caption": "", "bold": true, "width": "120px"},
-            {"type": "Label", "name": "VINDecodeDrive", "caption": "Drive"}
-          ]
-        },
-        {
-          "type": "RowLayout",
-          "items": [
-            {"type": "Label", "name": "VINCodeProduction", "caption": "", "bold": true, "width": "120px"},
-            {"type": "Label", "name": "VINDecodeProduction", "caption": "Production"}
-          ]
-        },
-        {
-          "type": "RowLayout",
-          "items": [
-            {"type": "Label", "name": "VINCodeRestraint", "caption": "", "bold": true, "width": "120px"},
-            {"type": "Label", "name": "VINDecodeRestraint", "caption": "Restraint system"}
-          ]
-        },
-        {
-          "type": "RowLayout",
-          "items": [
-            {"type": "Label", "name": "VINCodeValidation", "caption": "", "bold": true, "width": "120px"},
-            {"type": "Label", "name": "VINDecodeValidation", "caption": "Check digit"}
-          ]
-        },
-        {
-          "type": "Label",
-          "caption": "The VIN interpretation is not an official Skoda data source. It is derived from publicly available information and may be incomplete or ambiguous for individual vehicles."
-        },
-        {
-          "type": "CheckBox",
-          "name": "CreateVINVariables",
-          "caption": "Create VIN information variables"
-        },
-        {
-          "type": "Label",
-          "caption": "VIN information is decoded locally from the VIN. Variables are updated only when they are created or the configured VIN changes."
-        }
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Polling and control",
-      "expanded": true,
-      "items": [
-        {
-          "type": "NumberSpinner",
-          "name": "Interval",
-          "caption": "Polling interval",
-          "suffix": " s",
-          "minimum": 180,
-          "maximum": 3600
-        },
-        {
-          "type": "Label",
-          "caption": "Recommended: 300 seconds. The module observes the rate-limit information returned by the API."
-        },
-        {"type": "CheckBox", "name": "EnableRemote", "caption": "Enable remote control"},
-        {"type": "CheckBox", "name": "ClimateWithoutExternalPower", "caption": "Allow air conditioning without external power"},
-        {"type": "PasswordTextBox", "name": "SPIN", "caption": "S-PIN (optional, auxiliary heating only)"}
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Archiving",
-      "expanded": true,
-      "items": [
-        {"type": "CheckBox", "name": "EnableChargingHistory", "caption": "Archive vehicle data"},
-        {
-          "type": "Label",
-          "caption": "After explicit activation, archive logging is configured once for state of charge, charging limit, charging power and mileage. Later Archive Control changes remain untouched."
-        }
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Notifications",
-      "expanded": false,
-      "items": [
-        {
-          "type": "CheckBox",
-          "name": "NotifyKeyExpiry",
-          "caption": "Send a Symcon notification when the API key has 30 days or less remaining"
-        },
-        {
-          "type": "SelectInstance",
-          "name": "NotificationInstanceID",
-          "caption": "Visualization for notifications",
-          "validModules": []
-        },
-        {
-          "type": "Label",
-          "name": "NotificationTargetFeedback",
-          "caption": "Select a Tile Visualization or WebFront for notifications."
-        },
-        {
-          "type": "Button",
-          "caption": "Test notification",
-          "onClick": "echo MSKODA_TestNotification($id) ? 'Mitteilung gesendet.' : 'Mitteilung konnte nicht gesendet werden. Ausgewählte Visualisierung und registrierte Mobilgeräte prüfen.';"
-        }
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Additional data",
-      "expanded": false,
-      "items": [
-        {"type": "CheckBox", "name": "ShowDetails", "caption": "Create detail and diagnostic variables"},
-        {"type": "Label", "caption": "Missing detail variables are created when enabled. Existing variables are kept when this option is disabled."}
-      ]
-    },
-    {
-      "type": "ExpansionPanel",
-      "caption": "Help and documentation",
-      "expanded": false,
-      "items": [
-        {"type": "Label", "caption": "Documentation and source code: github.com/taloriko/IPSymconMySkoda"}
-      ]
-    }
   ],
   "actions": [
     {
