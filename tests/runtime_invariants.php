@@ -128,15 +128,15 @@ $m = new MySkoda();
 $m->Create();
 $m->ApplyChanges();
 check($m->status === 201, 'An empty configuration must be reported as unconfigured.');
-check($m->registrations === 37, 'Expected 37 standard variables.');
+check($m->registrations === 39, 'Expected 39 standard variables.');
 check($m->GetIDForIdent('NewApiFeatures') === false, 'No developer discovery variable.');
 check($m->GetValue('TargetTemperature') === 22.0, 'Initial temperature.');
 $m->properties['ShowDetails'] = true;
 $m->properties['CreateVINVariables'] = true;
 $m->properties['VIN'] = 'TMBJC7NY0N0000001'; // Synthetic syntax-valid fixture, no real vehicle.
 $m->ApplyChanges();
-check($m->registrations === 72, 'Expected 72 variables with both optional groups.');
-check(count($GLOBALS['objects']) === 72, 'No duplicate identifiers.');
+check($m->registrations === 74, 'Expected 74 variables with both optional groups.');
+check(count($GLOBALS['objects']) === 74, 'No duplicate identifiers.');
 check(json_decode($m->GetConfigurationForm(), true) !== null, 'Configuration form must remain valid JSON.');
 
 // User-owned metadata must survive repeated configuration and data updates.
@@ -151,7 +151,7 @@ $before = $GLOBALS['objects'];
 $writes = $GLOBALS['metadataWrites'];
 $m->ApplyChanges();
 $m->ApplyChanges();
-check($m->registrations === 72, 'Repeated ApplyChanges must not register existing variables.');
+check($m->registrations === 74, 'Repeated ApplyChanges must not register existing variables.');
 check($GLOBALS['metadataWrites'] === $writes, 'Existing metadata must not be written.');
 foreach ($before as $id => $old) {
     foreach (['ObjectName', 'ObjectPosition', 'ObjectIcon', 'Presentation'] as $key) {
@@ -162,7 +162,7 @@ $m->properties['ShowDetails'] = false;
 $m->properties['CreateVINVariables'] = false;
 $m->properties['EnableRemote'] = false;
 $m->ApplyChanges();
-check(count($GLOBALS['objects']) === 72, 'Disabling creation options must not delete objects.');
+check(count($GLOBALS['objects']) === 74, 'Disabling creation options must not delete objects.');
 check($GLOBALS['objects'][$m->GetIDForIdent('Climate')]['Action'] === false, 'Remote actions follow configuration.');
 $m->properties['EnableRemote'] = true;
 $m->ApplyChanges();
@@ -192,6 +192,20 @@ invoke($m, 'updateCoreValues', $vehicle);
 check($m->GetValue('DoorsLocked') === 'YES' && $m->GetValue('Locked') === 'NO', 'Lock API fields remain independent strings.');
 check($m->GetValue('WindowsOpen') === 'OPEN' && $m->GetValue('ReliableLockStatus') === 'UNKNOWN', 'Status strings are preserved.');
 check($m->GetValue('ChargePower') === 4200.0 && $m->GetValue('Range') === 321, 'Power/range conversions.');
+check($m->GetValue('Charging') === true, 'Charging boolean follows confirmed active charging state.');
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+invoke($m, 'updatePublicApiValuesFromRawData');
+check($m->GetValue('PlugConnectionState') === 'UNKNOWN', 'Missing plug connection state becomes UNKNOWN.');
+check($m->GetValue('PlugLockState') === 'UNKNOWN', 'Missing plug lock state becomes UNKNOWN.');
+$vehicle['charging']['status']['plugConnectionState'] = 'DISCONNECTED';
+$vehicle['charging']['status']['plugLockState'] = 'UNLOCKED';
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+invoke($m, 'updatePublicApiValuesFromRawData');
+check($m->GetValue('PlugConnectionState') === 'DISCONNECTED', 'API 1.1 plug connection state is preserved.');
+check($m->GetValue('PlugLockState') === 'UNLOCKED', 'API 1.1 plug lock state is preserved.');
+unset($vehicle['charging']['status']['state']);
+invoke($m, 'updateCoreValues', $vehicle);
+check($m->GetValue('Charging') === true, 'Missing charging state must not force Charging to false.');
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
 $m->WriteAttributeString('LastVehicleResponseRaw', "{\n  \"detail\": \"fixture error\"\n}\n");

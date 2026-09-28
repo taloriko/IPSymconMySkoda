@@ -43,8 +43,12 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 | `status.battery.stateOfChargeInPercent` | Ladezustand | ✅ | ⚪ | Integer | 0–100 % | `78` | |
 | `status.chargePowerInKw` | Ladeleistung | ✅ | ⚪ | Number | ≥ 0 kW | `0` | Im Modul in W ausgegeben |
 | `status.fullyChargedAt` | Vollgeladen um | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:38Z` | |
+| `status.plugConnectionState` | Ladestecker Anschlussstatus | ✅ | ⚪ | String | `CONNECTED` / `DISCONNECTED` | `DISCONNECTED` | Am Enyaq 80 2022 am 28.09.2026 mit `DISCONNECTED` geprüft; `CONNECTED` noch zu prüfen. Modul ergänzt bei fehlendem Wert `UNKNOWN`. |
+| `status.plugLockState` | Ladestecker Verriegelungsstatus | ✅ | ⚪ | String | `LOCKED` / `UNLOCKED` | `UNLOCKED` | Am Enyaq 80 2022 am 28.09.2026 mit `UNLOCKED` geprüft; `LOCKED` noch zu prüfen. Modul ergänzt bei fehlendem Wert `UNKNOWN`. |
 | `status.remainingTimeToFullyChargedInMinutes` | Restladezeit | ✅ | ⚪ | Integer | ≥ 0 min | `0` | |
 | `status.state` | Ladestatus | ✅ | ⚪ | String | `READY_FOR_CHARGING` / `CONNECT_CABLE` / `CONSERVING` / `CHARGING` / `CHARGING_INTERRUPTED` / `ERROR` | `CONNECT_CABLE` | |
+
+Public API 1.1: Fehlt `status.state`, bedeutet dies unbekannt und nicht automatisch „Kabel abgezogen“. Das Modul setzt `ChargingState` dann auf `UNKNOWN` und lässt den Bedienwert `Charging` unverändert.
 
 ## vehicle.chargingProfiles
 

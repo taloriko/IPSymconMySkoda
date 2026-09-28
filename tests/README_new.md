@@ -45,8 +45,12 @@ Für den Enyaq 80 von 2023 ist ausdrücklich der Schiebedachzustand `OPEN` best�
 | `status.battery.stateOfChargeInPercent` | Ladezustand | ✅ | ⚪ | Integer | 0–100 % | `78` | |
 | `status.chargePowerInKw` | Ladeleistung | ✅ | ⚪ | Number | ≥ 0 kW | `0` | Im Modul in W |
 | `status.fullyChargedAt` | Vollgeladen um | ✅ | ⚪ | String | ISO-8601 | `2026-09-18T08:49:38Z` | Im Modul als Unix-Zeitstempel |
+| `status.plugConnectionState` | Ladestecker Anschlussstatus | ✅ | ⚪ | String | `CONNECTED` / `DISCONNECTED` | `DISCONNECTED` | Am Enyaq 80 2022 am 28.09.2026 mit `DISCONNECTED` geprüft; `CONNECTED` noch zu prüfen. Modul ergänzt bei fehlendem Wert `UNKNOWN`. |
+| `status.plugLockState` | Ladestecker Verriegelungsstatus | ✅ | ⚪ | String | `LOCKED` / `UNLOCKED` | `UNLOCKED` | Am Enyaq 80 2022 am 28.09.2026 mit `UNLOCKED` geprüft; `LOCKED` noch zu prüfen. Modul ergänzt bei fehlendem Wert `UNKNOWN`. |
 | `status.remainingTimeToFullyChargedInMinutes` | Restladezeit | ✅ | ⚪ | Integer | ≥ 0 min | `0` | |
 | `status.state` | Ladestatus | ✅ | ⚪ | String | `READY_FOR_CHARGING` / `CONNECT_CABLE` / `CONSERVING` / `CHARGING` / `CHARGING_INTERRUPTED` / `ERROR` | `CONNECT_CABLE` | |
+
+Public API 1.1: Fehlt `status.state`, bedeutet dies unbekannt und nicht automatisch „Kabel abgezogen“. Das Modul setzt `ChargingState` dann auf `UNKNOWN` und lässt den Bedienwert `Charging` unverändert.
 
 ## vehicle.chargingProfiles
 

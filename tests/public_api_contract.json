@@ -21,6 +21,8 @@
     "StateOfCharge": [290, "Integer"],
     "ChargePower": [300, "Float"],
     "FullyChargedAt": [310, "Integer"],
+    "PlugConnectionState": [312, "String"],
+    "PlugLockState": [314, "String"],
     "RemainingChargingTime": [320, "Integer"],
     "ChargingState": [330, "String"],
     "ChargeType": [340, "String"],

@@ -7,6 +7,7 @@ MySkoda verbindet ein Škoda-Fahrzeug über die offizielle MyŠkoda Public API m
 - Fahrzeugdaten aus der Offiziellen Skoda API (über FIN/VIN und MySkoda API-Key)
 - Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
 - Ladeleistung, Ladelimit und Lademodus
+- Anschluss- und Verriegelungsstatus des Ladesteckers (Public API 1.1)
 - Klimatisierung und Solltemperatur
 - Laden starten/stoppen, Ladelimit und Lademodus ändern
 - Klimatisierung, Standheizung und Lüftung steuern
@@ -64,6 +65,8 @@ Das Standard-Abfrageintervall beträgt 300 Sekunden. Das Modul berücksichtigt d
 Beim Senden eines Befehls wird der gewünschte Wert sofort angezeigt. Während der HTTP-Anfrage ist der Befehl ausstehend. Eine erfolgreiche HTTP-Antwort beendet diesen Zustand und lässt den gewünschten Wert stehen. Bei Fehlern wird der vorherige Wert wiederhergestellt. Die reguläre Fahrzeugabfrage übernimmt anschließend wieder den API-Zustand.
 
 **Die Annahme durch die API bestätigt nicht die tatsächliche Ausführung im Fahrzeug.** Die optionalen Variablen `PendingCommands` und `CommandStatus` zeigen Übertragung und Ergebnis an.
+
+Seit Version 1.6 bleiben fehlende oder unbekannte Werte von `charging.status.state` als unbekannter Zustand behandelt; sie schalten den Bedienwert `Charging` nicht automatisch auf `false`. Für den tatsächlichen Ladezustand stehen zusätzlich `PlugConnectionState` und `PlugLockState` zur Verfügung.
 
 Bei ausgeschalteter Klimatisierung wird eine gewählte Solltemperatur lokal vorgemerkt. Sie wird mit dem nächsten Klimastart gesendet. Ein externer Klimastart stellt die Übernahme der API-Solltemperatur wieder her. Bei bereits aktiver Klimatisierung wird die Temperaturänderung unmittelbar als Klimastart mit Zieltemperatur gesendet.
 

@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6 - 2026-09-28
+
+- Public API 1.1: `plugConnectionState` und `plugLockState` als neue String-Variablen ergänzt.
+- Fehlende Steckerzustände werden als `UNKNOWN` dargestellt.
+- Fehlender oder unbekannter Ladestatus setzt den Bedienwert `Charging` nicht mehr automatisch auf Aus.
+- README-Dateien, geprüfte Variablenliste und automatisierte Tests ergänzt.
+- Modulversion auf 1.6 gesetzt, damit die neue Version nach dem Merge in `main` vom Symcon Module Store erkannt werden kann.
+
 ## Initiale Veröffentlichung
 
 - Anbindung eines Škoda-Fahrzeugs über die offizielle MyŠkoda Public API.

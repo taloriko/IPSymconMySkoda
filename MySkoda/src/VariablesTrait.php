@@ -95,7 +95,7 @@ trait MySkodaVariablesTrait
             $this->variable('LightsOn', 'Lights', VARIABLETYPE_STRING, 740, $this->onOffStatePresentation('lightbulb')),
             $this->variable('ParkingState', 'Parking state', VARIABLETYPE_STRING, 600, $this->parkingStatePresentation()),
             $this->variable('ParkingAddress', 'Parking address', VARIABLETYPE_STRING, 610, $this->valuePresentation('location-dot')),
-            $this->variable('ChargingState', 'Charging state', VARIABLETYPE_STRING, 330, $this->chargingStatePresentation()),
+            $this->variable('ChargingState', 'Charging state', VARIABLETYPE_STRING, 330, $this->chargingStatePresentation(), 'UNKNOWN'),
             $this->variable('ChargeType', 'Charge type', VARIABLETYPE_STRING, 340, $this->chargeTypePresentation()),
             $this->variable('FullyChargedAt', 'Fully charged at', VARIABLETYPE_INTEGER, 310, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_DATE_TIME,
@@ -205,8 +205,12 @@ trait MySkodaVariablesTrait
         $this->SetValue('DoorsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.doors', 'UNKNOWN')));
         $this->SetValue('WindowsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.windows', 'UNKNOWN')));
 
-        $chargeState = strtoupper((string) $this->path($vehicle, 'charging.status.state', ''));
-        $this->SetValue('Charging', in_array($chargeState, ['CHARGING', 'CONSERVING'], true));
+        $chargeState = $this->chargingStatusValue($vehicle, 'state');
+        if (in_array($chargeState, ['CHARGING', 'CONSERVING'], true)) {
+            $this->SetValue('Charging', true);
+        } elseif (in_array($chargeState, ['READY_FOR_CHARGING', 'CONNECT_CABLE', 'CHARGING_INTERRUPTED', 'ERROR'], true)) {
+            $this->SetValue('Charging', false);
+        }
         $this->setPathValue('ChargePower', $vehicle, 'charging.status.chargePowerInKw', static fn (mixed $v): float => (float) $v * 1000.0);
         $this->setPathValue('TargetSOC', $vehicle, 'charging.settings.targetStateOfChargeInPercent', static fn (mixed $v): int => (int) $v);
 
@@ -227,6 +231,12 @@ trait MySkodaVariablesTrait
         $this->setPathValue('TargetTemperature', $vehicle, 'airConditioning.targetTemperature.value', static fn (mixed $v): float => (float) $v);
     }
 
+    private function chargingStatusValue(array $vehicle, string $field): string
+    {
+        $value = $this->path($vehicle, 'charging.status.' . $field, null);
+        return is_string($value) && trim($value) !== '' ? strtoupper(trim($value)) : 'UNKNOWN';
+    }
+
     private function setPathValue(string $ident, array $source, string $path, Closure $convert): void
     {
         $value = $this->path($source, $path, null);
@@ -239,7 +249,7 @@ trait MySkodaVariablesTrait
     {
         $this->setIfExists('VehicleName', (string) $this->path($vehicle, 'name', ''));
         $this->setIfExists('LicensePlate', (string) $this->path($vehicle, 'licensePlate', ''));
-        $this->setIfExists('ChargingState', strtoupper((string) $this->path($vehicle, 'charging.status.state', 'UNKNOWN')));
+        $this->setIfExists('ChargingState', $this->chargingStatusValue($vehicle, 'state'));
         $this->setIfExists('ChargeType', strtoupper((string) $this->path($vehicle, 'charging.status.chargeType', 'OFF')));
         $this->setIfExists('FullyChargedAt', $this->toTimestamp($this->path($vehicle, 'charging.status.fullyChargedAt', null)));
         $this->setIfExists('TrunkOpen', strtoupper((string) $this->path($vehicle, 'status.detail.trunk', 'UNKNOWN')));

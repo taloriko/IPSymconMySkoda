@@ -9,6 +9,16 @@ trait MySkodaPublicApiVariablesTrait
         $initialInformation = $this->Translate('Not retrieved yet');
         $definitions = [
             $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode')),
+            $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
+                ['CONNECTED', 'Connected', 'plug-circle-check', 0x22C55E],
+                ['DISCONNECTED', 'Disconnected', 'plug', 0x6B7280],
+                ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+            ]), 'UNKNOWN'),
+            $this->variable('PlugLockState', 'Plug lock state', VARIABLETYPE_STRING, 314, $this->publicApiEnumPresentation('lock', [
+                ['LOCKED', 'Locked', 'lock', 0x22C55E],
+                ['UNLOCKED', 'Unlocked', 'lock-open', 0xF59E0B],
+                ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+            ]), 'UNKNOWN'),
             $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0)),
             $this->variable('AtSavedChargingLocation', 'At saved charging location', VARIABLETYPE_BOOLEAN, 200, $this->booleanYesNoPresentation(true, 'house')),
             $this->variable('BatteryCareMode', 'Battery care mode', VARIABLETYPE_STRING, 240, $this->publicApiEnumPresentation('shield', [
@@ -84,6 +94,8 @@ trait MySkodaPublicApiVariablesTrait
         $this->setPublicApiInteger('BatteryCareTargetSOC', $this->path($vehicle, 'charging.settings.batteryCareModeTargetValueInPercent', null));
         $this->setPublicApiString('BatteryCareMode', $this->path($vehicle, 'charging.settings.chargingCareMode', null), true);
         $this->setPublicApiString('MaxChargeCurrentAC', $this->path($vehicle, 'charging.settings.maxChargeCurrentAc', null), true);
+        $this->setPublicApiString('PlugConnectionState', $this->chargingStatusValue($vehicle, 'plugConnectionState'));
+        $this->setPublicApiString('PlugLockState', $this->chargingStatusValue($vehicle, 'plugLockState'));
         $this->setPublicApiInteger('RemainingChargingTime', $this->path($vehicle, 'charging.status.remainingTimeToFullyChargedInMinutes', null));
         $this->setPublicApiInformation('APICarType', $this->path($vehicle, 'fuelStatus.carType', null), $errors, 'FUEL_STATUS', true);
         $this->setPublicApiInformation('APIPrimaryEngineType', $this->path($vehicle, 'fuelStatus.primaryEngineRange.engineType', null), $errors, 'FUEL_STATUS', true);
