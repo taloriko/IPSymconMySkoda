@@ -53,6 +53,8 @@ Die Schaltflächen **Jetzt aktualisieren**, **Fahrzeugbild aktualisieren**, **Ro
 
 Die Standardkonfiguration erzeugt 37 Variablen. `ShowDetails` ergänzt 18 Variablen; `CreateVINVariables` ergänzt 17 Variablen. Bei Aktivierung beider Optionen entstehen 72 Variablen. Das optionale Bildmedium zählt nicht als Variable.
 
+**Ab Version 1.6:** Durch `PlugConnectionState` und `PlugLockState` entstehen 39 Standardvariablen beziehungsweise 74 Variablen bei aktivierten Optionen `ShowDetails` und `CreateVINVariables`.
+
 Fehlende Variablen erhalten bei der Anlage den vorgesehenen Datentyp, Namen, die Position und Darstellung. Existierende Variablen werden nicht erneut registriert, umbenannt, umsortiert oder automatisch gelöscht. Auch ein nachträglich geleertes Icon bleibt leer. Bei einer Typ- oder Ident-Kollision wird eine Meldung protokolliert; das betroffene Objekt wird nicht automatisch ersetzt.
 
 Das Ausschalten einer Erstellungsoption löscht vorhandene Variablen nicht. Laufende API-Werte werden weiterhin aktualisiert. FIN-Variablen werden nur bei ihrer Erstanlage und bei Änderung der konfigurierten FIN beschrieben. Remote-Bedienaktionen folgen weiterhin `EnableRemote`.
@@ -86,6 +88,8 @@ API-Pfade beziehen sich, sofern nicht anders angegeben, auf `vehicle` der Fahrze
 | 290 | `StateOfCharge` | Ladezustand | Integer | Standard | `charging.status.battery.stateOfChargeInPercent`; % |
 | 300 | `ChargePower` | Ladeleistung | Float | Standard | `charging.status.chargePowerInKw`; mit 1000 multipliziert, gespeichert in W |
 | 310 | `FullyChargedAt` | Vollgeladen um | Integer | Detail | `charging.status.fullyChargedAt`; Unix-Zeitstempel |
+| 312 | `PlugConnectionState` | Ladestecker Anschlussstatus | String | Standard | `charging.status.plugConnectionState`; `CONNECTED`, `DISCONNECTED`, `UNKNOWN` |
+| 314 | `PlugLockState` | Ladestecker Verriegelungsstatus | String | Standard | `charging.status.plugLockState`; `LOCKED`, `UNLOCKED`, `UNKNOWN` |
 | 320 | `RemainingChargingTime` | Restladezeit | Integer | Standard | `charging.status.remainingTimeToFullyChargedInMinutes`; min |
 | 330 | `ChargingState` | Ladestatus | String | Detail | `charging.status.state` |
 | 340 | `ChargeType` | Ladeart | String | Detail | `charging.status.chargeType` |
@@ -122,6 +126,8 @@ Die drei Verriegelungswerte werden getrennt aus den jeweiligen Feldern gelesen. 
 
 `Climate` ist wahr bei `ON`, `COOLING`, `HEATING`, `HEATING_AUXILIARY` oder `VENTILATION`. Für genaue Zustandsauswertungen ist `ClimateState` zu verwenden. Entsprechend ist `ChargingState` aussagekräftiger als der Bedien-Boolean `Charging`.
 
+Seit Version 1.6 wird ein fehlender oder bislang unbekannter Wert von `charging.status.state` nicht als bestätigtes Ladeende interpretiert. `ChargingState` erhält in diesem Fall `UNKNOWN`; der Bedienwert `Charging` bleibt unverändert. `PlugConnectionState` und `PlugLockState` bilden Anschluss- und Verriegelungszustand getrennt ab.
+
 ### 4.3 Lokale FIN-Informationen
 
 Die 17 optionalen String-Variablen liegen auf den Positionen 1100 bis 1260. Ihre vollständige Tabelle und der lokale Decoder sind in [README_FIN_VIN.md](README_FIN_VIN.md) beschrieben. Sie verwenden keine Icons oder besonderen Darstellungen.
@@ -153,6 +159,8 @@ Diese Standardvariablen sind reine Strings ohne Icons und besondere Darstellunge
 | Licht und Scheibenheizung | `OFF`, `ON`, `INVALID`, `UNKNOWN` |
 | `ClimateState` | `OFF`, `ON`, `COOLING`, `HEATING`, `HEATING_AUXILIARY`, `VENTILATION`, `INVALID`, `UNKNOWN` |
 | `ChargingState` | `READY_FOR_CHARGING`, `CHARGING`, `CONSERVING`, `CONNECT_CABLE`, `CHARGING_INTERRUPTED`, `ERROR`, `UNKNOWN` |
+| `PlugConnectionState` | `CONNECTED`, `DISCONNECTED`, `UNKNOWN` |
+| `PlugLockState` | `LOCKED`, `UNLOCKED`, `UNKNOWN` |
 | `ParkingState` | `PARKED`, `IN_MOTION`, `MOVING`, `DRIVING`, `UNKNOWN` |
 | `ChargeType` | `AC`, `DC`, `OFF` |
 | `BatteryCareMode` | `ACTIVATED`, `DEACTIVATED`, `ACTIVE`, `INACTIVE`, `UNKNOWN` |
