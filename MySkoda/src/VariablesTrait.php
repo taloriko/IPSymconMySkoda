@@ -208,6 +208,10 @@ trait MySkodaVariablesTrait
             }
 
             $supported = $required !== [];
+            if ($ident === 'TargetTemperature') {
+                $climateId = @$this->GetIDForIdent('Climate');
+                $supported = $climateId !== false && IPS_VariableExists($climateId);
+            }
             foreach ($required as $operation) {
                 if (!in_array($operation, $operations, true)) {
                     $supported = false;
