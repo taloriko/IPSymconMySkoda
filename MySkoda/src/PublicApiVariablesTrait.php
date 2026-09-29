@@ -4,28 +4,20 @@ declare(strict_types=1);
 
 trait MySkodaPublicApiVariablesTrait
 {
-    private function ensurePublicApiVariables(): void
-    {
-        foreach ($this->publicApiVariableDefinitions() as $definition) {
-            $this->registerVariableOnce($definition);
-        }
-    }
-
     private function publicApiVariableDefinitions(): array
     {
-        $initialInformation = $this->Translate('Not retrieved yet');
         return [
             $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode')),
             $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
                 ['CONNECTED', 'Connected', 'plug-circle-check', 0x22C55E],
                 ['DISCONNECTED', 'Disconnected', 'plug', 0x6B7280],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
-            ]), 'UNKNOWN'),
+            ])),
             $this->variable('PlugLockState', 'Plug lock state', VARIABLETYPE_STRING, 314, $this->publicApiEnumPresentation('lock', [
                 ['LOCKED', 'Locked', 'lock', 0x22C55E],
                 ['UNLOCKED', 'Unlocked', 'lock-open', 0xF59E0B],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
-            ]), 'UNKNOWN'),
+            ])),
             $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0)),
             $this->variable('AtSavedChargingLocation', 'At saved charging location', VARIABLETYPE_BOOLEAN, 200, $this->booleanYesNoPresentation(true, 'house')),
             $this->variable('BatteryCareMode', 'Battery care mode', VARIABLETYPE_STRING, 240, $this->publicApiEnumPresentation('shield', [
@@ -62,132 +54,22 @@ trait MySkodaPublicApiVariablesTrait
                 ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ])),
-            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1300, [], $initialInformation),
-            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1310, [], $initialInformation),
-            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1320, [], $initialInformation),
-            $this->variable('APISupportedFeatures', 'API supported features', VARIABLETYPE_STRING, 1330, [], $initialInformation),
-            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1340, [], $initialInformation),
-            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1350, [], $initialInformation),
-            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1360, [], $initialInformation),
-            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, [], $initialInformation),
+            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1300, $this->valuePresentation('car')),
+            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1310, $this->valuePresentation('gear')),
+            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1320, $this->valuePresentation('gear')),
+            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1340, $this->valuePresentation('list')),
+            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1350, [
+                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
+                'ICON' => 'satellite-dish',
+                'MULTILINE' => true
+            ]),
+            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1360, $this->valuePresentation('fire')),
+            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, $this->valuePresentation('fan')),
             $this->variable('FuelLevel', 'Fuel level', VARIABLETYPE_INTEGER, 350, $this->valuePresentation('gas-pump', ' %', 0)),
             $this->variable('PrimaryEngineRange', 'Primary engine range', VARIABLETYPE_INTEGER, 360, $this->valuePresentation('route', ' km', 0)),
             $this->variable('TotalRange', 'Total range', VARIABLETYPE_INTEGER, 370, $this->valuePresentation('route', ' km', 0)),
             $this->variable('AuxiliaryHeatingDuration', 'Auxiliary heating duration', VARIABLETYPE_INTEGER, 380, $this->valuePresentation('hourglass-half', ' s', 0))
         ];
-    }
-
-    private function updatePublicApiValuesFromRawData(): void
-    {
-        $raw = json_decode($this->ReadAttributeString('RawData'), true);
-        if (!is_array($raw)) {
-            return;
-        }
-
-        $vehicle = isset($raw['vehicle']) && is_array($raw['vehicle']) ? $raw['vehicle'] : [];
-        if ($vehicle === []) {
-            return;
-        }
-        $errors = isset($raw['errors']) && is_array($raw['errors']) ? $raw['errors'] : [];
-
-        $this->setPublicApiString('VIN', $this->path($vehicle, 'vin', null));
-        $this->setPublicApiString('TargetTemperatureUnit', $this->path($vehicle, 'airConditioning.targetTemperature.unit', null));
-        $this->setPublicApiBoolean('AirConditioningAtUnlock', $this->path($vehicle, 'airConditioning.airConditioningAtUnlock', null));
-        $this->setPublicApiBoolean('WindowHeatingEnabled', $this->path($vehicle, 'airConditioning.windowHeating.enabled', null));
-        $this->setPublicApiString('WindowHeatingFront', $this->path($vehicle, 'airConditioning.windowHeating.front', null), true);
-        $this->setPublicApiString('WindowHeatingRear', $this->path($vehicle, 'airConditioning.windowHeating.rear', null), true);
-        $this->setPublicApiBoolean('AtSavedChargingLocation', $this->path($vehicle, 'charging.isVehicleInSavedLocation', null));
-        $this->setPublicApiString('AutoUnlockPlug', $this->path($vehicle, 'charging.settings.autoUnlockPlugWhenCharged', null), true);
-        $this->setPublicApiInteger('BatteryCareTargetSOC', $this->path($vehicle, 'charging.settings.batteryCareModeTargetValueInPercent', null));
-        $this->setPublicApiString('BatteryCareMode', $this->path($vehicle, 'charging.settings.chargingCareMode', null), true);
-        $this->setPublicApiString('MaxChargeCurrentAC', $this->path($vehicle, 'charging.settings.maxChargeCurrentAc', null), true);
-        $this->setPublicApiString('PlugConnectionState', $this->chargingStatusValue($vehicle, 'plugConnectionState'));
-        $this->setPublicApiString('PlugLockState', $this->chargingStatusValue($vehicle, 'plugLockState'));
-        $this->setPublicApiInteger('RemainingChargingTime', $this->path($vehicle, 'charging.status.remainingTimeToFullyChargedInMinutes', null));
-        $this->setPublicApiInformation('APICarType', $this->path($vehicle, 'fuelStatus.carType', null), $errors, 'FUEL_STATUS', true);
-        $this->setPublicApiInformation('APIPrimaryEngineType', $this->path($vehicle, 'fuelStatus.primaryEngineRange.engineType', null), $errors, 'FUEL_STATUS', true);
-        $this->setPublicApiInformation('APISecondaryEngineType', $this->path($vehicle, 'fuelStatus.secondaryEngineRange.engineType', null), $errors, 'FUEL_STATUS', true);
-        $this->setPublicApiInformation('APIAuxiliaryHeatingState', $this->path($vehicle, 'auxiliaryHeating.state', null), $errors, 'AUXILIARY_HEATING', true);
-        $this->setPublicApiInformation('APIActiveVentilationState', $this->path($vehicle, 'activeVentilation.state', null), $errors, 'ACTIVE_VENTILATION', true);
-        $this->setPublicApiInformation('APIAvailableChargeModes', $this->path($vehicle, 'charging.settings.availableChargeModes', null), $errors, 'CHARGING');
-
-        $operations = $this->path($vehicle, 'operations', $this->path($vehicle, 'remoteOperations', null));
-        $this->setPublicApiInformation('APIRemoteOperations', $operations);
-        $this->setPublicApiInformation('APISupportedFeatures', $this->publicApiSupportedFeatures($vehicle, $errors));
-    }
-
-    /**
-     * Stores API information or an explicit, localized explanation in the value.
-     * An absent field alone never establishes that a feature is unsupported.
-     * Only exact component error types from this response refine that reason.
-     */
-    private function setPublicApiInformation(
-        string $ident,
-        mixed $value,
-        array $errors = [],
-        string $errorPrefix = '',
-        bool $uppercase = false
-    ): void {
-        if (@$this->GetIDForIdent($ident) === false) {
-            return;
-        }
-
-        $text = $this->publicApiValueAsString($value);
-        if ($text !== '') {
-            $this->SetValue($ident, $uppercase ? strtoupper($text) : $text);
-            return;
-        }
-
-        $reason = $value === []
-            ? $this->Translate('No entries')
-            : $this->Translate('Not provided');
-        if ($errorPrefix !== '') {
-            $types = [];
-            foreach ($errors as $error) {
-                if (is_array($error) && is_string($error['type'] ?? null)) {
-                    $types[strtoupper(trim($error['type']))] = true;
-                }
-            }
-
-            if (isset($types[$errorPrefix . '_UNSUPPORTED'])) {
-                $reason = $this->Translate('Unsupported');
-            } elseif (isset($types[$errorPrefix . '_DISABLED'])) {
-                $reason = $this->Translate('Service disabled');
-            } elseif (isset($types[$errorPrefix . '_UNAVAILABLE'])) {
-                $reason = $this->Translate('Temporarily unavailable');
-            }
-        }
-
-        $this->SetValue($ident, $reason);
-    }
-
-    private function setPublicApiString(string $ident, mixed $value, bool $uppercase = false): void
-    {
-        if ($value === null || @$this->GetIDForIdent($ident) === false) {
-            return;
-        }
-
-        $text = trim((string) $value);
-        if ($uppercase) {
-            $text = strtoupper($text);
-        }
-        $this->SetValue($ident, $text);
-    }
-
-    private function setPublicApiInteger(string $ident, mixed $value): void
-    {
-        if ($value === null || @$this->GetIDForIdent($ident) === false) {
-            return;
-        }
-        $this->SetValue($ident, (int) $value);
-    }
-
-    private function setPublicApiBoolean(string $ident, mixed $value): void
-    {
-        if ($value === null || @$this->GetIDForIdent($ident) === false) {
-            return;
-        }
-        $this->SetValue($ident, (bool) $value);
     }
 
     private function publicApiValueAsString(mixed $value): string
@@ -204,6 +86,7 @@ trait MySkodaPublicApiVariablesTrait
         if (!is_array($value) || $value === []) {
             return '';
         }
+
         if (array_is_list($value)) {
             $items = [];
             $onlyScalars = true;
@@ -225,67 +108,6 @@ trait MySkodaPublicApiVariablesTrait
 
         $json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         return is_string($json) ? $json : '';
-    }
-
-    private function publicApiSupportedFeatures(array $vehicle, array $errors): string
-    {
-        $parts = [
-            'status' => 'status',
-            'fuelStatus' => 'fuelStatus',
-            'odometer' => 'odometer',
-            'parkingPosition' => 'parkingPosition',
-            'airConditioning' => 'airConditioning',
-            'auxiliaryHeating' => 'auxiliaryHeating',
-            'activeVentilation' => 'activeVentilation',
-            'charging' => 'charging',
-            'chargingProfiles' => 'chargingProfiles'
-        ];
-
-        $supported = [];
-        foreach ($parts as $key => $apiName) {
-            if (array_key_exists($key, $vehicle)) {
-                $supported[$apiName] = true;
-            }
-        }
-
-        $errorPrefixes = [
-            'STATUS' => 'status',
-            'FUEL_STATUS' => 'fuelStatus',
-            'ODOMETER' => 'odometer',
-            'PARKING_POSITION' => 'parkingPosition',
-            'AIR_CONDITIONING' => 'airConditioning',
-            'AUXILIARY_HEATING' => 'auxiliaryHeating',
-            'ACTIVE_VENTILATION' => 'activeVentilation',
-            'CHARGING' => 'charging',
-            'CHARGING_PROFILES' => 'chargingProfiles'
-        ];
-
-        foreach ($errors as $error) {
-            if (!is_array($error) || !is_string($error['type'] ?? null)) {
-                continue;
-            }
-            $type = strtoupper(trim($error['type']));
-            if ($type === '' || str_ends_with($type, '_UNSUPPORTED')) {
-                continue;
-            }
-            if (!str_ends_with($type, '_DISABLED') && !str_ends_with($type, '_UNAVAILABLE')) {
-                continue;
-            }
-            foreach ($errorPrefixes as $prefix => $apiName) {
-                if (str_starts_with($type, $prefix . '_')) {
-                    $supported[$apiName] = true;
-                    break;
-                }
-            }
-        }
-
-        $ordered = [];
-        foreach ($parts as $apiName) {
-            if (isset($supported[$apiName])) {
-                $ordered[] = $apiName;
-            }
-        }
-        return implode(', ', $ordered);
     }
 
     private function publicApiEnumPresentation(string $icon, array $states): array
