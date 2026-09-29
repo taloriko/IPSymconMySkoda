@@ -1,11 +1,12 @@
 # MySkoda für Symcon
 
-MySkoda verbindet ein Škoda-Fahrzeug über die offizielle MyŠkoda Public API mit Symcon. Eine Instanz steht für eine FIN/VIN. Fahrzeugdaten werden zyklisch abgefragt und über feste Variablen-Idents bereitgestellt. Die tatsächlich verfügbaren Daten und Befehle hängen vom Fahrzeug und den freigeschalteten Diensten ab.
+MySkoda verbindet ein Škoda-Fahrzeug über die offizielle MyŠkoda Public API mit Symcon. Eine Instanz steht für eine FIN/VIN. Seit Version 1.7 werden nur die Fahrzeugdaten angelegt, die die API für dieses Fahrzeug tatsächlich liefert. Bekannte Felder erhalten feste, lesbare Variablen-Idents; neue unbekannte Felder erscheinen automatisch als neutrale `API_...`-Variablen.
 
 ## Funktionen
 
 - Fahrzeugdaten aus der Offiziellen Skoda API (über FIN/VIN und MySkoda API-Key)
-- Ladezustand, Reichweite, Kilometerstand und Fahrzeugstatus
+- fahrzeugabhängige Daten für Elektro-, Verbrenner- und weitere von der Public API gelieferte Fahrzeugtypen
+- Ladezustand, Tankfüllstand, Reichweiten, Kilometerstand und Fahrzeugstatus
 - Ladeleistung, Ladelimit und Lademodus
 - Anschluss- und Verriegelungsstatus des Ladesteckers (Public API 1.1)
 - Klimatisierung und Solltemperatur
@@ -66,7 +67,7 @@ Beim Senden eines Befehls wird der gewünschte Wert sofort angezeigt. Während d
 
 **Die Annahme durch die API bestätigt nicht die tatsächliche Ausführung im Fahrzeug.** Die optionalen Variablen `PendingCommands` und `CommandStatus` zeigen Übertragung und Ergebnis an.
 
-Seit Version 1.6 bleiben fehlende oder unbekannte Werte von `charging.status.state` als unbekannter Zustand behandelt; sie schalten den Bedienwert `Charging` nicht automatisch auf `false`. Für den tatsächlichen Ladezustand stehen zusätzlich `PlugConnectionState` und `PlugLockState` zur Verfügung.
+Seit Version 1.7 werden fehlende Fahrzeugfelder nicht mehr mit Ersatzwerten überschrieben. Kommt ein Feld erst bei einem späteren Abruf hinzu, wird seine Variable dann automatisch angelegt; fehlt es später wieder, bleibt der letzte gelieferte Wert erhalten. Dadurch kann dasselbe Modul ohne festes EV-Schema auch Verbrenner und weitere Fahrzeugvarianten abbilden.
 
 Bei ausgeschalteter Klimatisierung wird eine gewählte Solltemperatur lokal vorgemerkt. Sie wird mit dem nächsten Klimastart gesendet. Ein externer Klimastart stellt die Übernahme der API-Solltemperatur wieder her. Bei bereits aktiver Klimatisierung wird die Temperaturänderung unmittelbar als Klimastart mit Zieltemperatur gesendet.
 
