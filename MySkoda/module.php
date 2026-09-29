@@ -9,6 +9,7 @@ require_once __DIR__ . '/src/ApiTrait.php';
 require_once __DIR__ . '/src/OpenApiTrait.php';
 require_once __DIR__ . '/src/ImageTrait.php';
 require_once __DIR__ . '/src/PublicApiVariablesTrait.php';
+require_once __DIR__ . '/src/DynamicVariablesTrait.php';
 require_once __DIR__ . '/src/NotificationTrait.php';
 require_once __DIR__ . '/src/HelpersTrait.php';
 require_once __DIR__ . '/src/CommandTrait.php';
@@ -25,6 +26,7 @@ final class MySkoda extends IPSModuleStrict
         MySkodaOpenApiTrait,
         MySkodaImageTrait,
         MySkodaPublicApiVariablesTrait,
+        MySkodaDynamicVariablesTrait,
         MySkodaNotificationTrait,
         MySkodaHelpersTrait,
         MySkodaCommandTrait,
@@ -55,7 +57,7 @@ final class MySkoda extends IPSModuleStrict
 
     private const API_ROOT = 'https://public.api.connect.skoda-auto.cz';
     private const OPENAPI_URL = self::API_ROOT . '/v3/api-docs';
-    private const USER_AGENT = 'Symcon-MySkoda/1.6';
+    private const USER_AGENT = 'Symcon-MySkoda/1.7';
     private const QUOTA_RESERVE = 2;
 
     public function Update(): void
@@ -69,7 +71,6 @@ final class MySkoda extends IPSModuleStrict
             return false;
         }
 
-        $this->updatePublicApiValuesFromRawData();
         $this->syncVehicleImage(false);
         $this->refreshOpenApi(false);
         return true;
