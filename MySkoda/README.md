@@ -97,7 +97,7 @@ API-Pfade beziehen sich, sofern nicht anders angegeben, auf `vehicle` der Fahrze
 | 360 | `PrimaryEngineRange` | Reichweite Primärantrieb | Integer | bei Lieferung | `fuelStatus.primaryEngineRange.remainingRangeInKm`; km |
 | 370 | `TotalRange` | Gesamtreichweite | Integer | bei Lieferung | `fuelStatus.totalRangeInKm`; km |
 | 380 | `AuxiliaryHeatingDuration` | Standheizungsdauer | Integer | bei Lieferung | `auxiliaryHeating.durationInSeconds`; s |
-| 400 | `Mileage` | Kilometerstand | Integer | bei Lieferung | `odometer.mileageInKm`; gerundet, nur Werte größer 0 übernommen |
+| 400 | `Mileage` | Kilometerstand | Integer | bei Lieferung | `odometer.mileageInKm`; gerundet in km |
 | 600 | `ParkingState` | Parkstatus | String | bei Lieferung | `parkingPosition.state` |
 | 610 | `ParkingAddress` | Parkadresse | String | bei Lieferung | `parkingPosition.formattedAddress` |
 | 620 | `Latitude` | Breitengrad | Float | bei Lieferung | `parkingPosition.gpsCoordinates.latitude`; auch flache Koordinaten und `lat` werden gelesen |
@@ -118,15 +118,15 @@ Die drei Verriegelungswerte werden getrennt aus den jeweiligen Feldern gelesen. 
 
 | Position | Ident | Anzeige | Typ | Anlage | Bedeutung |
 |---:|---|---|---|---|---|
-| 900 | `Climate` | Klimatisierung | Boolean | bei Lieferung | aus Klimastatus abgeleitet; Start/Stopp bedienbar |
-| 910 | `Charging` | Laden | Boolean | bei Lieferung | wahr bei `CHARGING` oder `CONSERVING`; Start/Stopp bedienbar |
-| 920 | `LastUpdate` | Letzte Aktualisierung | Integer | bei Lieferung | lokaler Unix-Zeitstempel des letzten erfolgreichen Fahrzeugabrufs |
-| 930 | `ApiKeyWarning` | API-Key Warnung | Boolean | bei Lieferung | bekanntes Ablaufdatum erreicht oder höchstens 30 Tage entfernt |
-| 940 | `ApiKeyExpiresAtVar` | API-Key gültig bis | Integer | bei Lieferung | aus HTTP-Header `x-api-key-expires-at`; Unix-Zeitstempel |
-| 950 | `RequestsRemaining` | Verbleibende API-Anfragen | Integer | bei Lieferung | gespeichertes Restkontingent beim Fahrzeugabruf |
-| 960 | `PartialErrors` | API-Teilfehler | String | bei Lieferung | `errors` der Antwort als JSON; leer, wenn keine Teilfehler vorliegen |
-| 980 | `PendingCommands` | Ausstehende Befehle | Integer | bei Lieferung | Anzahl aktuell laufender Befehlsanfragen |
-| 990 | `CommandStatus` | Befehlsstatus | String | bei Lieferung | Übertragungsstatus oder Ergebnis des letzten Befehls |
+| 900 | `Climate` | Klimatisierung | Boolean | bei Klimastatus | aus Klimastatus abgeleitet; Start/Stopp bedienbar |
+| 910 | `Charging` | Laden | Boolean | bei Ladestatus | wahr bei `CHARGING` oder `CONSERVING`; Start/Stopp bedienbar |
+| 920 | `LastUpdate` | Letzte Aktualisierung | Integer | immer | lokaler Unix-Zeitstempel des letzten erfolgreichen Fahrzeugabrufs |
+| 930 | `ApiKeyWarning` | API-Key Warnung | Boolean | immer | bekanntes Ablaufdatum erreicht oder höchstens 30 Tage entfernt |
+| 940 | `ApiKeyExpiresAtVar` | API-Key gültig bis | Integer | `ShowDetails` | aus HTTP-Header `x-api-key-expires-at`; Unix-Zeitstempel |
+| 950 | `RequestsRemaining` | Verbleibende API-Anfragen | Integer | `ShowDetails` | gespeichertes Restkontingent beim Fahrzeugabruf |
+| 960 | `PartialErrors` | API-Teilfehler | String | bei `errors` | `errors` der Antwort als JSON; leer, wenn keine Teilfehler vorliegen |
+| 980 | `PendingCommands` | Ausstehende Befehle | Integer | `ShowDetails` | Anzahl aktuell laufender Befehlsanfragen |
+| 990 | `CommandStatus` | Befehlsstatus | String | `ShowDetails` | Übertragungsstatus oder Ergebnis des letzten Befehls |
 
 `Climate` ist wahr bei `ON`, `COOLING`, `HEATING`, `HEATING_AUXILIARY` oder `VENTILATION`. Für genaue Zustandsauswertungen ist `ClimateState` zu verwenden. Entsprechend ist `ChargingState` aussagekräftiger als der Bedien-Boolean `Charging`.
 
@@ -138,7 +138,7 @@ Die 17 optionalen String-Variablen liegen auf den Positionen 1100 bis 1260. Ihre
 
 ### 4.4 Zusätzliche API-Fahrzeuginformationen
 
-Diese Standardvariablen sind reine Strings ohne Icons und besondere Darstellungen. Sie werden aus den zuletzt empfangenen API-Daten aktualisiert; sie sind nicht Teil der lokalen FIN-Interpretation.
+Diese bekannten API-Fahrzeuginformationen werden ebenfalls nur angelegt, wenn der jeweilige Pfad geliefert wird. Sie sind nicht Teil der lokalen FIN-Interpretation.
 
 | Position | Ident | Anzeige | Typ | Anlage | Quelle / Bedeutung |
 |---:|---|---|---|---|---|
