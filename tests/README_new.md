@@ -6,6 +6,29 @@ Die Fahrzeugmatrix dokumentiert vorhandene praktische Testnachweise. Sie bestät
 
 Für den Enyaq 80 von 2023 ist ausdrücklich der Schiebedachzustand `OPEN` bestätigt. Die übrigen Felder dieses Fahrzeugs bleiben zu prüfen. Automatisierte Codeprüfungen ändern diese Fahrzeugnachweise nicht.
 
+## Superb Benzin / Verbrenner – bestätigt am 29.09.2026
+
+Für einen Superb mit `carType = GASOLINE` wurde folgende Struktur praktisch bestätigt. Personenbezogene Inhalte wie FIN, Kennzeichen, Adresse, Koordinaten und Render-URL wurden vor der Dokumentation entfernt.
+
+| API-Pfad | Modulvariable in 1.7 | Nachweis |
+|---|---|:---:|
+| `auxiliaryHeating.state` | `APIAuxiliaryHeatingState` | ✅ |
+| `auxiliaryHeating.durationInSeconds` | `AuxiliaryHeatingDuration` | ✅ |
+| `fuelStatus.carType` | `APICarType` | ✅ |
+| `fuelStatus.primaryEngineRange.currentFuelLevelInPercent` | `FuelLevel` | ✅ |
+| `fuelStatus.primaryEngineRange.currentSoCInPercent` | generische `API_FuelStatus_PrimaryEngineRange_CurrentSoCInPercent` | ✅ |
+| `fuelStatus.primaryEngineRange.engineType` | `APIPrimaryEngineType` | ✅ |
+| `fuelStatus.primaryEngineRange.remainingRangeInKm` | `PrimaryEngineRange` | ✅ |
+| `fuelStatus.totalRangeInKm` | `TotalRange` | ✅ |
+| `odometer.mileageInKm` | `Mileage` | ✅ |
+| `operations[].name` | `APIRemoteOperations` | ✅ `startAuxiliaryHeating`, `stopAuxiliaryHeating` |
+| `parkingPosition.*` | bekannte Standortvariablen | ✅ |
+| `status.overall.*` | bekannte Statusvariablen | ✅ |
+| `status.detail.sunroof/trunk/bonnet` | bekannte Detailvariablen | ✅ |
+| `*.carCapturedTimestamp` | generische `API_..._CarCapturedTimestamp` | ✅ |
+
+In dieser Antwort war kein `charging`-Bereich vorhanden. Auf einer neuen 1.7-Instanz werden deshalb keine EV-Ladevariablen nur vorsorglich angelegt. Werden später zusätzliche Felder geliefert, entstehen die zugehörigen Variablen beim nächsten Abruf automatisch.
+
 ## vehicle
 
 | API | Deutsch | Enyaq 80<br>2022 | Enyaq 80<br>2023 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
@@ -50,7 +73,7 @@ Für den Enyaq 80 von 2023 ist ausdrücklich der Schiebedachzustand `OPEN` best�
 | `status.remainingTimeToFullyChargedInMinutes` | Restladezeit | ✅ | ⚪ | Integer | ≥ 0 min | `0` | |
 | `status.state` | Ladestatus | ✅ | ⚪ | String | `READY_FOR_CHARGING` / `CONNECT_CABLE` / `CONSERVING` / `CHARGING` / `CHARGING_INTERRUPTED` / `ERROR` | `CONNECT_CABLE` | |
 
-Public API 1.1: Fehlt `status.state`, bedeutet dies unbekannt und nicht automatisch „Kabel abgezogen“. Das Modul setzt `ChargingState` dann auf `UNKNOWN` und lässt den Bedienwert `Charging` unverändert.
+Ab Version 1.7 wird ein bei einem späteren Abruf fehlender `status.state` nicht überschrieben. `ChargingState` und der abgeleitete Bedienwert `Charging` behalten ihren letzten bestätigten Wert, bis die API einen neuen Status liefert.
 
 ## vehicle.chargingProfiles
 
