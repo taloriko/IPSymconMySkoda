@@ -1,8 +1,31 @@
 # Fahrzeug-Kompatibilität
 
-Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen Fahrzeugen geprüft wurden.
+Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen Fahrzeugen geprüft wurden. Seit Version 1.7 bestimmt die tatsächlich gelieferte Antwort, welche Fahrzeugvariablen angelegt werden; unbekannte neue Felder werden automatisch als `API_...`-Variablen ergänzt.
 
 **Legende:** ✅ Getestet · 🟡 Vermutet · ⚪ Zu prüfen · ❌ Nicht vorhanden
+
+## Superb Benzin / Verbrenner – bestätigt am 29.09.2026
+
+Für einen Superb mit `carType = GASOLINE` wurde folgende Struktur praktisch bestätigt. Personenbezogene Inhalte wie FIN, Kennzeichen, Adresse, Koordinaten und Render-URL wurden vor der Dokumentation entfernt.
+
+| API-Pfad | Modulvariable in 1.7 | Nachweis |
+|---|---|:---:|
+| `auxiliaryHeating.state` | `APIAuxiliaryHeatingState` | ✅ |
+| `auxiliaryHeating.durationInSeconds` | `AuxiliaryHeatingDuration` | ✅ |
+| `fuelStatus.carType` | `APICarType` | ✅ |
+| `fuelStatus.primaryEngineRange.currentFuelLevelInPercent` | `FuelLevel` | ✅ |
+| `fuelStatus.primaryEngineRange.currentSoCInPercent` | generische `API_FuelStatus_PrimaryEngineRange_CurrentSoCInPercent` | ✅ |
+| `fuelStatus.primaryEngineRange.engineType` | `APIPrimaryEngineType` | ✅ |
+| `fuelStatus.primaryEngineRange.remainingRangeInKm` | `PrimaryEngineRange` | ✅ |
+| `fuelStatus.totalRangeInKm` | `TotalRange` | ✅ |
+| `odometer.mileageInKm` | `Mileage` | ✅ |
+| `operations[].name` | `APIRemoteOperations` | ✅ `startAuxiliaryHeating`, `stopAuxiliaryHeating` |
+| `parkingPosition.*` | bekannte Standortvariablen | ✅ |
+| `status.overall.*` | bekannte Statusvariablen | ✅ |
+| `status.detail.sunroof/trunk/bonnet` | bekannte Detailvariablen | ✅ |
+| `*.carCapturedTimestamp` | generische `API_..._CarCapturedTimestamp` | ✅ |
+
+In dieser Antwort war kein `charging`-Bereich vorhanden. Auf einer neuen 1.7-Instanz werden deshalb keine EV-Ladevariablen nur vorsorglich angelegt. Werden später zusätzliche Felder geliefert, entstehen die zugehörigen Variablen beim nächsten Abruf automatisch.
 
 ## vehicle
 
@@ -19,7 +42,7 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 |---|---|:---:|:---:|---|---|---|---|
 | `state` | Klimatisierung | ✅ | ⚪ | String | `OFF` / `ON` / `COOLING` / `HEATING` / `HEATING_AUXILIARY` / `VENTILATION` / `INVALID` | `OFF` | |
 | `airConditioningAtUnlock` | Klimatisierung beim Entriegeln | ✅ | ⚪ | Boolean | `true` / `false` | `true` | Beginnt sofort mit der Klimatisierung beim entriegeln (Auch bei Annäherung, wenn aktiviert)|
-| `carCapturedTimestamp` | — | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:39Z` | Keine eigene Variable unter der Instanz |
+| `carCapturedTimestamp` | — | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:39Z` | In 1.7 als generische `API_..._CarCapturedTimestamp`-Variable verfügbar |
 | `targetTemperature.value` | Solltemperatur | ✅ | ⚪ | Number | 16–30 °C | `22` | Modul: 0,5-°C-Schritte (Wird nur gesendet wenn Klima dannach aktiviert wird)|
 | `targetTemperature.unit` | Einheit Solltemperatur | ✅ | ⚪ | String | `CELSIUS` | `CELSIUS` | Ob hier auch Fahrenheit möglich ist konnte ich nicht testen |
 | `windowHeating.enabled` | Scheibenheizung aktiviert | ✅  | ⚪ | Boolean | `true` / `false` | `true` | Nutzung bei Intiligenten Klimatisieren |
@@ -31,7 +54,7 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 | API | Deutsch | Enyaq 80<br>2022 | Enyaq 80<br>2023 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|:---:|---|---|---|---|
 | `isVehicleInSavedLocation` | An gespeichertem Ladeort | ✅ | ⚪ | Boolean | `true` / `false` | `false` | Ist das Fahrzeug an einem Ladeort, der vorherher im Fahrzeug gespeichert und definiert wurde |
-| `carCapturedTimestamp` | — | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:53:06Z` | Keine eigene Variable unter der Instanz |
+| `carCapturedTimestamp` | — | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:53:06Z` | In 1.7 als generische `API_..._CarCapturedTimestamp`-Variable verfügbar |
 | `settings.autoUnlockPlugWhenCharged` | Automatische Steckerentriegelung | ✅ | ⚪ | String | `OFF` / `ON` / `PERMANENT` | `OFF` | Wird nach dem Beenden des Ladevorgangs das Kabel an der Seite des Fahrzeuges entriegelt (Wenn aktiviert kann das Kabel gestohlen werden) |
 | `settings.availableChargeModes` | Lademodus | ✅ | ⚪ | Array[String] | `MANUAL` / `TIMER` / `TIMER_CHARGING_WITH_CLIMATISATION` / `PREFERRED_CHARGING_TIMES` / `ONLY_OWN_CURRENT` / `IMMEDIATE_DISCHARGING` / `HOME_STORAGE_CHARGING` / `OTHER` / `OFF` | `["MANUAL"]` | Verfügbare Auswahl |
 | `settings.batteryCareModeTargetValueInPercent` | Battery-Care-Ziel | ✅ | ⚪ | Integer | 0–100 % | `80` | |
@@ -48,21 +71,21 @@ Diese Tabelle dokumentiert, welche MySkoda-Datenpunkte und Funktionen mit realen
 | `status.remainingTimeToFullyChargedInMinutes` | Restladezeit | ✅ | ⚪ | Integer | ≥ 0 min | `0` | |
 | `status.state` | Ladestatus | ✅ | ⚪ | String | `READY_FOR_CHARGING` / `CONNECT_CABLE` / `CONSERVING` / `CHARGING` / `CHARGING_INTERRUPTED` / `ERROR` | `CONNECT_CABLE` | |
 
-Public API 1.1: Fehlt `status.state`, bedeutet dies unbekannt und nicht automatisch „Kabel abgezogen“. Das Modul setzt `ChargingState` dann auf `UNKNOWN` und lässt den Bedienwert `Charging` unverändert.
+Ab Version 1.7 wird ein bei einem späteren Abruf fehlender `status.state` nicht überschrieben. `ChargingState` und der abgeleitete Bedienwert `Charging` behalten ihren letzten bestätigten Wert, bis die API einen neuen Status liefert.
 
 ## vehicle.chargingProfiles
 
 | API | Deutsch | Enyaq 80<br>2022 | Enyaq 80<br>2023 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|:---:|---|---|---|---|
 | `profiles` | — | 🟡 | ⚪ | Array[Object] | leer oder Ladeprofil-Objekte | `[]` | Über `GetChargingProfiles()` abrufbar; im Test leer |
-| `carCapturedTimestamp` | — | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:35.868Z` | Keine eigene Variable unter der Instanz |
+| `carCapturedTimestamp` | — | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:35.868Z` | In 1.7 als generische `API_..._CarCapturedTimestamp`-Variable verfügbar |
 
 ## vehicle.odometer
 
 | API | Deutsch | Enyaq 80<br>2022 | Enyaq 80<br>2023 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|:---:|---|---|---|---|
 | `mileageInKm` | Kilometerstand | ✅ | ⚪ | Number | ≥ 0 km | `123456` | Im Modul als Integer ausgegeben |
-| `carCapturedTimestamp` | — | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:55:40.132Z` | Keine eigene Variable unter der Instanz |
+| `carCapturedTimestamp` | — | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:55:40.132Z` | In 1.7 als generische `API_..._CarCapturedTimestamp`-Variable verfügbar |
 
 ## vehicle.operations
 
