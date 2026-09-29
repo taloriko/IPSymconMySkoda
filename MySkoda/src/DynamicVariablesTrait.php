@@ -34,8 +34,8 @@ trait MySkodaDynamicVariablesTrait
         $paths = json_decode($this->ReadAttributeString('DynamicVariablePaths'), true);
         $paths = is_array($paths) ? $paths : [];
         $pathsChanged = false;
-        $this->syncDynamicNode($vehicle, '', $paths, $pathsChanged);
         $this->syncDerivedVehicleVariables($vehicle);
+        $this->syncDynamicNode($vehicle, '', $paths, $pathsChanged);
         $this->syncEnvelopeErrors($envelope);
         $this->syncRemoteOperationCache($vehicle);
 
