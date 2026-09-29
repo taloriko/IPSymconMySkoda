@@ -227,7 +227,11 @@
       "Not provided": "Nicht geliefert",
       "No entries": "Keine Einträge",
       "Service disabled": "Dienst deaktiviert",
-      "Temporarily unavailable": "Vorübergehend nicht verfügbar"
+      "Temporarily unavailable": "Vorübergehend nicht verfügbar",
+      "Fuel level": "Tankfüllstand",
+      "Primary engine range": "Reichweite Primärantrieb",
+      "Total range": "Gesamtreichweite",
+      "Auxiliary heating duration": "Standheizungsdauer"
     }
   }
 }
