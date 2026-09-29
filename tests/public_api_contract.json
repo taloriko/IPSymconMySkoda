@@ -276,10 +276,6 @@
       1320,
       "String"
     ],
-    "APISupportedFeatures": [
-      1330,
-      "String"
-    ],
     "APIAvailableChargeModes": [
       1340,
       "String"
