@@ -27,6 +27,13 @@ trait MySkodaHelpersTrait
         return $current;
     }
 
+    private function pathHasValue(array $data, string $path): bool
+    {
+        $sentinel = new stdClass();
+        $value = $this->path($data, $path, $sentinel);
+        return $value !== $sentinel && $value !== null;
+    }
+
     private function firstPath(array $data, array $paths): mixed
     {
         foreach ($paths as $path) {
