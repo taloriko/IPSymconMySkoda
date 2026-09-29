@@ -34,9 +34,7 @@ trait MySkodaDynamicVariablesTrait
         $paths = json_decode($this->ReadAttributeString('DynamicVariablePaths'), true);
         $paths = is_array($paths) ? $paths : [];
         $pathsChanged = false;
-        $position = 2000;
-
-        $this->syncDynamicNode($vehicle, '', $position, $paths, $pathsChanged);
+        $this->syncDynamicNode($vehicle, '', $paths, $pathsChanged);
         $this->syncDerivedVehicleVariables($vehicle);
         $this->syncEnvelopeErrors($envelope);
         $this->syncRemoteOperationCache($vehicle);
@@ -62,7 +60,6 @@ trait MySkodaDynamicVariablesTrait
     private function syncDynamicNode(
         mixed $value,
         string $path,
-        int &$position,
         array &$paths,
         bool &$pathsChanged
     ): void {
@@ -72,26 +69,29 @@ trait MySkodaDynamicVariablesTrait
 
         if (is_array($value)) {
             if ($path !== '' && array_is_list($value)) {
-                $this->syncDynamicValue($path, $value, $position, $paths, $pathsChanged);
+                $this->syncDynamicValue($path, $value, $paths, $pathsChanged);
                 return;
             }
 
             foreach ($value as $key => $child) {
                 $childPath = $path === '' ? (string) $key : $path . '.' . (string) $key;
-                $this->syncDynamicNode($child, $childPath, $position, $paths, $pathsChanged);
+                $this->syncDynamicNode($child, $childPath, $paths, $pathsChanged);
             }
             return;
         }
 
+        if (is_string($value) && trim($value) === '') {
+            return;
+        }
+
         if ($path !== '') {
-            $this->syncDynamicValue($path, $value, $position, $paths, $pathsChanged);
+            $this->syncDynamicValue($path, $value, $paths, $pathsChanged);
         }
     }
 
     private function syncDynamicValue(
         string $path,
         mixed $value,
-        int &$position,
         array &$paths,
         bool &$pathsChanged
     ): void {
@@ -108,12 +108,13 @@ trait MySkodaDynamicVariablesTrait
         }
 
         $ident = $this->dynamicIdentForPath($path, $paths, $pathsChanged);
+        $keys = array_keys($paths);
+        $index = array_search($ident, $keys, true);
+        $position = 2000 + (($index === false ? count($keys) : (int) $index) * 10);
         $definition = $this->dynamicGenericDefinition($ident, $path, $value, $position);
         if ($definition === null) {
             return;
         }
-
-        $position += 10;
         $this->registerVariableOnce($definition);
         $this->setIfExists($ident, $this->dynamicGenericValue($value));
     }
@@ -170,6 +171,10 @@ trait MySkodaDynamicVariablesTrait
             'fuelStatus.carType' => ['ident' => 'APICarType', 'transform' => 'upper'],
             'fuelStatus.primaryEngineRange.engineType' => ['ident' => 'APIPrimaryEngineType', 'transform' => 'upper'],
             'fuelStatus.secondaryEngineRange.engineType' => ['ident' => 'APISecondaryEngineType', 'transform' => 'upper'],
+            'fuelStatus.primaryEngineRange.currentFuelLevelInPercent' => ['ident' => 'FuelLevel'],
+            'fuelStatus.primaryEngineRange.remainingRangeInKm' => ['ident' => 'PrimaryEngineRange'],
+            'fuelStatus.totalRangeInKm' => ['ident' => 'TotalRange'],
+            'auxiliaryHeating.durationInSeconds' => ['ident' => 'AuxiliaryHeatingDuration'],
             'operations',
             'remoteOperations' => ['ident' => 'APIRemoteOperations', 'transform' => 'text'],
             'auxiliaryHeating.state' => ['ident' => 'APIAuxiliaryHeatingState', 'transform' => 'upper'],
@@ -183,7 +188,7 @@ trait MySkodaDynamicVariablesTrait
         $definitions = array_merge(
             $this->coreVariableDefinitions(),
             $this->detailVariableDefinitions(),
-            $this->dynamicAdditionalKnownDefinitions()
+            $this->publicApiVariableDefinitions()
         );
 
         foreach ($definitions as $definition) {
@@ -193,44 +198,6 @@ trait MySkodaDynamicVariablesTrait
         }
 
         return null;
-    }
-
-    private function dynamicAdditionalKnownDefinitions(): array
-    {
-        return [
-            $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode')),
-            $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
-                ['CONNECTED', 'Connected', 'plug-circle-check', 0x22C55E],
-                ['DISCONNECTED', 'Disconnected', 'plug', 0x6B7280],
-                ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
-            ])),
-            $this->variable('PlugLockState', 'Plug lock state', VARIABLETYPE_STRING, 314, $this->publicApiEnumPresentation('lock', [
-                ['LOCKED', 'Locked', 'lock', 0x22C55E],
-                ['UNLOCKED', 'Unlocked', 'lock-open', 0xF59E0B],
-                ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
-            ])),
-            $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0)),
-            $this->variable('AtSavedChargingLocation', 'At saved charging location', VARIABLETYPE_BOOLEAN, 200, $this->valuePresentation('house')),
-            $this->variable('BatteryCareMode', 'Battery care mode', VARIABLETYPE_STRING, 240, $this->valuePresentation('shield')),
-            $this->variable('BatteryCareTargetSOC', 'Battery care target', VARIABLETYPE_INTEGER, 230, $this->valuePresentation('battery-half', ' %', 0)),
-            $this->variable('MaxChargeCurrentAC', 'Maximum AC charging current', VARIABLETYPE_STRING, 250, $this->valuePresentation('bolt')),
-            $this->variable('AutoUnlockPlug', 'Automatic plug unlock', VARIABLETYPE_STRING, 210, $this->valuePresentation('plug')),
-            $this->variable('TargetTemperatureUnit', 'Target temperature unit', VARIABLETYPE_STRING, 130, $this->valuePresentation('temperature-half')),
-            $this->variable('AirConditioningAtUnlock', 'Air conditioning at unlock', VARIABLETYPE_BOOLEAN, 110, $this->valuePresentation('key')),
-            $this->variable('WindowHeatingEnabled', 'Window heating enabled', VARIABLETYPE_BOOLEAN, 140, $this->valuePresentation('window-maximize')),
-            $this->variable('WindowHeatingFront', 'Front window heating', VARIABLETYPE_STRING, 150, $this->onOffStatePresentation('window-maximize')),
-            $this->variable('WindowHeatingRear', 'Rear window heating', VARIABLETYPE_STRING, 160, $this->onOffStatePresentation('car-rear')),
-            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1300, $this->valuePresentation()),
-            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1310, $this->valuePresentation()),
-            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1320, $this->valuePresentation()),
-            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1340, $this->valuePresentation()),
-            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1350, [
-                'PRESENTATION' => VARIABLE_PRESENTATION_VALUE_PRESENTATION,
-                'MULTILINE' => true
-            ]),
-            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1360, $this->valuePresentation('fire')),
-            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, $this->valuePresentation('fan'))
-        ];
     }
 
     private function setDynamicKnownValue(array $definition, array $spec, mixed $value): void
