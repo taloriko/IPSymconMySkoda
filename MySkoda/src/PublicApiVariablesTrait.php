@@ -74,7 +74,7 @@ trait MySkodaPublicApiVariablesTrait
             $this->variable('PrimaryEngineRange', 'Primary engine range', VARIABLETYPE_INTEGER, 360, $this->valuePresentation('route', ' km', 0)),
             $this->variable('TotalRange', 'Total range', VARIABLETYPE_INTEGER, 370, $this->valuePresentation('route', ' km', 0)),
             $this->variable('AuxiliaryHeatingDuration', 'Auxiliary heating duration', VARIABLETYPE_INTEGER, 380, $this->valuePresentation('hourglass-half', ' s', 0))
-  ;
+        ];
     }
 
     private function updatePublicApiValuesFromRawData(): void
