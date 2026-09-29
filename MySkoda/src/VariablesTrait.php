@@ -18,13 +18,19 @@ trait MySkodaVariablesTrait
 
     private function registerVariables(): void
     {
+        $always = ['ApiKeyWarning', 'LastUpdate'];
         foreach ($this->coreVariableDefinitions() as $definition) {
-            $this->registerVariableOnce($definition);
+            if (in_array((string) $definition['ident'], $always, true)) {
+                $this->registerVariableOnce($definition);
+            }
         }
 
         if ($this->ReadPropertyBoolean('ShowDetails')) {
+            $diagnostics = ['ApiKeyExpiresAtVar', 'RequestsRemaining'];
             foreach ($this->detailVariableDefinitions() as $definition) {
-                $this->registerVariableOnce($definition);
+                if (in_array((string) $definition['ident'], $diagnostics, true)) {
+                    $this->registerVariableOnce($definition);
+                }
             }
         }
     }
@@ -184,8 +190,32 @@ trait MySkodaVariablesTrait
     private function applyActions(): void
     {
         $enabled = $this->ReadPropertyBoolean('EnableRemote');
-        foreach (['Charging', 'TargetSOC', 'ChargeMode', 'Climate', 'TargetTemperature'] as $ident) {
-            $this->MaintainAction($ident, $enabled);
+        $operations = json_decode($this->ReadAttributeString('AvailableRemoteOperations'), true);
+        $operations = is_array($operations) ? $operations : [];
+
+        $requirements = [
+            'Charging' => ['startCharging', 'stopCharging'],
+            'TargetSOC' => ['setChargingLimit'],
+            'ChargeMode' => ['setChargeMode'],
+            'Climate' => ['startAirConditioning', 'stopAirConditioning'],
+            'TargetTemperature' => ['startAirConditioning']
+        ];
+
+        foreach ($requirements as $ident => $required) {
+            $id = @$this->GetIDForIdent($ident);
+            if ($id === false || !IPS_VariableExists($id)) {
+                continue;
+            }
+
+            $supported = $required !== [];
+            foreach ($required as $operation) {
+                if (!in_array($operation, $operations, true)) {
+                    $supported = false;
+                    break;
+                }
+            }
+
+            $this->MaintainAction($ident, $enabled && $supported);
         }
     }
 
@@ -240,7 +270,8 @@ trait MySkodaVariablesTrait
     private function setPathValue(string $ident, array $source, string $path, Closure $convert): void
     {
         $value = $this->path($source, $path, null);
-        if ($value !== null) {
+        $id = @$this->GetIDForIdent($ident);
+        if ($value !== null && $id !== false && IPS_VariableExists($id)) {
             $this->SetValue($ident, $convert($value));
         }
     }
