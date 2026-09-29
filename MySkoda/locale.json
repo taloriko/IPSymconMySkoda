@@ -227,7 +227,17 @@
       "Not provided": "Nicht geliefert",
       "No entries": "Keine Einträge",
       "Service disabled": "Dienst deaktiviert",
-      "Temporarily unavailable": "Vorübergehend nicht verfügbar"
+      "Temporarily unavailable": "Vorübergehend nicht verfügbar",
+      "Fuel level": "Tankfüllstand",
+      "Primary engine state of charge": "Primärer Antrieb SoC",
+      "Fuel range": "Kraftstoff-Reichweite",
+      "Total range": "Gesamtreichweite",
+      "Auxiliary heating duration": "Standheizungsdauer",
+      "Gasoline": "Benzin",
+      "Diesel": "Diesel",
+      "Electric": "Elektrisch",
+      "Hybrid": "Hybrid",
+      "Plug-in hybrid": "Plug-in-Hybrid"
     }
   }
 }
