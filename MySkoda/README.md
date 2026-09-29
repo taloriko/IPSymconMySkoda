@@ -1,6 +1,6 @@
 # MySkoda
 
-MySkoda ist ein Gerätemodul für Symcon. Eine Instanz repräsentiert ein Fahrzeug anhand seiner FIN/VIN und verwendet ausschließlich die offizielle MyŠkoda Public API. Das Modul legt eigene Variablen und bei verfügbarer Render-URL ein Bildmedium unterhalb der Instanz an.
+MySkoda ist ein Gerätemodul für Symcon. Eine Instanz repräsentiert ein Fahrzeug anhand seiner FIN/VIN und verwendet ausschließlich die offizielle MyŠkoda Public API. Seit Version 1.7 werden Fahrzeugvariablen aus den tatsächlich gelieferten API-Feldern erzeugt. Bekannte Felder erhalten feste Idents und passende Darstellungen; bisher unbekannte Felder werden automatisch als neutrale `API_...`-Variablen angelegt.
 
 ## 1. Voraussetzungen
 
@@ -41,7 +41,7 @@ Anschließend kann unter **Instanz hinzufügen** eine Instanz **MySkoda** angele
 | `EnableRemote` | Remote-Steuerung | an; steuert Bedienaktionen und die Ausführung von Remote-Befehlen |
 | `ClimateWithoutExternalPower` | Klima ohne externe Versorgung | an; wird beim Klimastart nur mitgesendet, wenn das Fahrzeug das entsprechende API-Feld liefert |
 | `SPIN` | S-PIN | leer; für den Start der Standheizung |
-| `ShowDetails` | Detail- und Diagnosevariablen anlegen | aus; legt bei Aktivierung fehlende Detailvariablen an |
+| `ShowDetails` | zusätzliche Moduldiagnose anlegen | aus; ergänzt API-Key-Ablauf, Restkontingent und Befehlsdiagnose. Fahrzeugdaten selbst werden unabhängig davon nach API-Antwort angelegt |
 | `CreateVINVariables` | FIN-Informationsvariablen anlegen | aus; legt 17 lokale String-Variablen an |
 | `EnableChargingHistory` | Fahrzeugdaten archivieren | aus; richtet Archivierung einmalig ein |
 | `NotifyKeyExpiry` | API-Key-Ablaufwarnung | aus; Mitteilung bei höchstens 30 Tagen Restlaufzeit |
@@ -51,15 +51,15 @@ Die Schaltflächen **Jetzt aktualisieren**, **Fahrzeugbild aktualisieren**, **Ro
 
 ## 4. Variablen und Objektverwaltung
 
-Die Standardkonfiguration erzeugt 37 Variablen. `ShowDetails` ergänzt 18 Variablen; `CreateVINVariables` ergänzt 17 Variablen. Bei Aktivierung beider Optionen entstehen 72 Variablen. Das optionale Bildmedium zählt nicht als Variable.
+Die Anzahl der Fahrzeugvariablen ist ab Version 1.7 nicht mehr fest. `ApiKeyWarning` und `LastUpdate` gehören zur Instanz; Fahrzeugwerte entstehen erst, wenn der jeweilige Pfad in einer API-Antwort tatsächlich einen Wert liefert. `CreateVINVariables` ergänzt weiterhin 17 lokal erzeugte FIN-Variablen. `ShowDetails` ergänzt nur die Moduldiagnose.
 
-**Ab Version 1.6:** Durch `PlugConnectionState` und `PlugLockState` entstehen 39 Standardvariablen beziehungsweise 74 Variablen bei aktivierten Optionen `ShowDetails` und `CreateVINVariables`.
+Kommt bei einem späteren Abruf ein neues Feld hinzu, wird die passende Variable automatisch angelegt. Fehlt ein bereits bekannter Pfad in einer späteren, unvollständigen Antwort, wird die vorhandene Variable weder gelöscht noch auf 0, leer oder `UNKNOWN` zurückgesetzt; ihr letzter Wert bleibt erhalten. Leere Strings und `null` gelten dabei als nicht befüllt.
 
-Fehlende Variablen erhalten bei der Anlage den vorgesehenen Datentyp, Namen, die Position und Darstellung. Existierende Variablen werden nicht erneut registriert, umbenannt, umsortiert oder automatisch gelöscht. Auch ein nachträglich geleertes Icon bleibt leer. Bei einer Typ- oder Ident-Kollision wird eine Meldung protokolliert; das betroffene Objekt wird nicht automatisch ersetzt.
+Für bekannte API-Pfade verwendet das Modul die unten dokumentierten Idents, Namen, Einheiten und Darstellungen. Noch unbekannte Skalare erhalten einen stabilen Ident aus ihrem Pfad, zum Beispiel `serviceData.oilTemperatureInC` → `API_ServiceData_OilTemperatureInC`. Arrays werden als JSON beziehungsweise kompakte Liste gespeichert. Die Zuordnung von generischem Ident zu API-Pfad wird intern gespeichert, damit spätere Abrufe dieselbe Variable weiterverwenden.
 
-Das Ausschalten einer Erstellungsoption löscht vorhandene Variablen nicht. Laufende API-Werte werden weiterhin aktualisiert. FIN-Variablen werden nur bei ihrer Erstanlage und bei Änderung der konfigurierten FIN beschrieben. Remote-Bedienaktionen folgen weiterhin `EnableRemote`.
+Existierende Variablen werden nicht erneut registriert, umbenannt, umsortiert oder automatisch gelöscht. Damit bleiben auch Benutzeranpassungen und Variablen aus einer älteren Modulversion erhalten. Bei einer Typ- oder Ident-Kollision wird eine Meldung protokolliert; das betroffene Objekt wird nicht automatisch ersetzt.
 
-Die folgenden Positionen sind die Vorgaben für die **Erstanlage**. Reihenfolge: API-Fahrzeugdaten, abgeleitete Betriebsdaten, lokale FIN-Daten, zusätzliche API-Fahrzeuginformationen. **Standard** bedeutet immer angelegt; **Detail** erfordert `ShowDetails` für die Anlage. Die Anzeige ist deutsch, während die Idents als Programmierschnittstelle unverändert bleiben.
+Die folgenden Positionen sind die Vorgaben für die **Erstanlage bekannter Felder**. Ob eine Variable entsteht, hängt ab Version 1.7 grundsätzlich davon ab, ob der zugehörige API-Pfad geliefert wird.
 
 ### 4.1 API-Fahrzeugdaten
 
@@ -67,46 +67,50 @@ API-Pfade beziehen sich, sofern nicht anders angegeben, auf `vehicle` der Fahrze
 
 | Position | Ident | Anzeige | Typ | Anlage | Quelle / Bedeutung |
 |---:|---|---|---|---|---|
-| 10 | `VehicleName` | Fahrzeugname | String | Detail | `name` |
-| 20 | `LicensePlate` | Kennzeichen | String | Detail | `licensePlate` |
-| 30 | `VIN` | FIN / VIN | String | Standard | `vin` aus der API, nicht aus der lokalen Interpretation |
-| 100 | `ClimateState` | Klimastatus | String | Standard | `airConditioning.state` |
-| 110 | `AirConditioningAtUnlock` | Klimatisierung beim Entriegeln | Boolean | Standard | `airConditioning.airConditioningAtUnlock` |
-| 120 | `TargetTemperature` | Solltemperatur | Float | Standard | `airConditioning.targetTemperature.value`; bedienbar |
-| 130 | `TargetTemperatureUnit` | Einheit Solltemperatur | String | Standard | `airConditioning.targetTemperature.unit` |
-| 140 | `WindowHeatingEnabled` | Scheibenheizung aktiviert | Boolean | Standard | `airConditioning.windowHeating.enabled` |
-| 150 | `WindowHeatingFront` | Frontscheibenheizung | String | Standard | `airConditioning.windowHeating.front` |
-| 160 | `WindowHeatingRear` | Heckscheibenheizung | String | Standard | `airConditioning.windowHeating.rear` |
-| 200 | `AtSavedChargingLocation` | An gespeichertem Ladeort | Boolean | Standard | `charging.isVehicleInSavedLocation` |
-| 210 | `AutoUnlockPlug` | Automatische Steckerentriegelung | String | Standard | `charging.settings.autoUnlockPlugWhenCharged` |
-| 230 | `BatteryCareTargetSOC` | Battery-Care-Ziel | Integer | Standard | `charging.settings.batteryCareModeTargetValueInPercent`; % |
-| 240 | `BatteryCareMode` | Battery Care Mode | String | Standard | `charging.settings.chargingCareMode` |
-| 250 | `MaxChargeCurrentAC` | Maximaler AC-Ladestrom | String | Standard | `charging.settings.maxChargeCurrentAc`; Status, kein Amperewert |
-| 260 | `ChargeMode` | Lademodus | Integer | Standard | Index für `charging.settings.preferredChargeMode`; bedienbar |
-| 270 | `TargetSOC` | Ladelimit | Integer | Standard | `charging.settings.targetStateOfChargeInPercent`; %; bedienbar |
-| 280 | `Range` | Reichweite | Integer | Standard | `charging.status.battery.remainingCruisingRangeInMeters`; gerundet in km |
-| 290 | `StateOfCharge` | Ladezustand | Integer | Standard | `charging.status.battery.stateOfChargeInPercent`; % |
-| 300 | `ChargePower` | Ladeleistung | Float | Standard | `charging.status.chargePowerInKw`; mit 1000 multipliziert, gespeichert in W |
-| 310 | `FullyChargedAt` | Vollgeladen um | Integer | Detail | `charging.status.fullyChargedAt`; Unix-Zeitstempel |
-| 312 | `PlugConnectionState` | Ladestecker Anschlussstatus | String | Standard | `charging.status.plugConnectionState`; `CONNECTED`, `DISCONNECTED`, `UNKNOWN` |
-| 314 | `PlugLockState` | Ladestecker Verriegelungsstatus | String | Standard | `charging.status.plugLockState`; `LOCKED`, `UNLOCKED`, `UNKNOWN` |
-| 320 | `RemainingChargingTime` | Restladezeit | Integer | Standard | `charging.status.remainingTimeToFullyChargedInMinutes`; min |
-| 330 | `ChargingState` | Ladestatus | String | Detail | `charging.status.state` |
-| 340 | `ChargeType` | Ladeart | String | Detail | `charging.status.chargeType` |
-| 400 | `Mileage` | Kilometerstand | Integer | Standard | `odometer.mileageInKm`; gerundet, nur Werte größer 0 übernommen |
-| 600 | `ParkingState` | Parkstatus | String | Detail | `parkingPosition.state` |
-| 610 | `ParkingAddress` | Parkadresse | String | Detail | `parkingPosition.formattedAddress` |
-| 620 | `Latitude` | Breitengrad | Float | Detail | `parkingPosition.gpsCoordinates.latitude`; auch flache Koordinaten und `lat` werden gelesen |
-| 630 | `Longitude` | Längengrad | Float | Detail | `parkingPosition.gpsCoordinates.longitude`; auch flache Koordinaten, `lon` und `lng` werden gelesen |
-| 700 | `DoorsLocked` | Türverriegelungsstatus | String | Standard | `status.overall.doorsLocked` |
-| 710 | `Locked` | Fahrzeugverriegelungsstatus | String | Standard | `status.overall.locked` |
-| 720 | `DoorsOpen` | Türen | String | Standard | `status.overall.doors` |
-| 730 | `WindowsOpen` | Fenster | String | Standard | `status.overall.windows` |
-| 740 | `LightsOn` | Licht | String | Detail | `status.overall.lights` |
-| 750 | `ReliableLockStatus` | Zuverlässiger Verriegelungsstatus | String | Standard | `status.overall.reliableLockStatus` |
-| 800 | `SunroofOpen` | Schiebedach | String | Detail | `status.detail.sunroof` |
-| 810 | `TrunkOpen` | Kofferraum | String | Detail | `status.detail.trunk` |
-| 820 | `BonnetOpen` | Motorhaube | String | Detail | `status.detail.bonnet` |
+| 10 | `VehicleName` | Fahrzeugname | String | bei Lieferung | `name` |
+| 20 | `LicensePlate` | Kennzeichen | String | bei Lieferung | `licensePlate` |
+| 30 | `VIN` | FIN / VIN | String | bei Lieferung | `vin` aus der API, nicht aus der lokalen Interpretation |
+| 100 | `ClimateState` | Klimastatus | String | bei Lieferung | `airConditioning.state` |
+| 110 | `AirConditioningAtUnlock` | Klimatisierung beim Entriegeln | Boolean | bei Lieferung | `airConditioning.airConditioningAtUnlock` |
+| 120 | `TargetTemperature` | Solltemperatur | Float | bei Lieferung | `airConditioning.targetTemperature.value`; bedienbar |
+| 130 | `TargetTemperatureUnit` | Einheit Solltemperatur | String | bei Lieferung | `airConditioning.targetTemperature.unit` |
+| 140 | `WindowHeatingEnabled` | Scheibenheizung aktiviert | Boolean | bei Lieferung | `airConditioning.windowHeating.enabled` |
+| 150 | `WindowHeatingFront` | Frontscheibenheizung | String | bei Lieferung | `airConditioning.windowHeating.front` |
+| 160 | `WindowHeatingRear` | Heckscheibenheizung | String | bei Lieferung | `airConditioning.windowHeating.rear` |
+| 200 | `AtSavedChargingLocation` | An gespeichertem Ladeort | Boolean | bei Lieferung | `charging.isVehicleInSavedLocation` |
+| 210 | `AutoUnlockPlug` | Automatische Steckerentriegelung | String | bei Lieferung | `charging.settings.autoUnlockPlugWhenCharged` |
+| 230 | `BatteryCareTargetSOC` | Battery-Care-Ziel | Integer | bei Lieferung | `charging.settings.batteryCareModeTargetValueInPercent`; % |
+| 240 | `BatteryCareMode` | Battery Care Mode | String | bei Lieferung | `charging.settings.chargingCareMode` |
+| 250 | `MaxChargeCurrentAC` | Maximaler AC-Ladestrom | String | bei Lieferung | `charging.settings.maxChargeCurrentAc`; Status, kein Amperewert |
+| 260 | `ChargeMode` | Lademodus | Integer | bei Lieferung | Index für `charging.settings.preferredChargeMode`; bedienbar |
+| 270 | `TargetSOC` | Ladelimit | Integer | bei Lieferung | `charging.settings.targetStateOfChargeInPercent`; %; bedienbar |
+| 280 | `Range` | Reichweite | Integer | bei Lieferung | `charging.status.battery.remainingCruisingRangeInMeters`; gerundet in km |
+| 290 | `StateOfCharge` | Ladezustand | Integer | bei Lieferung | `charging.status.battery.stateOfChargeInPercent`; % |
+| 300 | `ChargePower` | Ladeleistung | Float | bei Lieferung | `charging.status.chargePowerInKw`; mit 1000 multipliziert, gespeichert in W |
+| 310 | `FullyChargedAt` | Vollgeladen um | Integer | bei Lieferung | `charging.status.fullyChargedAt`; Unix-Zeitstempel |
+| 312 | `PlugConnectionState` | Ladestecker Anschlussstatus | String | bei Lieferung | `charging.status.plugConnectionState`; `CONNECTED`, `DISCONNECTED`, `UNKNOWN` |
+| 314 | `PlugLockState` | Ladestecker Verriegelungsstatus | String | bei Lieferung | `charging.status.plugLockState`; `LOCKED`, `UNLOCKED`, `UNKNOWN` |
+| 320 | `RemainingChargingTime` | Restladezeit | Integer | bei Lieferung | `charging.status.remainingTimeToFullyChargedInMinutes`; min |
+| 330 | `ChargingState` | Ladestatus | String | bei Lieferung | `charging.status.state` |
+| 340 | `ChargeType` | Ladeart | String | bei Lieferung | `charging.status.chargeType` |
+| 350 | `FuelLevel` | Tankfüllstand | Integer | bei Lieferung | `fuelStatus.primaryEngineRange.currentFuelLevelInPercent`; % |
+| 360 | `PrimaryEngineRange` | Reichweite Primärantrieb | Integer | bei Lieferung | `fuelStatus.primaryEngineRange.remainingRangeInKm`; km |
+| 370 | `TotalRange` | Gesamtreichweite | Integer | bei Lieferung | `fuelStatus.totalRangeInKm`; km |
+| 380 | `AuxiliaryHeatingDuration` | Standheizungsdauer | Integer | bei Lieferung | `auxiliaryHeating.durationInSeconds`; s |
+| 400 | `Mileage` | Kilometerstand | Integer | bei Lieferung | `odometer.mileageInKm`; gerundet, nur Werte größer 0 übernommen |
+| 600 | `ParkingState` | Parkstatus | String | bei Lieferung | `parkingPosition.state` |
+| 610 | `ParkingAddress` | Parkadresse | String | bei Lieferung | `parkingPosition.formattedAddress` |
+| 620 | `Latitude` | Breitengrad | Float | bei Lieferung | `parkingPosition.gpsCoordinates.latitude`; auch flache Koordinaten und `lat` werden gelesen |
+| 630 | `Longitude` | Längengrad | Float | bei Lieferung | `parkingPosition.gpsCoordinates.longitude`; auch flache Koordinaten, `lon` und `lng` werden gelesen |
+| 700 | `DoorsLocked` | Türverriegelungsstatus | String | bei Lieferung | `status.overall.doorsLocked` |
+| 710 | `Locked` | Fahrzeugverriegelungsstatus | String | bei Lieferung | `status.overall.locked` |
+| 720 | `DoorsOpen` | Türen | String | bei Lieferung | `status.overall.doors` |
+| 730 | `WindowsOpen` | Fenster | String | bei Lieferung | `status.overall.windows` |
+| 740 | `LightsOn` | Licht | String | bei Lieferung | `status.overall.lights` |
+| 750 | `ReliableLockStatus` | Zuverlässiger Verriegelungsstatus | String | bei Lieferung | `status.overall.reliableLockStatus` |
+| 800 | `SunroofOpen` | Schiebedach | String | bei Lieferung | `status.detail.sunroof` |
+| 810 | `TrunkOpen` | Kofferraum | String | bei Lieferung | `status.detail.trunk` |
+| 820 | `BonnetOpen` | Motorhaube | String | bei Lieferung | `status.detail.bonnet` |
 
 Die drei Verriegelungswerte werden getrennt aus den jeweiligen Feldern gelesen. Es findet keine Priorisierung oder gegenseitige Ersetzung statt.
 
@@ -114,19 +118,19 @@ Die drei Verriegelungswerte werden getrennt aus den jeweiligen Feldern gelesen. 
 
 | Position | Ident | Anzeige | Typ | Anlage | Bedeutung |
 |---:|---|---|---|---|---|
-| 900 | `Climate` | Klimatisierung | Boolean | Standard | aus Klimastatus abgeleitet; Start/Stopp bedienbar |
-| 910 | `Charging` | Laden | Boolean | Standard | wahr bei `CHARGING` oder `CONSERVING`; Start/Stopp bedienbar |
-| 920 | `LastUpdate` | Letzte Aktualisierung | Integer | Standard | lokaler Unix-Zeitstempel des letzten erfolgreichen Fahrzeugabrufs |
-| 930 | `ApiKeyWarning` | API-Key Warnung | Boolean | Standard | bekanntes Ablaufdatum erreicht oder höchstens 30 Tage entfernt |
-| 940 | `ApiKeyExpiresAtVar` | API-Key gültig bis | Integer | Detail | aus HTTP-Header `x-api-key-expires-at`; Unix-Zeitstempel |
-| 950 | `RequestsRemaining` | Verbleibende API-Anfragen | Integer | Detail | gespeichertes Restkontingent beim Fahrzeugabruf |
-| 960 | `PartialErrors` | API-Teilfehler | String | Detail | `errors` der Antwort als JSON; leer, wenn keine Teilfehler vorliegen |
-| 980 | `PendingCommands` | Ausstehende Befehle | Integer | Detail | Anzahl aktuell laufender Befehlsanfragen |
-| 990 | `CommandStatus` | Befehlsstatus | String | Detail | Übertragungsstatus oder Ergebnis des letzten Befehls |
+| 900 | `Climate` | Klimatisierung | Boolean | bei Lieferung | aus Klimastatus abgeleitet; Start/Stopp bedienbar |
+| 910 | `Charging` | Laden | Boolean | bei Lieferung | wahr bei `CHARGING` oder `CONSERVING`; Start/Stopp bedienbar |
+| 920 | `LastUpdate` | Letzte Aktualisierung | Integer | bei Lieferung | lokaler Unix-Zeitstempel des letzten erfolgreichen Fahrzeugabrufs |
+| 930 | `ApiKeyWarning` | API-Key Warnung | Boolean | bei Lieferung | bekanntes Ablaufdatum erreicht oder höchstens 30 Tage entfernt |
+| 940 | `ApiKeyExpiresAtVar` | API-Key gültig bis | Integer | bei Lieferung | aus HTTP-Header `x-api-key-expires-at`; Unix-Zeitstempel |
+| 950 | `RequestsRemaining` | Verbleibende API-Anfragen | Integer | bei Lieferung | gespeichertes Restkontingent beim Fahrzeugabruf |
+| 960 | `PartialErrors` | API-Teilfehler | String | bei Lieferung | `errors` der Antwort als JSON; leer, wenn keine Teilfehler vorliegen |
+| 980 | `PendingCommands` | Ausstehende Befehle | Integer | bei Lieferung | Anzahl aktuell laufender Befehlsanfragen |
+| 990 | `CommandStatus` | Befehlsstatus | String | bei Lieferung | Übertragungsstatus oder Ergebnis des letzten Befehls |
 
 `Climate` ist wahr bei `ON`, `COOLING`, `HEATING`, `HEATING_AUXILIARY` oder `VENTILATION`. Für genaue Zustandsauswertungen ist `ClimateState` zu verwenden. Entsprechend ist `ChargingState` aussagekräftiger als der Bedien-Boolean `Charging`.
 
-Seit Version 1.6 wird ein fehlender oder bislang unbekannter Wert von `charging.status.state` nicht als bestätigtes Ladeende interpretiert. `ChargingState` erhält in diesem Fall `UNKNOWN`; der Bedienwert `Charging` bleibt unverändert. `PlugConnectionState` und `PlugLockState` bilden Anschluss- und Verriegelungszustand getrennt ab.
+Seit Version 1.7 gilt für alle Fahrzeugfelder einheitlich: Fehlt ein Pfad in einem späteren Abruf, bleibt der zuletzt gelieferte Wert erhalten. Das gilt auch für `charging.status.state`, `PlugConnectionState` und `PlugLockState`. Erst ein tatsächlich gelieferter neuer Wert überschreibt den bisherigen Zustand.
 
 ### 4.3 Lokale FIN-Informationen
 
@@ -138,16 +142,15 @@ Diese Standardvariablen sind reine Strings ohne Icons und besondere Darstellunge
 
 | Position | Ident | Anzeige | Typ | Anlage | Quelle / Bedeutung |
 |---:|---|---|---|---|---|
-| 1300 | `APICarType` | API Fahrzeugtyp | String | Standard | `fuelStatus.carType` |
-| 1310 | `APIPrimaryEngineType` | API Primärer Antriebstyp | String | Standard | `fuelStatus.primaryEngineRange.engineType` |
-| 1320 | `APISecondaryEngineType` | API Sekundärer Antriebstyp | String | Standard | `fuelStatus.secondaryEngineRange.engineType` |
-| 1330 | `APISupportedFeatures` | API Unterstützte Funktionen | String | Standard | aus vorhandenen API-Bereichen und bestimmten Fehlerkategorien abgeleitet |
-| 1340 | `APIAvailableChargeModes` | API Verfügbare Lademodi | String | Standard | `charging.settings.availableChargeModes` als kompakte Liste |
-| 1350 | `APIRemoteOperations` | API Remote-Operationen | String | Standard | `operations`, alternativ `remoteOperations`; Liste oder JSON |
-| 1360 | `APIAuxiliaryHeatingState` | API Standheizungsstatus | String | Standard | `auxiliaryHeating.state` |
-| 1370 | `APIActiveVentilationState` | API Lüftungsstatus | String | Standard | `activeVentilation.state` |
+| 1300 | `APICarType` | API Fahrzeugtyp | String | bei Lieferung | `fuelStatus.carType` |
+| 1310 | `APIPrimaryEngineType` | API Primärer Antriebstyp | String | bei Lieferung | `fuelStatus.primaryEngineRange.engineType` |
+| 1320 | `APISecondaryEngineType` | API Sekundärer Antriebstyp | String | bei Lieferung | `fuelStatus.secondaryEngineRange.engineType` |
+| 1340 | `APIAvailableChargeModes` | API Verfügbare Lademodi | String | bei Lieferung | `charging.settings.availableChargeModes` als kompakte Liste |
+| 1350 | `APIRemoteOperations` | API Remote-Operationen | String | bei Lieferung | `operations`, alternativ `remoteOperations`; Liste oder JSON |
+| 1360 | `APIAuxiliaryHeatingState` | API Standheizungsstatus | String | bei Lieferung | `auxiliaryHeating.state` |
+| 1370 | `APIActiveVentilationState` | API Lüftungsstatus | String | bei Lieferung | `activeVentilation.state` |
 
-`APISupportedFeatures` ist ein abgeleiteter Hinweis auf API-Bereiche und kein vollständiger Ausstattungsnachweis. Scalar-Listen werden mit Kommas verbunden, strukturierte Werte als JSON ausgegeben.
+Listen aus bekannten Feldern werden kompakt beziehungsweise als JSON gespeichert. Weitere, noch nicht speziell bekannte API-Felder erscheinen automatisch mit einem `API_...`-Ident und neutraler Darstellung.
 
 ## 5. Zustände und Einheiten
 
@@ -169,7 +172,7 @@ Diese Standardvariablen sind reine Strings ohne Icons und besondere Darstellunge
 
 Dies sind die im Modul bekannten Anzeigeoptionen, keine Zusage, dass ein Fahrzeug alle Werte liefert. Unbekannte String-Zustände bleiben als API-Wert auswertbar. API-Enums werden überwiegend in Großschreibung übernommen.
 
-Fehlende Daten sind nicht mit einem bestätigten Fahrzeugzustand gleichzusetzen: Einige Statusfelder erhalten `UNKNOWN`, manche numerischen Werte behalten den letzten Wert, andere Detailwerte werden leer oder 0 gesetzt. Zahlen und Booleans haben keine allgemeine Unbekannt-Darstellung. Für die Einordnung sind `LastUpdate`, `PartialErrors` und die Rohantwort maßgeblich. `LastUpdate` ist nicht der Erfassungszeitpunkt im Fahrzeug. Die API-Felder `carCapturedTimestamp` erhalten keine eigenen Variablen.
+Fehlende Daten sind nicht mit einem bestätigten Fahrzeugzustand gleichzusetzen. Ab Version 1.7 werden fehlende Pfade nicht aktiv zurückgesetzt; vorhandene Werte bleiben stehen. Für die Einordnung sind `LastUpdate`, `PartialErrors` und die Rohantwort maßgeblich. `LastUpdate` ist der lokale Abrufzeitpunkt. Noch nicht speziell zugeordnete Zeitstempel wie `carCapturedTimestamp` erscheinen als generische `API_...`-Stringvariablen.
 
 Die Bedienoberfläche für Temperatur ist auf 16–30 °C in Schritten von 0,5 eingestellt. Der Code übernimmt die API-Temperatureinheit für Befehle, rechnet den Zahlenwert jedoch nicht zwischen Celsius und Fahrenheit um. Ein durchgängiger Fahrenheit-Betrieb wird damit nicht zugesichert.
 
@@ -191,7 +194,7 @@ Die interne Verfügbarkeitsliste enthält die gemeldeten `availableChargeModes` 
 
 ## 6. Remote-Befehle
 
-Die Bedienvariablen sind `Charging`, `TargetSOC`, `ChargeMode`, `Climate` und `TargetTemperature`. `EnableRemote` muss eingeschaltet sein. Andere Fahrzeugwerte sind nicht bedienbar.
+Die Bedienvariablen sind `Charging`, `TargetSOC`, `ChargeMode`, `Climate` und `TargetTemperature`, soweit die zugehörigen Fahrzeugdaten vorhanden sind. `EnableRemote` muss eingeschaltet sein. Eine Aktion wird nur aktiviert, wenn das Fahrzeug die dafür benötigte Operation in `vehicle.operations` beziehungsweise `remoteOperations` meldet. Andere Fahrzeugwerte sind nicht bedienbar.
 
 Beim Absenden wird der gewünschte Wert lokal gesetzt. Während der synchronen HTTP-Anfrage wird Pending geführt. Eine erfolgreiche 2xx-Antwort beendet Pending und hält den gewünschten Wert. Bei Übertragungsfehlern, Fehlerantworten oder Ausnahmen wird der vorherige Wert wiederhergestellt. Der nächste reguläre Fahrzeugabruf übernimmt wieder den Zustand der API. **Eine erfolgreiche Übertragung ist keine Bestätigung der Ausführung im Fahrzeug.**
 
@@ -288,6 +291,6 @@ Die reguläre HTTP-Debugzeile maskiert die konfigurierte FIN im Anfragepfad. Das
 
 ## 13. Quellcode und Tests
 
-Die Modulklasse in [module.php](module.php) kombiniert die Zuständigkeiten für Konfiguration, Variablen, HTTP, Remote-Befehle, OpenAPI, Bilder, Mitteilungen, Archivierung und FIN-Interpretation. Normale zusätzliche API-Daten werden in [PublicApiVariablesTrait.php](src/PublicApiVariablesTrait.php) verarbeitet.
+Die Modulklasse in [module.php](module.php) kombiniert die Zuständigkeiten für Konfiguration, Variablen, HTTP, Remote-Befehle, OpenAPI, Bilder, Mitteilungen, Archivierung und FIN-Interpretation. Die dynamische Zuordnung der Fahrzeugantwort erfolgt in [DynamicVariablesTrait.php](src/DynamicVariablesTrait.php); [PublicApiVariablesTrait.php](src/PublicApiVariablesTrait.php) enthält die bereits bekannten, schöner dargestellten API-Felder.
 
 [Automatisierte Prüfungen und Fahrzeug-Testnachweise](../tests/README_new.md) ergänzen die [externe Public-API-Dokumentation](https://public.api.connect.skoda-auto.cz/docs). Automatisierte Prüfungen ersetzen keinen Test in einer realen Symcon-Instanz mit dem jeweiligen Fahrzeug.
