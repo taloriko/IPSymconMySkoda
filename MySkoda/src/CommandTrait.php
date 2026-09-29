@@ -29,14 +29,13 @@ trait MySkodaCommandTrait
         $this->clearPendingCommands();
 
         $this->coreApplyChanges();
-        $this->updatePublicApiValuesFromRawData();
+        $this->syncVehicleVariablesFromRawData();
         $this->updateCommandStatusVariables();
     }
 
     private function registerVariables(): void
     {
         $this->baseRegisterVariables();
-        $this->ensurePublicApiVariables();
 
         if (!$this->ReadPropertyBoolean('ShowDetails')) {
             return;
