@@ -198,8 +198,8 @@ check($m->GetValue('ChargePower') === 4200.0 && $m->GetValue('Range') === 321, '
 check($m->GetValue('Charging') === true, 'Charging boolean follows confirmed active charging state.');
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
-check($m->GetValue('PlugConnectionState') === 'UNKNOWN', 'Missing plug connection state becomes UNKNOWN.');
-check($m->GetValue('PlugLockState') === 'UNKNOWN', 'Missing plug lock state becomes UNKNOWN.');
+check($m->GetIDForIdent('PlugConnectionState') === false, 'Missing plug connection state does not create a placeholder.');
+check($m->GetIDForIdent('PlugLockState') === false, 'Missing plug lock state does not create a placeholder.');
 $vehicle['charging']['status']['plugConnectionState'] = 'DISCONNECTED';
 $vehicle['charging']['status']['plugLockState'] = 'UNLOCKED';
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
