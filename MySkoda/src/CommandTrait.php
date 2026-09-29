@@ -29,7 +29,9 @@ trait MySkodaCommandTrait
         $this->clearPendingCommands();
 
         $this->coreApplyChanges();
-        $this->syncVehicleVariablesFromRawData();
+        if ($this->configurationValid() && $this->ReadAttributeString('ConnectionState') === 'success') {
+            $this->syncVehicleVariablesFromRawData();
+        }
         $this->updateCommandStatusVariables();
     }
 
