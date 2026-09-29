@@ -216,6 +216,11 @@ trait MySkodaCoreTrait
             json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
 
+        $this->ensureVehicleVariables($vehicle);
+        $this->ensurePublicApiVariables($vehicle);
+        $this->applyActions();
+        $this->initializeChargingHistory();
+
         $this->updateCoreValues($vehicle);
         $this->updateDetailValues($vehicle, $envelope);
         $this->WriteAttributeString('LastError', '');
