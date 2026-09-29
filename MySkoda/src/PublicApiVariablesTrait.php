@@ -6,8 +6,15 @@ trait MySkodaPublicApiVariablesTrait
 {
     private function ensurePublicApiVariables(): void
     {
+        foreach ($this->publicApiVariableDefinitions() as $definition) {
+            $this->registerVariableOnce($definition);
+        }
+    }
+
+    private function publicApiVariableDefinitions(): array
+    {
         $initialInformation = $this->Translate('Not retrieved yet');
-        $definitions = [
+        return [
             $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode')),
             $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
                 ['CONNECTED', 'Connected', 'plug-circle-check', 0x22C55E],
@@ -62,12 +69,12 @@ trait MySkodaPublicApiVariablesTrait
             $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1340, [], $initialInformation),
             $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1350, [], $initialInformation),
             $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1360, [], $initialInformation),
-            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, [], $initialInformation)
-        ];
-
-        foreach ($definitions as $definition) {
-            $this->registerVariableOnce($definition);
-        }
+            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, [], $initialInformation),
+            $this->variable('FuelLevel', 'Fuel level', VARIABLETYPE_INTEGER, 350, $this->valuePresentation('gas-pump', ' %', 0)),
+            $this->variable('PrimaryEngineRange', 'Primary engine range', VARIABLETYPE_INTEGER, 360, $this->valuePresentation('route', ' km', 0)),
+            $this->variable('TotalRange', 'Total range', VARIABLETYPE_INTEGER, 370, $this->valuePresentation('route', ' km', 0)),
+            $this->variable('AuxiliaryHeatingDuration', 'Auxiliary heating duration', VARIABLETYPE_INTEGER, 380, $this->valuePresentation('hourglass-half', ' s', 0))
+  ;
     }
 
     private function updatePublicApiValuesFromRawData(): void
