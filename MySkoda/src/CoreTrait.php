@@ -26,6 +26,8 @@ trait MySkodaCoreTrait
         $this->RegisterAttributeString('OpenApiOperations', '');
         $this->RegisterAttributeInteger('OpenApiUpdatedAt', 0);
         $this->RegisterAttributeString('AvailableChargeModes', '[]');
+        $this->RegisterAttributeString('AvailableRemoteOperations', '[]');
+        $this->RegisterAttributeString('DynamicVariablePaths', '{}');
         $this->RegisterAttributeInteger('RateLimitLimit', -1);
         $this->RegisterAttributeInteger('RateLimitRemaining', -1);
         $this->RegisterAttributeInteger('RateLimitResetAt', 0);
@@ -216,8 +218,7 @@ trait MySkodaCoreTrait
             json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
 
-        $this->updateCoreValues($vehicle);
-        $this->updateDetailValues($vehicle, $envelope);
+        $this->syncDynamicVehicleVariables($vehicle, $envelope);
         $this->WriteAttributeString('LastError', '');
         $this->SetValue('LastUpdate', time());
         $this->updateKeyExpiryWarning();
