@@ -118,6 +118,10 @@ trait MySkodaPublicApiVariablesTrait
 
         $errors = isset($raw['errors']) && is_array($raw['errors']) ? $raw['errors'] : [];
 
+        // A field may appear only in a later vehicle response. Discover before writing
+        // so newly delivered values create their variables immediately.
+        $this->ensurePublicApiVariables($vehicle);
+
         $this->setPublicApiString('VIN', $this->path($vehicle, 'vin', null));
         $this->setPublicApiString('TargetTemperatureUnit', $this->path($vehicle, 'airConditioning.targetTemperature.unit', null));
         $this->setPublicApiBoolean('AirConditioningAtUnlock', $this->path($vehicle, 'airConditioning.airConditioningAtUnlock', null));
