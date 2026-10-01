@@ -237,7 +237,8 @@
       "Diesel": "Diesel",
       "Electric": "Elektrisch",
       "Hybrid": "Hybrid",
-      "Plug-in hybrid": "Plug-in-Hybrid"
+      "Plug-in hybrid": "Plug-in-Hybrid",
+      "Auxiliary heating control": "Standheizung"
     }
   }
 }
