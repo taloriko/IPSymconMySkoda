@@ -180,6 +180,10 @@
       900,
       "Boolean"
     ],
+    "AuxiliaryHeating": [
+      905,
+      "Boolean"
+    ],
     "Charging": [
       910,
       "Boolean"
