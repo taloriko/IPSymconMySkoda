@@ -46,6 +46,34 @@ trait MySkodaHelpersTrait
         return null;
     }
 
+    private function vehicleOperationAvailable(string $wanted): bool
+    {
+        $raw = json_decode($this->ReadAttributeString('RawData'), true);
+        if (!is_array($raw)) {
+            return false;
+        }
+
+        $vehicle = isset($raw['vehicle']) && is_array($raw['vehicle']) ? $raw['vehicle'] : [];
+        $operations = $this->path(
+            $vehicle,
+            'operations',
+            $this->path($vehicle, 'remoteOperations', [])
+        );
+        if (!is_array($operations)) {
+            return false;
+        }
+
+        foreach ($operations as $operation) {
+            $name = is_array($operation)
+                ? (string) ($operation['name'] ?? $operation['operationId'] ?? '')
+                : (string) $operation;
+            if ($name !== '' && strcasecmp($name, $wanted) === 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private function toTimestamp(mixed $value): int
     {
         if ($value === null || $value === '') {
