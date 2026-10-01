@@ -69,6 +69,7 @@ trait MySkodaVariablesTrait
             'TargetSOC' => ['charging.settings.targetStateOfChargeInPercent'],
             'ChargeMode' => ['charging.settings.preferredChargeMode'],
             'Climate' => ['airConditioning.state'],
+            'AuxiliaryHeating' => ['auxiliaryHeating.state'],
             'ClimateState' => ['airConditioning.state'],
             'TargetTemperature' => ['airConditioning.targetTemperature.value'],
             'VehicleName' => ['name'],
@@ -132,6 +133,7 @@ trait MySkodaVariablesTrait
             ]),
             $this->variable('ChargeMode', 'Charging mode', VARIABLETYPE_INTEGER, 260, $this->chargeModePresentation()),
             $this->variable('Climate', 'Air conditioning', VARIABLETYPE_BOOLEAN, 900, $this->booleanActionPresentation('fan')),
+            $this->variable('AuxiliaryHeating', 'Auxiliary heating control', VARIABLETYPE_BOOLEAN, 905, $this->booleanActionPresentation('fire')),
             $this->variable('ClimateState', 'Air conditioning state', VARIABLETYPE_STRING, 100, $this->climateStatePresentation()),
             $this->variable('TargetTemperature', 'Target temperature', VARIABLETYPE_FLOAT, 120, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
@@ -259,6 +261,15 @@ trait MySkodaVariablesTrait
                 $this->MaintainAction($ident, $enabled);
             }
         }
+
+        $auxiliaryHeatingId = @$this->GetIDForIdent('AuxiliaryHeating');
+        if ($auxiliaryHeatingId !== false && IPS_VariableExists($auxiliaryHeatingId)) {
+            $auxiliaryHeatingEnabled = $enabled
+                && trim($this->ReadPropertyString('SPIN')) !== ''
+                && $this->vehicleOperationAvailable('startAuxiliaryHeating')
+                && $this->vehicleOperationAvailable('stopAuxiliaryHeating');
+            $this->MaintainAction('AuxiliaryHeating', $auxiliaryHeatingEnabled);
+        }
     }
 
     private function updateCoreValues(array $vehicle): void
@@ -298,6 +309,16 @@ trait MySkodaVariablesTrait
                 $this->setIfExists('ChargeMode', (int) $index);
             } else {
                 $this->SendDebug('Charge mode', 'Unknown API value: ' . $mode, 0);
+            }
+        }
+
+        $auxiliaryHeatingStateValue = $this->path($vehicle, 'auxiliaryHeating.state', null);
+        if (is_string($auxiliaryHeatingStateValue) && trim($auxiliaryHeatingStateValue) !== '') {
+            $auxiliaryHeatingState = strtoupper(trim($auxiliaryHeatingStateValue));
+            if (in_array($auxiliaryHeatingState, ['ON', 'HEATING', 'HEATING_AUXILIARY', 'VENTILATION'], true)) {
+                $this->setIfExists('AuxiliaryHeating', true);
+            } elseif ($auxiliaryHeatingState === 'OFF') {
+                $this->setIfExists('AuxiliaryHeating', false);
             }
         }
 
