@@ -76,6 +76,14 @@ check($m->GetValue('APICarType') === 'GASOLINE', 'Car type is preserved.');
 check($m->GetValue('APIPrimaryEngineType') === 'GASOLINE', 'Engine type is preserved.');
 check($m->GetValue('APIAuxiliaryHeatingState') === 'OFF', 'Auxiliary heating state is preserved.');
 check($m->GetValue('AuxiliaryHeatingDuration') === 40, 'Auxiliary heating duration is converted to minutes.');
+check($m->GetIDForIdent('AuxiliaryHeating') !== false, 'Auxiliary heating control is created when status is delivered.');
+check($m->GetValue('AuxiliaryHeating') === false, 'Auxiliary heating control follows OFF state.');
+$m->properties['SPIN'] = '1234';
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+invoke($m, 'applyActions');
+$auxiliaryHeatingId = $m->GetIDForIdent('AuxiliaryHeating');
+check(($GLOBALS['objects'][$auxiliaryHeatingId]['Action'] ?? false) === true, 'Auxiliary heating becomes actionable with S-PIN and start/stop operations.');
+
 
 check($m->GetValue('APIFutureDataNewBoolean') === true, 'Unknown boolean field is added dynamically.');
 check($m->GetValue('APIFutureDataNewNumber') === 12.5, 'Unknown numeric field is added dynamically.');
