@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.8 - 2026-09-29
+
+- Fahrzeugvariablen werden nur noch angelegt, wenn der zugehörige Wert tatsächlich in einer Fahrzeugantwort geliefert wurde.
+- Neu auftauchende, bisher unbekannte skalare API-Felder werden automatisch als zusätzliche API-Variablen angelegt.
+- Bereits angelegte Variablen bleiben bestehen; vorhandene Namen, Positionen, Icons und Darstellungen werden nicht überschrieben.
+- Verbrennerdaten aus `fuelStatus` ergänzt: Tankfüllstand, primärer Antrieb SoC, Kraftstoff-Reichweite und Gesamtreichweite.
+- Fahrzeug- und Antriebstypen erhalten Darstellungen für Benzin, Diesel, Elektro, Hybrid und Plug-in-Hybrid.
+- Standheizungsstatus und Standheizungsdauer werden bei vorhandenen API-Daten mit eigener Darstellung angelegt.
+- Lade-, Klima- und andere fahrzeugspezifische Variablen erscheinen nicht mehr als leere Platzhalter bei Fahrzeugen, die diese Daten nicht liefern.
+
 ## 1.6 - 2026-09-28
 
 - Public API 1.1: `plugConnectionState` und `plugLockState` als neue String-Variablen ergänzt.

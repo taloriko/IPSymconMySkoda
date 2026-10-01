@@ -137,6 +137,18 @@ trait MySkodaCommandTrait
                 );
                 return;
 
+            case 'AuxiliaryHeating':
+                $desired = (bool) $Value;
+                $this->executeOptimisticCommand(
+                    'AuxiliaryHeating',
+                    $desired,
+                    'Auxiliary heating',
+                    fn (): bool => $desired
+                        ? $this->StartAuxiliaryHeating()
+                        : $this->StopAuxiliaryHeating()
+                );
+                return;
+
             case 'TargetTemperature':
                 $temperature = max(16.0, min(30.0, (float) $Value));
                 if (!(bool) $this->GetValue('Climate')) {
