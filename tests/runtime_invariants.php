@@ -226,6 +226,15 @@ $ok = invoke($m, 'executeOptimisticCommand', 'TargetSOC', 90, 'Charging limit', 
 });
 check($ok && $m->GetValue('PendingCommands') === 0 && $m->GetValue('TargetSOC') === 90, 'Accepted command keeps desired value.');
 check($m->ReadAttributeString('LastCommandResult') === 'accepted', 'Accepted result.');
+
+$m->SetStatus(102);
+invoke($m, 'setApiError', [
+    'status' => 500,
+    'headers' => [],
+    'json' => ['detail' => 'Internal Server Error', 'type' => 'about:blank'],
+    'curlError' => ''
+], false);
+check($m->status === 102, 'A failed remote command must not mark an otherwise connected instance as faulty.');
 $ok = invoke($m, 'executeOptimisticCommand', 'TargetSOC', 100, 'Charging limit', function () use ($m): bool {
     $m->WriteAttributeString('LastError', 'fixture rejection');
     return false;
