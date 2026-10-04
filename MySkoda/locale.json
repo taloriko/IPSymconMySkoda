@@ -238,7 +238,8 @@
       "Electric": "Elektrisch",
       "Hybrid": "Hybrid",
       "Plug-in hybrid": "Plug-in-Hybrid",
-      "Auxiliary heating control": "Standheizung"
+      "Auxiliary heating control": "Standheizung",
+      "Charging rate": "Ladegeschwindigkeit"
     }
   }
 }
