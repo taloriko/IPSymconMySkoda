@@ -9,6 +9,17 @@ trait MySkodaPublicApiVariablesTrait
         return [
             'VIN' => ['path' => 'vin', 'definition' => $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode'))],
             'TargetTemperatureUnit' => ['path' => 'airConditioning.targetTemperature.unit', 'definition' => $this->variable('TargetTemperatureUnit', 'Target temperature unit', VARIABLETYPE_STRING, 130, $this->valuePresentation('temperature-half'))],
+            'APIAirConditioningEstimatedReachOfTargetTemperatureAt' => [
+                'path' => 'airConditioning.estimatedReachOfTargetTemperatureAt',
+                'upgradeDynamic' => true,
+                'definition' => $this->variable(
+                    'APIAirConditioningEstimatedReachOfTargetTemperatureAt',
+                    'Estimated target temperature reached at',
+                    VARIABLETYPE_STRING,
+                    135,
+                    $this->valuePresentation('temperature-half')
+                )
+            ],
             'AirConditioningAtUnlock' => ['path' => 'airConditioning.airConditioningAtUnlock', 'definition' => $this->variable('AirConditioningAtUnlock', 'Air conditioning at unlock', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(true, 'key'))],
             'WindowHeatingEnabled' => ['path' => 'airConditioning.windowHeating.enabled', 'definition' => $this->variable('WindowHeatingEnabled', 'Window heating enabled', VARIABLETYPE_BOOLEAN, 140, $this->booleanYesNoPresentation(true, 'window-maximize'))],
             'WindowHeatingFront' => ['path' => 'airConditioning.windowHeating.front', 'definition' => $this->variable('WindowHeatingFront', 'Front window heating', VARIABLETYPE_STRING, 150, $this->publicApiEnumPresentation('window-maximize', [
@@ -52,6 +63,17 @@ trait MySkodaPublicApiVariablesTrait
                     VARIABLETYPE_INTEGER,
                     255,
                     $this->valuePresentation('bolt', ' A', 0)
+                )
+            ],
+            'APIChargingSettingsAvailableChargeModes' => [
+                'path' => 'charging.settings.availableChargeModes',
+                'upgradeDynamic' => true,
+                'definition' => $this->variable(
+                    'APIChargingSettingsAvailableChargeModes',
+                    'Available charging modes',
+                    VARIABLETYPE_STRING,
+                    258,
+                    $this->valuePresentation('bolt')
                 )
             ],
             'PlugConnectionState' => ['path' => 'charging.status.plugConnectionState', 'definition' => $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
@@ -149,6 +171,10 @@ trait MySkodaPublicApiVariablesTrait
 
         $this->setPublicApiString('VIN', $this->path($vehicle, 'vin', null));
         $this->setPublicApiString('TargetTemperatureUnit', $this->path($vehicle, 'airConditioning.targetTemperature.unit', null));
+        $this->setPublicApiDateTimeString(
+            'APIAirConditioningEstimatedReachOfTargetTemperatureAt',
+            $this->path($vehicle, 'airConditioning.estimatedReachOfTargetTemperatureAt', null)
+        );
         $this->setPublicApiBoolean('AirConditioningAtUnlock', $this->path($vehicle, 'airConditioning.airConditioningAtUnlock', null));
         $this->setPublicApiBoolean('WindowHeatingEnabled', $this->path($vehicle, 'airConditioning.windowHeating.enabled', null));
         $this->setPublicApiString('WindowHeatingFront', $this->path($vehicle, 'airConditioning.windowHeating.front', null), true);
@@ -159,6 +185,11 @@ trait MySkodaPublicApiVariablesTrait
         $this->setPublicApiString('BatteryCareMode', $this->path($vehicle, 'charging.settings.chargingCareMode', null), true);
         $this->setPublicApiString('MaxChargeCurrentAC', $this->path($vehicle, 'charging.settings.maxChargeCurrentAc', null), true);
         $this->setPublicApiInteger('APIChargingSettingsMaxChargeCurrentAcAmpere', $this->path($vehicle, 'charging.settings.maxChargeCurrentAcAmpere', null));
+        $availableModes = $this->path($vehicle, 'charging.settings.availableChargeModes', null);
+        if (is_array($availableModes)) {
+            $availableModes = implode(', ', array_map(static fn (mixed $mode): string => (string) $mode, $availableModes));
+        }
+        $this->setPublicApiString('APIChargingSettingsAvailableChargeModes', $availableModes, true);
         $this->setPublicApiString('PlugConnectionState', $this->path($vehicle, 'charging.status.plugConnectionState', null), true);
         $this->setPublicApiString('PlugLockState', $this->path($vehicle, 'charging.status.plugLockState', null), true);
         $this->setPublicApiInteger('RemainingChargingTime', $this->path($vehicle, 'charging.status.remainingTimeToFullyChargedInMinutes', null));
@@ -427,6 +458,17 @@ trait MySkodaPublicApiVariablesTrait
         }
         $text = trim((string) $value);
         $this->SetValue($ident, $uppercase ? strtoupper($text) : $text);
+    }
+
+    private function setPublicApiDateTimeString(string $ident, mixed $value): void
+    {
+        if ($value === null || @$this->GetIDForIdent($ident) === false) {
+            return;
+        }
+
+        $timestamp = $this->toTimestamp($value);
+        $text = $timestamp > 0 ? date('d.m.Y H:i:s', $timestamp) : trim((string) $value);
+        $this->SetValue($ident, $text);
     }
 
     private function setPublicApiInteger(string $ident, mixed $value): void
