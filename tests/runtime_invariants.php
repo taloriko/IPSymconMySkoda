@@ -184,8 +184,8 @@ $GLOBALS['objects'][$locked]['ObjectType'] = 2;
 
 $vehicle = [
     'vin' => $m->properties['VIN'],
-    'airConditioning' => ['state' => 'OFF', 'airConditioningWithoutExternalPower' => true, 'targetTemperature' => ['value' => 20.0, 'unit' => 'CELSIUS']],
-    'charging' => ['settings' => ['targetStateOfChargeInPercent' => 80, 'preferredChargeMode' => 'MANUAL', 'availableChargeModes' => ['MANUAL']], 'status' => ['state' => 'CHARGING', 'chargePowerInKw' => 4.2, 'chargingRateInKilometersPerHour' => 20.1696, 'battery' => ['stateOfChargeInPercent' => 71, 'remainingCruisingRangeInMeters' => 321000]]],
+    'airConditioning' => ['state' => 'OFF', 'airConditioningWithoutExternalPower' => true, 'estimatedReachOfTargetTemperatureAt' => '2026-10-03T17:37:47Z', 'targetTemperature' => ['value' => 20.0, 'unit' => 'CELSIUS']],
+    'charging' => ['settings' => ['targetStateOfChargeInPercent' => 80, 'preferredChargeMode' => 'MANUAL', 'availableChargeModes' => ['MANUAL'], 'maxChargeCurrentAcAmpere' => 10], 'status' => ['state' => 'CHARGING', 'chargePowerInKw' => 4.2, 'chargingRateInKilometersPerHour' => 20.1696, 'battery' => ['stateOfChargeInPercent' => 71, 'remainingCruisingRangeInMeters' => 321000]]],
     'status' => ['overall' => ['doorsLocked' => 'YES', 'locked' => 'NO', 'reliableLockStatus' => 'UNKNOWN', 'doors' => 'CLOSED', 'windows' => 'OPEN']],
     'odometer' => ['mileageInKm' => 12345]
 ];
@@ -200,6 +200,9 @@ check($m->GetValue('Charging') === true, 'Charging boolean follows confirmed act
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
 check(abs($m->GetValue('APIChargingStatusChargingRateInKilometersPerHour') - 20.1696) < 0.0001, 'Charging rate remains a float.');
+check($m->GetValue('APIChargingSettingsAvailableChargeModes') === 'MANUAL', 'Available charging modes are exposed as a readable list.');
+check($m->GetValue('APIChargingSettingsMaxChargeCurrentAcAmpere') === 10, 'Maximum AC current is exposed in ampere.');
+check(str_contains($m->GetValue('APIAirConditioningEstimatedReachOfTargetTemperatureAt'), '03.10.2026'), 'Estimated target-temperature time is formatted for display.');
 check(invoke($m, 'vehicleProvidesValue', 'airConditioning.airConditioningWithoutExternalPower') === true, 'Vehicle-advertised external-power climate setting is detected.');
 check($m->GetIDForIdent('PlugConnectionState') === false, 'Missing plug connection state does not create a placeholder.');
 check($m->GetIDForIdent('PlugLockState') === false, 'Missing plug lock state does not create a placeholder.');
