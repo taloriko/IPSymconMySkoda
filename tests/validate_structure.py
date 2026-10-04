@@ -100,7 +100,7 @@ def main() -> None:
         require(ident not in definitions, f"Duplicate definition: {ident}")
         require(caption in translations, f"Missing variable translation: {caption}")
         definitions[ident] = (int(position), "String")
-    require(len(definitions) == 82, f"Expected 82 known variable definitions, got {len(definitions)}")
+    require(len(definitions) == 84, f"Expected 84 known variable definitions, got {len(definitions)}")
     contract = load(ROOT / "tests" / "public_api_contract.json")
     expected_variables = {ident: tuple(spec) for ident, spec in contract["variables"].items()}
     require(definitions == expected_variables, f"Variable contract mismatch: {set(definitions.items()) ^ set(expected_variables.items())}")
