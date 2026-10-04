@@ -15,6 +15,8 @@
 - Die Einstellung "Klimatisierung ohne externe Stromversorgung" wird nur angezeigt, wenn das Fahrzeug dieses API-Feld liefert; S-PIN nur bei angebotener Standheizung.
 - `chargingRateInKilometersPerHour` wird entsprechend der API-Spezifikation als Float behandelt; ältere Integer-Variablen aus Vorabständen werden ohne wiederkehrende Typfehler weitergeführt.
 - Ungültiges Symcon-Statusicon `warning` durch das unterstützte `error` ersetzt.
+- Neue bekannte API-Felder mit eigener Darstellung ergänzt: verfügbare Lademodi, maximaler AC-Ladestrom in Ampere, Ladegeschwindigkeit in km/h und voraussichtlicher Zeitpunkt zum Erreichen der Zieltemperatur.
+- Bereits generisch angelegte API-Felder werden nur dann auf die neue Standarddarstellung migriert, wenn keine benutzerdefinierte Darstellung vorhanden ist.
 
 ## 1.6 - 2026-09-28
 
