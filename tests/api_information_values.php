@@ -76,6 +76,8 @@ check($m->GetValue('APICarType') === 'GASOLINE', 'Car type is preserved.');
 check($m->GetValue('APIPrimaryEngineType') === 'GASOLINE', 'Engine type is preserved.');
 check($m->GetValue('APIAuxiliaryHeatingState') === 'OFF', 'Auxiliary heating state is preserved.');
 check($m->GetValue('AuxiliaryHeatingDuration') === 40, 'Auxiliary heating duration is converted to minutes.');
+check(invoke($m, 'auxiliaryHeatingStartBody', '1234', 22.0) === ['spin' => '1234'], 'Auxiliary heating sends only the required S-PIN when the vehicle exposes no target temperature.');
+check(invoke($m, 'vehicleProvidesValue', 'airConditioning.airConditioningWithoutExternalPower') === false, 'Combustion fixture does not expose the external-power climate setting.');
 check($m->GetIDForIdent('AuxiliaryHeating') !== false, 'Auxiliary heating control is created when status is delivered.');
 check($m->GetValue('AuxiliaryHeating') === false, 'Auxiliary heating control follows OFF state.');
 $m->properties['SPIN'] = '1234';
