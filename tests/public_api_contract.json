@@ -96,6 +96,10 @@
       320,
       "Integer"
     ],
+    "APIChargingStatusChargingRateInKilometersPerHour": [
+      325,
+      "Float"
+    ],
     "ChargingState": [
       330,
       "String"
