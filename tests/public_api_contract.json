@@ -60,6 +60,10 @@
       250,
       "String"
     ],
+    "APIChargingSettingsMaxChargeCurrentAcAmpere": [
+      255,
+      "Integer"
+    ],
     "ChargeMode": [
       260,
       "Integer"
