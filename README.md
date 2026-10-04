@@ -94,6 +94,8 @@ Fehler und nachvollziehbare Verbesserungsvorschläge können über die GitHub-Is
 
 Copyright © 2026 **taloriko**.
 
-Veröffentlicht unter der [MIT-Lizenz](LICENSE).
+Dieses Projekt steht unter der [IPSymconMySkoda Non-Commercial License](LICENSE).
+
+Private und sonstige nicht-kommerzielle Nutzung, Weiterentwicklung, Forks und Änderungen sind ausdrücklich erlaubt und erwünscht. Eine kommerzielle Nutzung ist nur mit vorheriger schriftlicher Genehmigung des Urheberrechtsinhabers erlaubt.
 
 Dieses Projekt ist eine unabhängige Community-Integration und weder ein offizielles Produkt von Škoda Auto a.s. noch mit Škoda Auto a.s. verbunden oder von Škoda Auto a.s. unterstützt.
