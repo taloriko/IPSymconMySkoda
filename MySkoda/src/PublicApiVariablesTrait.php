@@ -9,17 +9,7 @@ trait MySkodaPublicApiVariablesTrait
         return [
             'VIN' => ['path' => 'vin', 'definition' => $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode'))],
             'TargetTemperatureUnit' => ['path' => 'airConditioning.targetTemperature.unit', 'definition' => $this->variable('TargetTemperatureUnit', 'Target temperature unit', VARIABLETYPE_STRING, 130, $this->valuePresentation('temperature-half'))],
-            'APIAirConditioningEstimatedReachOfTargetTemperatureAt' => [
-                'path' => 'airConditioning.estimatedReachOfTargetTemperatureAt',
-                'upgradeDynamic' => true,
-                'definition' => $this->variable(
-                    'APIAirConditioningEstimatedReachOfTargetTemperatureAt',
-                    'Estimated target temperature reached at',
-                    VARIABLETYPE_STRING,
-                    135,
-                    $this->valuePresentation('temperature-half')
-                )
-            ],
+            'APIAirConditioningEstimatedReachOfTargetTemperatureAt' => ['path' => 'airConditioning.estimatedReachOfTargetTemperatureAt', 'upgradeDynamic' => true, 'definition' => $this->variable('APIAirConditioningEstimatedReachOfTargetTemperatureAt', 'Estimated target temperature reached at', VARIABLETYPE_STRING, 135, $this->valuePresentation('temperature-half'))],
             'AirConditioningAtUnlock' => ['path' => 'airConditioning.airConditioningAtUnlock', 'definition' => $this->variable('AirConditioningAtUnlock', 'Air conditioning at unlock', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(true, 'key'))],
             'WindowHeatingEnabled' => ['path' => 'airConditioning.windowHeating.enabled', 'definition' => $this->variable('WindowHeatingEnabled', 'Window heating enabled', VARIABLETYPE_BOOLEAN, 140, $this->booleanYesNoPresentation(true, 'window-maximize'))],
             'WindowHeatingFront' => ['path' => 'airConditioning.windowHeating.front', 'definition' => $this->variable('WindowHeatingFront', 'Front window heating', VARIABLETYPE_STRING, 150, $this->publicApiEnumPresentation('window-maximize', [
@@ -54,28 +44,8 @@ trait MySkodaPublicApiVariablesTrait
                 ['REDUCED', 'Reduced', 'gauge', -1],
                 ['UNKNOWN', 'Unknown', 'circle-question', -1]
             ]))],
-            'APIChargingSettingsMaxChargeCurrentAcAmpere' => [
-                'path' => 'charging.settings.maxChargeCurrentAcAmpere',
-                'upgradeDynamic' => true,
-                'definition' => $this->variable(
-                    'APIChargingSettingsMaxChargeCurrentAcAmpere',
-                    'Maximum AC charging current in ampere',
-                    VARIABLETYPE_INTEGER,
-                    255,
-                    $this->valuePresentation('bolt', ' A', 0)
-                )
-            ],
-            'APIChargingSettingsAvailableChargeModes' => [
-                'path' => 'charging.settings.availableChargeModes',
-                'upgradeDynamic' => true,
-                'definition' => $this->variable(
-                    'APIChargingSettingsAvailableChargeModes',
-                    'Available charging modes',
-                    VARIABLETYPE_STRING,
-                    258,
-                    $this->valuePresentation('bolt')
-                )
-            ],
+            'APIChargingSettingsMaxChargeCurrentAcAmpere' => ['path' => 'charging.settings.maxChargeCurrentAcAmpere', 'upgradeDynamic' => true, 'definition' => $this->variable('APIChargingSettingsMaxChargeCurrentAcAmpere', 'Maximum AC charging current in ampere', VARIABLETYPE_INTEGER, 255, $this->valuePresentation('bolt', ' A', 0))],
+            'APIChargingSettingsAvailableChargeModes' => ['path' => 'charging.settings.availableChargeModes', 'upgradeDynamic' => true, 'definition' => $this->variable('APIChargingSettingsAvailableChargeModes', 'Available charging modes', VARIABLETYPE_STRING, 258, $this->valuePresentation('bolt'))],
             'PlugConnectionState' => ['path' => 'charging.status.plugConnectionState', 'definition' => $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
                 ['CONNECTED', 'Connected', 'plug-circle-check', 0x22C55E],
                 ['DISCONNECTED', 'Disconnected', 'plug', 0x6B7280],
@@ -87,17 +57,7 @@ trait MySkodaPublicApiVariablesTrait
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ]))],
             'RemainingChargingTime' => ['path' => 'charging.status.remainingTimeToFullyChargedInMinutes', 'definition' => $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0))],
-            'APIChargingStatusChargingRateInKilometersPerHour' => [
-                'path' => 'charging.status.chargingRateInKilometersPerHour',
-                'upgradeDynamic' => true,
-                'definition' => $this->variable(
-                    'APIChargingStatusChargingRateInKilometersPerHour',
-                    'Charging rate',
-                    VARIABLETYPE_FLOAT,
-                    325,
-                    $this->valuePresentation('gauge', ' km/h', 1)
-                )
-            ],
+            'APIChargingStatusChargingRateInKilometersPerHour' => ['path' => 'charging.status.chargingRateInKilometersPerHour', 'upgradeDynamic' => true, 'definition' => $this->variable('APIChargingStatusChargingRateInKilometersPerHour', 'Charging rate', VARIABLETYPE_FLOAT, 325, $this->valuePresentation('gauge', ' km/h', 1))],
 
             'FuelLevelPercent' => ['path' => 'fuelStatus.primaryEngineRange.currentFuelLevelInPercent', 'definition' => $this->variable('FuelLevelPercent', 'Fuel level', VARIABLETYPE_INTEGER, 360, $this->valuePresentation('gas-pump', ' %', 0))],
             'PrimaryEngineSOC' => ['path' => 'fuelStatus.primaryEngineRange.currentSoCInPercent', 'definition' => $this->variable('PrimaryEngineSOC', 'Primary engine state of charge', VARIABLETYPE_INTEGER, 370, $this->valuePresentation('gauge', ' %', 0))],
