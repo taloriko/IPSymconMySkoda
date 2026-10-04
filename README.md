@@ -34,12 +34,18 @@ Die FIN/VIN-Entschlüsselung ist eine Zusatzfunktion. Details zur Zerlegung, Pr�
 - 17-stellige FIN/VIN und ein für das Fahrzeug gültiger MySkoda API-Key
 - aktive MySkoda/Škoda-Connect-Dienste für die verwendeten Fahrzeugfunktionen
 - Internetzugang von Symcon zur MyŠkoda Public API
-- S-PIN für den Start der Standheizung
+- S-PIN nur für Fahrzeuge/Funktionen, die über die separate API-Funktion `auxiliaryHeating` (Standheizung) gesteuert werden
 - Archive Control nur bei Verwendung der optionalen Archivierung
 
 Voraussetzung ist, dass das Fahrzeug über die Public API mit dem eigenen API-Key erreichbar ist. Die Unterstützung einzelner Funktionen ergibt sich aus den gelieferten Daten und angebotenen Operationen, nicht allein aus dem Modellnamen oder der lokalen FIN-Auswertung. Praktische Nachweise für Enyaq 80 von 2022 und 2023 sind in der [Fahrzeug-Kompatibilitätsmatrix](tests/README.md) dokumentiert. Die Matrix unterscheidet geprüfte Werte von noch offenen Tests. Automatisierte Verbrenner-Prüfdaten sind keine pauschale Fahrzeugfreigabe.
 
 Der API-Key wird in der MySkoda App unter **Profil → Smart Home → Schlüssel erstellen** erzeugt. Dort kann auch die FIN/VIN kopiert werden.
+
+### Wofür wird die S-PIN benötigt?
+
+Die **S-PIN wird ausschließlich für die separate Standheizungsfunktion `auxiliaryHeating` benötigt**. Sie wird beim Aufruf von `MSKODA_StartAuxiliaryHeating(...)` an die Public API übertragen. Für die normale elektrische Klimatisierung über `airConditioning` – also Klimatisierung starten/stoppen und Solltemperatur ändern – wird keine S-PIN verwendet. Auch Laden, Ladelimit und Lademodus benötigen keine S-PIN.
+
+Bei Fahrzeugen wie einem Enyaq, die nur die normale elektrische Klimatisierung anbieten und keine separate `auxiliaryHeating`-Funktion melden, ist keine S-PIN erforderlich. Das S-PIN-Feld kann in der Instanz deshalb ausgeblendet sein.
 
 ## Installation
 
