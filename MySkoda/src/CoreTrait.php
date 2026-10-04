@@ -255,6 +255,9 @@ trait MySkodaCoreTrait
                 $element['caption'] = $notificationCaption;
             } elseif ($name === 'ClimateWithoutExternalPower') {
                 $element['visible'] = $this->vehicleProvidesValue('airConditioning.airConditioningWithoutExternalPower');
+            } elseif ($name === 'SPIN') {
+                $element['visible'] = $this->vehicleProvidesValue('auxiliaryHeating.state')
+                    || $this->vehicleOperationAvailable('startAuxiliaryHeating');
             }
 
             if (isset($element['items']) && is_array($element['items'])) {
