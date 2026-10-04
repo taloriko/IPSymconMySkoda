@@ -16,7 +16,7 @@ Fahrzeugvariablen entstehen anhand der gelieferten API-Felder. Zusätzliche skal
 - 17-stellige FIN/VIN und ein für das Fahrzeug gültiger MySkoda API-Key
 - aktive MySkoda/Škoda-Connect-Dienste für die verwendeten Fahrzeugfunktionen
 - Internetzugang von Symcon zur MyŠkoda Public API
-- S-PIN für den Start der Standheizung
+- S-PIN nur für Fahrzeuge/Funktionen, die über die separate API-Funktion `auxiliaryHeating` (Standheizung) gesteuert werden
 - Archive Control nur bei Verwendung der optionalen Archivierung
 
 Der API-Key wird in der MySkoda App unter **Profil → Smart Home → Schlüssel erstellen** erzeugt. Dort kann auch die FIN/VIN kopiert werden.
@@ -52,12 +52,20 @@ Anschließend kann unter **Instanz hinzufügen** eine Instanz **MySkoda** angele
 | `Interval` | Abfrageintervall | 300 s; Formularbereich 180–3600 s; Laufzeitminimum 180 s |
 | `EnableRemote` | Remote-Steuerung | an; steuert Standard-Bedienaktionen und die Ausführung von Remote-Befehlen |
 | `ClimateWithoutExternalPower` | Klimatisierung ohne externe Stromversorgung erlauben | an; nur sichtbar und beim Klimastart mitgesendet, wenn `airConditioning.airConditioningWithoutExternalPower` vorhanden und nicht `null` ist |
-| `SPIN` | S-PIN | leer; für den Standheizungsstart; sichtbar bei geliefertem Standheizungsstatus oder angebotener Startoperation |
+| `SPIN` | S-PIN | leer; nur für die separate `auxiliaryHeating`-Standheizung; nicht für normale Klimatisierung oder Laden; sichtbar bei geliefertem Standheizungsstatus oder angebotener Startoperation |
 | `ShowDetails` | Detail- und Diagnosevariablen anlegen | aus; legt ausschließlich zusätzliche Diagnose- und API-Informationsvariablen an, nicht die normalen Fahrzeugdetails |
 | `CreateVINVariables` | FIN-Informationsvariablen anlegen | aus; legt 17 lokale String-Variablen an |
 | `EnableChargingHistory` | Fahrzeugdaten archivieren | aus; richtet Logging einmalig ein, sobald alle vier benötigten Variablen vorhanden sind; siehe Abschnitt 10 |
 | `NotifyKeyExpiry` | API-Key-Ablaufwarnung | aus; Mitteilung bei höchstens 30 Tagen Restlaufzeit |
 | `NotificationInstanceID` | Visualisierung für Mitteilungen | 0; Kachel-Visualisierung oder WebFront auswählen |
+
+### Wofür wird die S-PIN benötigt?
+
+Die **S-PIN wird ausschließlich für die separate Standheizungsfunktion `auxiliaryHeating` benötigt**. Sie wird beim Start über `MSKODA_StartAuxiliaryHeating(...)` beziehungsweise die zugehörige Bedienvariable an die Public API übertragen.
+
+Für die normale elektrische Klimatisierung über `airConditioning` wird keine S-PIN verwendet. Das betrifft Klimatisierung starten/stoppen und die Solltemperatur. Ebenso benötigen Laden, Ladelimit und Lademodus keine S-PIN.
+
+Meldet ein Fahrzeug keine separate `auxiliaryHeating`-Funktion und bietet auch keine Operation `startAuxiliaryHeating` an, ist keine S-PIN erforderlich. Das Eingabefeld wird in diesem Fall in der Instanz ausgeblendet. Ein Enyaq mit ausschließlich normaler elektrischer Klimatisierung benötigt für diese Funktionen daher keine S-PIN.
 
 ### Erste Verbindung und Bedienung
 
