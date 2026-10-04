@@ -239,7 +239,8 @@
       "Hybrid": "Hybrid",
       "Plug-in hybrid": "Plug-in-Hybrid",
       "Auxiliary heating control": "Standheizung",
-      "Charging rate": "Ladegeschwindigkeit"
+      "Charging rate": "Ladegeschwindigkeit",
+      "Maximum AC charging current in ampere": "Maximaler AC-Ladestrom"
     }
   }
 }
