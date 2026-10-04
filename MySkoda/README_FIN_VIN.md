@@ -113,7 +113,7 @@ Aktuell verwendete bzw. zur Gegenprüfung geeignete Quellen sind unter anderem:
   <https://www.law.cornell.edu/cfr/text/49/565.15>
 - Škoda-/Rettungs- und Typgenehmigungsunterlagen sowie öffentlich zugängliche nationale Typgenehmigungsdaten für die Gegenprüfung einzelner Baureihen
 
-## 8. Was kann nicht aus der FIN abgeleitet wird
+## 8. Welche Informationen lassen sich nicht aus der FIN ableiten?
 
 Beispiele:
 - exaktes Produktionsdatum
