@@ -28,6 +28,10 @@
       130,
       "String"
     ],
+    "APIAirConditioningEstimatedReachOfTargetTemperatureAt": [
+      135,
+      "String"
+    ],
     "WindowHeatingEnabled": [
       140,
       "Boolean"
@@ -63,6 +67,10 @@
     "APIChargingSettingsMaxChargeCurrentAcAmpere": [
       255,
       "Integer"
+    ],
+    "APIChargingSettingsAvailableChargeModes": [
+      258,
+      "String"
     ],
     "ChargeMode": [
       260,
