@@ -54,6 +54,7 @@ trait MySkodaPublicApiVariablesTrait
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ]))],
             'RemainingChargingTime' => ['path' => 'charging.status.remainingTimeToFullyChargedInMinutes', 'definition' => $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0))],
+            'APIChargingStatusChargingRateInKilometersPerHour' => ['path' => 'charging.status.chargingRateInKilometersPerHour', 'definition' => $this->variable('APIChargingStatusChargingRateInKilometersPerHour', 'Charging rate', VARIABLETYPE_FLOAT, 325, $this->valuePresentation('route', ' km/h', 1))],
 
             'FuelLevelPercent' => ['path' => 'fuelStatus.primaryEngineRange.currentFuelLevelInPercent', 'definition' => $this->variable('FuelLevelPercent', 'Fuel level', VARIABLETYPE_INTEGER, 360, $this->valuePresentation('gas-pump', ' %', 0))],
             'PrimaryEngineSOC' => ['path' => 'fuelStatus.primaryEngineRange.currentSoCInPercent', 'definition' => $this->variable('PrimaryEngineSOC', 'Primary engine state of charge', VARIABLETYPE_INTEGER, 370, $this->valuePresentation('gauge', ' %', 0))],
@@ -136,6 +137,7 @@ trait MySkodaPublicApiVariablesTrait
         $this->setPublicApiString('PlugConnectionState', $this->path($vehicle, 'charging.status.plugConnectionState', null), true);
         $this->setPublicApiString('PlugLockState', $this->path($vehicle, 'charging.status.plugLockState', null), true);
         $this->setPublicApiInteger('RemainingChargingTime', $this->path($vehicle, 'charging.status.remainingTimeToFullyChargedInMinutes', null));
+        $this->setPublicApiFloat('APIChargingStatusChargingRateInKilometersPerHour', $this->path($vehicle, 'charging.status.chargingRateInKilometersPerHour', null));
 
         $this->setPublicApiInteger('FuelLevelPercent', $this->path($vehicle, 'fuelStatus.primaryEngineRange.currentFuelLevelInPercent', null));
         $this->setPublicApiInteger('PrimaryEngineSOC', $this->path($vehicle, 'fuelStatus.primaryEngineRange.currentSoCInPercent', null));
@@ -373,6 +375,27 @@ trait MySkodaPublicApiVariablesTrait
             return;
         }
         $this->SetValue($ident, (int) $value);
+    }
+
+    private function setPublicApiFloat(string $ident, mixed $value): void
+    {
+        if ($value === null) {
+            return;
+        }
+        $id = @$this->GetIDForIdent($ident);
+        if ($id === false || !IPS_VariableExists($id)) {
+            return;
+        }
+
+        $variable = IPS_GetVariable($id);
+        if ((int) ($variable['VariableType'] ?? -1) === VARIABLETYPE_INTEGER) {
+            // Compatibility with 1.8 test builds that created this dynamic field
+            // as Integer when the API first returned an integral value such as 0.
+            $this->SetValue($ident, (int) round((float) $value));
+            return;
+        }
+
+        $this->SetValue($ident, (float) $value);
     }
 
     private function setPublicApiBoolean(string $ident, mixed $value): void
