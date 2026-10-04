@@ -209,6 +209,6 @@
     {"code": 104, "icon": "inactive", "caption": "Inactive"},
     {"code": 201, "icon": "error", "caption": "VIN or API token is missing or invalid"},
     {"code": 202, "icon": "error", "caption": "Connection to MySkoda failed / API error"},
-    {"code": 203, "icon": "warning", "caption": "Rate limit / waiting period active"}
+    {"code": 203, "icon": "error", "caption": "Rate limit / waiting period active"}
   ]
 }

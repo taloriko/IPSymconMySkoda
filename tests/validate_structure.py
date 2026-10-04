@@ -66,6 +66,10 @@ def main() -> None:
     actual_actions = {item.get("caption") for item in walk(form["actions"]) if item.get("type") == "Button"}
     require(actual_actions == expected_actions, "Unexpected action buttons")
     require("Test notification" in {item.get("caption") for item in walk(form["elements"])}, "Notification test missing")
+    allowed_status_icons = {"active", "inactive", "error"}
+    for status in form["status"]:
+        require(status.get("icon") in allowed_status_icons, f"Unsupported status icon: {status.get('icon')}")
+
     for section in ["elements", "actions", "status"]:
         for item in walk(form[section]):
             caption = item.get("caption")
@@ -96,7 +100,7 @@ def main() -> None:
         require(ident not in definitions, f"Duplicate definition: {ident}")
         require(caption in translations, f"Missing variable translation: {caption}")
         definitions[ident] = (int(position), "String")
-    require(len(definitions) == 74, f"Expected 74 variable definitions, got {len(definitions)}")
+    require(len(definitions) == 84, f"Expected 84 known variable definitions, got {len(definitions)}")
     contract = load(ROOT / "tests" / "public_api_contract.json")
     expected_variables = {ident: tuple(spec) for ident, spec in contract["variables"].items()}
     require(definitions == expected_variables, f"Variable contract mismatch: {set(definitions.items()) ^ set(expected_variables.items())}")

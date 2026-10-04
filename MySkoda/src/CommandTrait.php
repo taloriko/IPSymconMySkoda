@@ -137,6 +137,18 @@ trait MySkodaCommandTrait
                 );
                 return;
 
+            case 'AuxiliaryHeating':
+                $desired = (bool) $Value;
+                $this->executeOptimisticCommand(
+                    'AuxiliaryHeating',
+                    $desired,
+                    'Auxiliary heating',
+                    fn (): bool => $desired
+                        ? $this->StartAuxiliaryHeating()
+                        : $this->StopAuxiliaryHeating()
+                );
+                return;
+
             case 'TargetTemperature':
                 $temperature = max(16.0, min(30.0, (float) $Value));
                 if (!(bool) $this->GetValue('Climate')) {
@@ -228,15 +240,7 @@ trait MySkodaCommandTrait
             );
         }
 
-        $body = [
-            'spin' => $spin,
-            'targetTemperature' => [
-                'value' => max(16.0, min(30.0, $TargetTemperature)),
-                'unit' => $this->commandTemperatureUnit()
-            ],
-            'durationInSeconds' => max(60, $DurationMinutes * 60),
-            'startMode' => strtoupper($Mode) === 'VENTILATION' ? 'VENTILATION' : 'HEATING'
-        ];
+        $body = $this->auxiliaryHeatingStartBody($spin, $TargetTemperature);
 
         return $this->executeDirectCommand(
             'StartAuxiliaryHeating',
@@ -249,6 +253,26 @@ trait MySkodaCommandTrait
                 $body
             )
         );
+    }
+
+    private function auxiliaryHeatingStartBody(string $spin, float $targetTemperature): array
+    {
+        // The Public API requires only the S-PIN. Optional fields are sent only
+        // when the vehicle itself reports the corresponding setting.
+        $body = ['spin' => $spin];
+
+        $raw = json_decode($this->ReadAttributeString('RawData'), true);
+        $target = is_array($raw)
+            ? $this->path($raw, 'vehicle.auxiliaryHeating.targetTemperature', null)
+            : null;
+        if (is_array($target) && isset($target['value'], $target['unit'])) {
+            $body['targetTemperature'] = [
+                'value' => max(16.0, min(30.0, $targetTemperature)),
+                'unit' => strtoupper((string) $target['unit'])
+            ];
+        }
+
+        return $body;
     }
 
     public function StopAuxiliaryHeating(): bool

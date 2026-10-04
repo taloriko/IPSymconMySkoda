@@ -48,6 +48,7 @@ function IPS_GetMedia(int $id): array { return $GLOBALS['objects'][$id]; }
 function IPS_SetIcon(int $id, string $icon): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectIcon'] = $icon; }
 function IPS_SetName(int $id, string $name): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectName'] = $name; }
 function IPS_SetPosition(int $id, int $position): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectPosition'] = $position; }
+function IPS_SetVariableCustomPresentation(int $id, array $presentation): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['VariableCustomPresentation'] = $presentation; $GLOBALS['objects'][$id]['Presentation'] = $presentation; }
 function IPS_DeleteVariable(int $id): void { throw new RuntimeException('Variable deletion is forbidden in this test.'); }
 function GetValue(int $id): mixed { return $GLOBALS['objects'][$id]['Value']; }
 
@@ -109,7 +110,7 @@ class MySkodaTestHost
         $GLOBALS['objects'][$GLOBALS['nextId']++] = [
             'ParentID' => $this->InstanceID, 'ObjectIdent' => $ident, 'ObjectType' => 2,
             'ObjectName' => $name, 'ObjectPosition' => $position, 'ObjectIcon' => '',
-            'VariableType' => $type, 'Presentation' => $presentation,
+            'VariableType' => $type, 'Presentation' => $presentation, 'VariablePresentation' => $presentation, 'VariableCustomPresentation' => [],
             'Value' => match ($type) { 0 => false, 1 => 0, 2 => 0.0, 3 => '' }
         ];
     }
@@ -128,15 +129,15 @@ $m = new MySkoda();
 $m->Create();
 $m->ApplyChanges();
 check($m->status === 201, 'An empty configuration must be reported as unconfigured.');
-check($m->registrations === 39, 'Expected 39 standard variables.');
+check($m->registrations === 2, 'Only technical base variables exist before vehicle data is received.');
 check($m->GetIDForIdent('NewApiFeatures') === false, 'No developer discovery variable.');
-check($m->GetValue('TargetTemperature') === 22.0, 'Initial temperature.');
+check($m->GetIDForIdent('TargetTemperature') === false, 'Vehicle variables are absent before vehicle data is received.');
 $m->properties['ShowDetails'] = true;
 $m->properties['CreateVINVariables'] = true;
 $m->properties['VIN'] = 'TMBJC7NY0N0000001'; // Synthetic syntax-valid fixture, no real vehicle.
 $m->ApplyChanges();
-check($m->registrations === 74, 'Expected 74 variables with both optional groups.');
-check(count($GLOBALS['objects']) === 74, 'No duplicate identifiers.');
+check($m->registrations === 24, 'Only technical/detail and VIN variables exist before vehicle data is received.');
+check(count($GLOBALS['objects']) === 24, 'No duplicate identifiers.');
 check(json_decode($m->GetConfigurationForm(), true) !== null, 'Configuration form must remain valid JSON.');
 
 // User-owned metadata must survive repeated configuration and data updates.
@@ -151,7 +152,7 @@ $before = $GLOBALS['objects'];
 $writes = $GLOBALS['metadataWrites'];
 $m->ApplyChanges();
 $m->ApplyChanges();
-check($m->registrations === 74, 'Repeated ApplyChanges must not register existing variables.');
+check($m->registrations === 24, 'Repeated ApplyChanges must not register existing variables.');
 check($GLOBALS['metadataWrites'] === $writes, 'Existing metadata must not be written.');
 foreach ($before as $id => $old) {
     foreach (['ObjectName', 'ObjectPosition', 'ObjectIcon', 'Presentation'] as $key) {
@@ -162,12 +163,12 @@ $m->properties['ShowDetails'] = false;
 $m->properties['CreateVINVariables'] = false;
 $m->properties['EnableRemote'] = false;
 $m->ApplyChanges();
-check(count($GLOBALS['objects']) === 74, 'Disabling creation options must not delete objects.');
-check($GLOBALS['objects'][$m->GetIDForIdent('Climate')]['Action'] === false, 'Remote actions follow configuration.');
+check(count($GLOBALS['objects']) === 24, 'Disabling creation options must not delete objects.');
+check($m->GetIDForIdent('Climate') === false, 'Unsupported vehicle actions are not created without vehicle data.');
 $m->properties['EnableRemote'] = true;
 $m->ApplyChanges();
-$definition = invoke($m, 'variable', 'Locked', 'Replacement', VARIABLETYPE_BOOLEAN, 1, [], true);
-$locked = $m->GetIDForIdent('Locked');
+$definition = invoke($m, 'variable', 'LastUpdate', 'Replacement', VARIABLETYPE_BOOLEAN, 1, [], true);
+$locked = $m->GetIDForIdent('LastUpdate');
 $saved = $GLOBALS['objects'][$locked];
 $logCount = count($m->logs);
 invoke($m, 'registerVariableOnce', $definition);
@@ -183,11 +184,14 @@ $GLOBALS['objects'][$locked]['ObjectType'] = 2;
 
 $vehicle = [
     'vin' => $m->properties['VIN'],
-    'airConditioning' => ['state' => 'OFF', 'targetTemperature' => ['value' => 20.0, 'unit' => 'CELSIUS']],
-    'charging' => ['settings' => ['targetStateOfChargeInPercent' => 80, 'preferredChargeMode' => 'MANUAL', 'availableChargeModes' => ['MANUAL']], 'status' => ['state' => 'CHARGING', 'chargePowerInKw' => 4.2, 'battery' => ['stateOfChargeInPercent' => 71, 'remainingCruisingRangeInMeters' => 321000]]],
+    'airConditioning' => ['state' => 'OFF', 'airConditioningWithoutExternalPower' => true, 'estimatedReachOfTargetTemperatureAt' => '2026-10-03T17:37:47Z', 'targetTemperature' => ['value' => 20.0, 'unit' => 'CELSIUS']],
+    'charging' => ['settings' => ['targetStateOfChargeInPercent' => 80, 'preferredChargeMode' => 'MANUAL', 'availableChargeModes' => ['MANUAL'], 'maxChargeCurrentAcAmpere' => 10], 'status' => ['state' => 'CHARGING', 'chargePowerInKw' => 4.2, 'chargingRateInKilometersPerHour' => 20.1696, 'battery' => ['stateOfChargeInPercent' => 71, 'remainingCruisingRangeInMeters' => 321000]]],
     'status' => ['overall' => ['doorsLocked' => 'YES', 'locked' => 'NO', 'reliableLockStatus' => 'UNKNOWN', 'doors' => 'CLOSED', 'windows' => 'OPEN']],
     'odometer' => ['mileageInKm' => 12345]
 ];
+invoke($m, 'ensureVehicleVariables', $vehicle);
+invoke($m, 'ensurePublicApiVariables', $vehicle);
+invoke($m, 'applyActions');
 invoke($m, 'updateCoreValues', $vehicle);
 check($m->GetValue('DoorsLocked') === 'YES' && $m->GetValue('Locked') === 'NO', 'Lock API fields remain independent strings.');
 check($m->GetValue('WindowsOpen') === 'OPEN' && $m->GetValue('ReliableLockStatus') === 'UNKNOWN', 'Status strings are preserved.');
@@ -195,8 +199,13 @@ check($m->GetValue('ChargePower') === 4200.0 && $m->GetValue('Range') === 321, '
 check($m->GetValue('Charging') === true, 'Charging boolean follows confirmed active charging state.');
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
-check($m->GetValue('PlugConnectionState') === 'UNKNOWN', 'Missing plug connection state becomes UNKNOWN.');
-check($m->GetValue('PlugLockState') === 'UNKNOWN', 'Missing plug lock state becomes UNKNOWN.');
+check(abs($m->GetValue('APIChargingStatusChargingRateInKilometersPerHour') - 20.1696) < 0.0001, 'Charging rate remains a float.');
+check($m->GetValue('APIChargingSettingsAvailableChargeModes') === 'MANUAL', 'Available charging modes are exposed as a readable list.');
+check($m->GetValue('APIChargingSettingsMaxChargeCurrentAcAmpere') === 10, 'Maximum AC current is exposed in ampere.');
+check(str_contains($m->GetValue('APIAirConditioningEstimatedReachOfTargetTemperatureAt'), '03.10.2026'), 'Estimated target-temperature time is formatted for display.');
+check(invoke($m, 'vehicleProvidesValue', 'airConditioning.airConditioningWithoutExternalPower') === true, 'Vehicle-advertised external-power climate setting is detected.');
+check($m->GetIDForIdent('PlugConnectionState') === false, 'Missing plug connection state does not create a placeholder.');
+check($m->GetIDForIdent('PlugLockState') === false, 'Missing plug lock state does not create a placeholder.');
 $vehicle['charging']['status']['plugConnectionState'] = 'DISCONNECTED';
 $vehicle['charging']['status']['plugLockState'] = 'UNLOCKED';
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
@@ -221,6 +230,15 @@ $ok = invoke($m, 'executeOptimisticCommand', 'TargetSOC', 90, 'Charging limit', 
 });
 check($ok && $m->GetValue('PendingCommands') === 0 && $m->GetValue('TargetSOC') === 90, 'Accepted command keeps desired value.');
 check($m->ReadAttributeString('LastCommandResult') === 'accepted', 'Accepted result.');
+
+$m->SetStatus(102);
+invoke($m, 'setApiError', [
+    'status' => 500,
+    'headers' => [],
+    'json' => ['detail' => 'Internal Server Error', 'type' => 'about:blank'],
+    'curlError' => ''
+], false);
+check($m->status === 102, 'A failed remote command must not mark an otherwise connected instance as faulty.');
 $ok = invoke($m, 'executeOptimisticCommand', 'TargetSOC', 100, 'Charging limit', function () use ($m): bool {
     $m->WriteAttributeString('LastError', 'fixture rejection');
     return false;

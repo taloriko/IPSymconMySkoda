@@ -2,123 +2,106 @@
 
 declare(strict_types=1);
 
-// Load the isolated Symcon host and its existing regression checks.
 require __DIR__ . '/runtime_invariants.php';
 
-$informationModule = new MySkoda();
-$informationModule->InstanceID = 20;
-$informationModule->Create();
-$informationModule->ApplyChanges();
+$m = new MySkoda();
+$m->InstanceID = 20;
+$m->Create();
+$m->ApplyChanges();
 
-$informationIdents = [
-    'APICarType', 'APIPrimaryEngineType', 'APISecondaryEngineType',
-    'APISupportedFeatures', 'APIAvailableChargeModes', 'APIRemoteOperations',
-    'APIAuxiliaryHeatingState', 'APIActiveVentilationState'
+$vehicle = [
+    'vin' => 'TMBJC7NY0N0000002',
+    'fuelStatus' => [
+        'carType' => 'GASOLINE',
+        'primaryEngineRange' => [
+            'currentFuelLevelInPercent' => 64,
+            'currentSoCInPercent' => 64,
+            'engineType' => 'GASOLINE',
+            'remainingRangeInKm' => 430
+        ],
+        'totalRangeInKm' => 430
+    ],
+    'auxiliaryHeating' => [
+        'state' => 'OFF',
+        'durationInSeconds' => 2400
+    ],
+    'odometer' => ['mileageInKm' => 37953],
+    'status' => [
+        'overall' => [
+            'doorsLocked' => 'YES',
+            'locked' => 'YES',
+            'doors' => 'CLOSED',
+            'windows' => 'CLOSED',
+            'lights' => 'OFF',
+            'reliableLockStatus' => 'LOCKED'
+        ],
+        'detail' => [
+            'sunroof' => 'CLOSED',
+            'trunk' => 'CLOSED',
+            'bonnet' => 'CLOSED'
+        ]
+    ],
+    'parkingPosition' => [
+        'state' => 'PARKED',
+        'formattedAddress' => 'Fixture address',
+        'gpsCoordinates' => ['latitude' => 48.1, 'longitude' => 9.1]
+    ],
+    'operations' => [
+        ['name' => 'startAuxiliaryHeating'],
+        ['name' => 'stopAuxiliaryHeating']
+    ],
+    'futureData' => [
+        'newBoolean' => true,
+        'newNumber' => 12.5,
+        'newText' => 'AVAILABLE'
+    ]
 ];
-$metadata = [];
-foreach ($informationIdents as $ident) {
-    check($informationModule->GetValue($ident) === 'Not retrieved yet', 'Initial information state: ' . $ident);
-    $id = $informationModule->GetIDForIdent($ident);
-    $metadata[$id] = $GLOBALS['objects'][$id];
-    unset($metadata[$id]['Value']);
-}
-$informationRegistrations = $informationModule->registrations;
-$informationMetadataWrites = $GLOBALS['metadataWrites'];
-$store = static function (array $vehicle, mixed $errors = null) use ($informationModule): void {
-    $envelope = ['vehicle' => $vehicle];
-    if ($errors !== null) {
-        $envelope['errors'] = $errors;
-    }
-    $informationModule->WriteAttributeString('RawData', json_encode($envelope, JSON_THROW_ON_ERROR));
-    invoke($informationModule, 'updatePublicApiValuesFromRawData');
-};
-$vehicleInfo = ['vin' => 'TMBJC7NY0N0000002']; // Synthetic fixture only.
-$scalarIdents = ['APICarType', 'APIPrimaryEngineType', 'APISecondaryEngineType', 'APIAuxiliaryHeatingState', 'APIActiveVentilationState'];
 
-// A normal response without errors or optional parts is not a support verdict.
-$store($vehicleInfo);
-foreach ($informationIdents as $ident) {
-    check($informationModule->GetValue($ident) === 'Not provided', 'Missing information without errors: ' . $ident);
-}
-foreach ([null, '', '   '] as $empty) {
-    $store($vehicleInfo + [
-        'fuelStatus' => ['carType' => $empty, 'primaryEngineRange' => ['engineType' => $empty], 'secondaryEngineRange' => ['engineType' => $empty]],
-        'auxiliaryHeating' => ['state' => $empty],
-        'activeVentilation' => ['state' => $empty]
-    ], []);
-    foreach ($scalarIdents as $ident) {
-        check($informationModule->GetValue($ident) === 'Not provided', 'Null/empty information: ' . $ident);
-    }
-}
+invoke($m, 'ensureVehicleVariables', $vehicle);
+invoke($m, 'ensurePublicApiVariables', $vehicle);
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+invoke($m, 'updateCoreValues', $vehicle);
+invoke($m, 'updateDetailValues', $vehicle, ['vehicle' => $vehicle]);
+invoke($m, 'updatePublicApiValuesFromRawData');
 
-// Non-empty API values and existing list serialization remain unchanged.
-$operations = [['name' => 'startCharging'], ['name' => 'stopCharging']];
-$store($vehicleInfo + [
-    'fuelStatus' => ['carType' => ' bev ', 'primaryEngineRange' => ['engineType' => 'electric'], 'secondaryEngineRange' => ['engineType' => 'UNKNOWN']],
-    'auxiliaryHeating' => ['state' => 'OFF'],
-    'activeVentilation' => ['state' => 'ON'],
-    'charging' => ['settings' => ['availableChargeModes' => ['MANUAL', 'TIMER']]],
-    'operations' => $operations
-]);
-foreach (['APICarType' => 'BEV', 'APIPrimaryEngineType' => 'ELECTRIC', 'APISecondaryEngineType' => 'UNKNOWN', 'APIAuxiliaryHeatingState' => 'OFF', 'APIActiveVentilationState' => 'ON', 'APIAvailableChargeModes' => 'MANUAL, TIMER'] as $ident => $expected) {
-    check($informationModule->GetValue($ident) === $expected, 'Actual API information: ' . $ident);
-}
-check($informationModule->GetValue('APIRemoteOperations') === json_encode($operations), 'Structured operations remain JSON.');
-check($informationModule->GetValue('APISupportedFeatures') === 'fuelStatus, auxiliaryHeating, activeVentilation, charging', 'Feature summary retains its existing order.');
-$store($vehicleInfo, []);
-foreach ($scalarIdents as $ident) {
-    check($informationModule->GetValue($ident) === 'Not provided', 'Missing information must replace stale values: ' . $ident);
+check($m->GetIDForIdent('StateOfCharge') === false, 'EV battery state must not exist for the combustion fixture.');
+check($m->GetIDForIdent('Charging') === false, 'Charging action must not exist without charging data.');
+check($m->GetIDForIdent('Climate') === false, 'Climate action must not exist without air-conditioning data.');
+
+check($m->GetValue('FuelLevelPercent') === 64, 'Fuel level is created and populated.');
+check($m->GetValue('PrimaryEngineSOC') === 64, 'Primary engine SoC is created and populated.');
+check($m->GetValue('FuelRange') === 430, 'Fuel range is created and populated.');
+check($m->GetValue('TotalRange') === 430, 'Total range is created and populated.');
+check($m->GetValue('APICarType') === 'GASOLINE', 'Car type is preserved.');
+check($m->GetValue('APIPrimaryEngineType') === 'GASOLINE', 'Engine type is preserved.');
+check($m->GetValue('APIAuxiliaryHeatingState') === 'OFF', 'Auxiliary heating state is preserved.');
+check($m->GetValue('AuxiliaryHeatingDuration') === 40, 'Auxiliary heating duration is converted to minutes.');
+check(invoke($m, 'auxiliaryHeatingStartBody', '1234', 22.0) === ['spin' => '1234'], 'Auxiliary heating sends only the required S-PIN when the vehicle exposes no target temperature.');
+check(invoke($m, 'vehicleProvidesValue', 'airConditioning.airConditioningWithoutExternalPower') === false, 'Combustion fixture does not expose the external-power climate setting.');
+check($m->GetIDForIdent('AuxiliaryHeating') !== false, 'Auxiliary heating control is created when status is delivered.');
+check($m->GetValue('AuxiliaryHeating') === false, 'Auxiliary heating control follows OFF state.');
+$m->properties['SPIN'] = '1234';
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+invoke($m, 'applyActions');
+$auxiliaryHeatingId = $m->GetIDForIdent('AuxiliaryHeating');
+check(($GLOBALS['objects'][$auxiliaryHeatingId]['Action'] ?? false) === true, 'Auxiliary heating becomes actionable with S-PIN and start/stop operations.');
+
+
+check($m->GetValue('APIFutureDataNewBoolean') === true, 'Unknown boolean field is added dynamically.');
+check($m->GetValue('APIFutureDataNewNumber') === 12.5, 'Unknown numeric field is added dynamically.');
+check($m->GetValue('APIFutureDataNewText') === 'AVAILABLE', 'Unknown string field is added dynamically.');
+
+check($m->GetIDForIdent('APIFuelStatusCarCapturedTimestamp') === false, 'Capture timestamps are not duplicated as dynamic variables.');
+
+$metadataId = $m->GetIDForIdent('FuelLevelPercent');
+$before = $GLOBALS['objects'][$metadataId];
+$vehicle['fuelStatus']['primaryEngineRange']['currentFuelLevelInPercent'] = 63;
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+invoke($m, 'ensurePublicApiVariables', $vehicle);
+invoke($m, 'updatePublicApiValuesFromRawData');
+check($m->GetValue('FuelLevelPercent') === 63, 'Existing variables continue to update.');
+foreach (['ObjectName', 'ObjectPosition', 'ObjectIcon', 'Presentation'] as $key) {
+    check($GLOBALS['objects'][$metadataId][$key] === $before[$key], 'Existing metadata remains untouched: ' . $key);
 }
 
-// Only exact, matching component reports may establish a specific reason.
-foreach (['UNSUPPORTED' => 'Unsupported', 'DISABLED' => 'Service disabled', 'UNAVAILABLE' => 'Temporarily unavailable'] as $suffix => $expected) {
-    $store($vehicleInfo, [
-        ['type' => 'FUEL_STATUS_' . $suffix],
-        ['type' => 'AUXILIARY_HEATING_' . $suffix],
-        ['type' => 'ACTIVE_VENTILATION_' . $suffix],
-        ['type' => 'CHARGING_' . $suffix]
-    ]);
-    foreach (array_merge($scalarIdents, ['APIAvailableChargeModes']) as $ident) {
-        check($informationModule->GetValue($ident) === $expected, 'Explicit component reason: ' . $ident . '/' . $suffix);
-    }
-    check($informationModule->GetValue('APIRemoteOperations') === 'Not provided', 'Component reports must not affect unrelated operations.');
-}
-$store($vehicleInfo, [
-    ['type' => 'CHARGING_PROFILES_UNSUPPORTED'], ['type' => 'FUEL_STATUS_OTHER'],
-    ['type' => ['FUEL_STATUS_UNSUPPORTED']], ['type' => null], [], 'invalid', null
-]);
-foreach (array_merge($scalarIdents, ['APIAvailableChargeModes']) as $ident) {
-    check($informationModule->GetValue($ident) === 'Not provided', 'Unknown/malformed/unrelated reports must not imply unsupported: ' . $ident);
-}
-$store($vehicleInfo, 'invalid');
-check($informationModule->GetValue('APICarType') === 'Not provided', 'Malformed errors collection is ignored.');
-$store($vehicleInfo + ['fuelStatus' => ['carType' => 'BEV']], [['type' => 'FUEL_STATUS_UNSUPPORTED']]);
-check($informationModule->GetValue('APICarType') === 'BEV', 'A delivered field remains authoritative.');
-check($informationModule->GetValue('APIPrimaryEngineType') === 'Unsupported', 'Missing sibling uses explicit component reason.');
-
-// Delivered empty lists are distinguishable from absent data.
-$store($vehicleInfo + ['charging' => ['settings' => ['availableChargeModes' => []]], 'operations' => []]);
-check($informationModule->GetValue('APIAvailableChargeModes') === 'No entries', 'Explicit empty modes list.');
-check($informationModule->GetValue('APIRemoteOperations') === 'No entries', 'Explicit empty operations list.');
-$store($vehicleInfo + ['remoteOperations' => ['startCharging']]);
-check($informationModule->GetValue('APIRemoteOperations') === 'startCharging', 'Existing alternate operations field still works.');
-foreach ([0, '0'] as $zero) {
-    invoke($informationModule, 'setPublicApiInformation', 'APICarType', $zero);
-    check($informationModule->GetValue('APICarType') === '0', 'Zero is a supplied value, not missing.');
-}
-invoke($informationModule, 'setPublicApiInformation', 'APICarType', false);
-check($informationModule->GetValue('APICarType') === 'false', 'False is a supplied value, not missing.');
-
-// The change writes values only: no object migration, metadata repair or new IDs.
-check($informationModule->registrations === $informationRegistrations, 'Updates must not register more variables.');
-check($GLOBALS['metadataWrites'] === $informationMetadataWrites, 'Updates must not change names, icons or positions.');
-foreach ($metadata as $id => $expected) {
-    $actual = $GLOBALS['objects'][$id];
-    unset($actual['Value']);
-    check($actual === $expected, 'Information variable metadata must be preserved.');
-}
-$locale = json_decode(file_get_contents($root . '/MySkoda/locale.json'), true, 512, JSON_THROW_ON_ERROR);
-foreach (['Not retrieved yet', 'Not provided', 'No entries', 'Unsupported', 'Service disabled', 'Temporarily unavailable'] as $caption) {
-    check(isset($locale['translations']['de'][$caption]), 'German information caption missing: ' . $caption);
-}
-echo 'API information checks passed (' . $GLOBALS['checks'] . " total checks).\n";
+echo 'Dynamic API vehicle checks passed (' . $GLOBALS['checks'] . " total checks).\n";

@@ -19,14 +19,84 @@ trait MySkodaVariablesTrait
     private function registerVariables(): void
     {
         foreach ($this->coreVariableDefinitions() as $definition) {
-            $this->registerVariableOnce($definition);
+            if (in_array((string) $definition['ident'], ['ApiKeyWarning', 'LastUpdate'], true)) {
+                $this->registerVariableOnce($definition);
+            }
         }
 
         if ($this->ReadPropertyBoolean('ShowDetails')) {
             foreach ($this->detailVariableDefinitions() as $definition) {
-                $this->registerVariableOnce($definition);
+                if (in_array((string) $definition['ident'], ['ApiKeyExpiresAtVar', 'RequestsRemaining', 'PartialErrors'], true)) {
+                    $this->registerVariableOnce($definition);
+                }
             }
         }
+    }
+
+    private function ensureVehicleVariables(array $vehicle): void
+    {
+        $definitions = [];
+        foreach (array_merge($this->coreVariableDefinitions(), $this->detailVariableDefinitions()) as $definition) {
+            $definitions[(string) $definition['ident']] = $definition;
+        }
+
+        foreach ($this->vehicleVariableSourcePaths() as $ident => $paths) {
+            foreach ($paths as $path) {
+                if (!$this->pathHasValue($vehicle, $path)) {
+                    continue;
+                }
+                if (isset($definitions[$ident])) {
+                    $this->registerVariableOnce($definitions[$ident]);
+                }
+                break;
+            }
+        }
+    }
+
+    private function vehicleVariableSourcePaths(): array
+    {
+        return [
+            'StateOfCharge' => ['charging.status.battery.stateOfChargeInPercent'],
+            'Range' => ['charging.status.battery.remainingCruisingRangeInMeters'],
+            'Mileage' => ['odometer.mileageInKm'],
+            'DoorsLocked' => ['status.overall.doorsLocked'],
+            'Locked' => ['status.overall.locked'],
+            'ReliableLockStatus' => ['status.overall.reliableLockStatus'],
+            'DoorsOpen' => ['status.overall.doors'],
+            'WindowsOpen' => ['status.overall.windows'],
+            'Charging' => ['charging.status.state'],
+            'ChargePower' => ['charging.status.chargePowerInKw'],
+            'TargetSOC' => ['charging.settings.targetStateOfChargeInPercent'],
+            'ChargeMode' => ['charging.settings.preferredChargeMode'],
+            'Climate' => ['airConditioning.state'],
+            'AuxiliaryHeating' => ['auxiliaryHeating.state'],
+            'ClimateState' => ['airConditioning.state'],
+            'TargetTemperature' => ['airConditioning.targetTemperature.value'],
+            'VehicleName' => ['name'],
+            'LicensePlate' => ['licensePlate'],
+            'TrunkOpen' => ['status.detail.trunk'],
+            'BonnetOpen' => ['status.detail.bonnet'],
+            'SunroofOpen' => ['status.detail.sunroof'],
+            'LightsOn' => ['status.overall.lights'],
+            'ParkingState' => ['parkingPosition.state'],
+            'ParkingAddress' => ['parkingPosition.formattedAddress'],
+            'ChargingState' => ['charging.status.state'],
+            'ChargeType' => ['charging.status.chargeType'],
+            'FullyChargedAt' => ['charging.status.fullyChargedAt'],
+            'Latitude' => ['parkingPosition.latitude', 'parkingPosition.gpsCoordinates.latitude', 'parkingPosition.gpsCoordinates.lat'],
+            'Longitude' => ['parkingPosition.longitude', 'parkingPosition.gpsCoordinates.longitude', 'parkingPosition.gpsCoordinates.lon', 'parkingPosition.gpsCoordinates.lng']
+        ];
+    }
+
+    private function knownVehicleDataPaths(): array
+    {
+        $paths = [];
+        foreach ($this->vehicleVariableSourcePaths() as $sourcePaths) {
+            foreach ($sourcePaths as $path) {
+                $paths[$path] = true;
+            }
+        }
+        return array_keys($paths);
     }
 
     private function coreVariableDefinitions(): array
@@ -63,6 +133,7 @@ trait MySkodaVariablesTrait
             ]),
             $this->variable('ChargeMode', 'Charging mode', VARIABLETYPE_INTEGER, 260, $this->chargeModePresentation()),
             $this->variable('Climate', 'Air conditioning', VARIABLETYPE_BOOLEAN, 900, $this->booleanActionPresentation('fan')),
+            $this->variable('AuxiliaryHeating', 'Auxiliary heating control', VARIABLETYPE_BOOLEAN, 905, $this->booleanActionPresentation('fire')),
             $this->variable('ClimateState', 'Air conditioning state', VARIABLETYPE_STRING, 100, $this->climateStatePresentation()),
             $this->variable('TargetTemperature', 'Target temperature', VARIABLETYPE_FLOAT, 120, [
                 'PRESENTATION' => VARIABLE_PRESENTATION_SLIDER,
@@ -143,8 +214,15 @@ trait MySkodaVariablesTrait
             }
 
             $variable = IPS_GetVariable($existingId);
-            if ((int) ($variable['VariableType'] ?? -1) !== (int) $definition['type']) {
-                $this->LogMessage(sprintf('MySkoda: variable "%s" has an unexpected type.', $ident), KL_ERROR);
+            $existingType = (int) ($variable['VariableType'] ?? -1);
+            $expectedType = (int) $definition['type'];
+            if ($existingType !== $expectedType) {
+                $legacyChargingRate = $ident === 'APIChargingStatusChargingRateInKilometersPerHour'
+                    && $existingType === VARIABLETYPE_INTEGER
+                    && $expectedType === VARIABLETYPE_FLOAT;
+                if (!$legacyChargingRate) {
+                    $this->LogMessage(sprintf('MySkoda: variable "%s" has an unexpected type.', $ident), KL_ERROR);
+                }
             }
             return;
         }
@@ -185,7 +263,19 @@ trait MySkodaVariablesTrait
     {
         $enabled = $this->ReadPropertyBoolean('EnableRemote');
         foreach (['Charging', 'TargetSOC', 'ChargeMode', 'Climate', 'TargetTemperature'] as $ident) {
-            $this->MaintainAction($ident, $enabled);
+            $id = @$this->GetIDForIdent($ident);
+            if ($id !== false && IPS_VariableExists($id)) {
+                $this->MaintainAction($ident, $enabled);
+            }
+        }
+
+        $auxiliaryHeatingId = @$this->GetIDForIdent('AuxiliaryHeating');
+        if ($auxiliaryHeatingId !== false && IPS_VariableExists($auxiliaryHeatingId)) {
+            $auxiliaryHeatingEnabled = $enabled
+                && trim($this->ReadPropertyString('SPIN')) !== ''
+                && $this->vehicleOperationAvailable('startAuxiliaryHeating')
+                && $this->vehicleOperationAvailable('stopAuxiliaryHeating');
+            $this->MaintainAction('AuxiliaryHeating', $auxiliaryHeatingEnabled);
         }
     }
 
@@ -194,23 +284,27 @@ trait MySkodaVariablesTrait
         $this->setPathValue('StateOfCharge', $vehicle, 'charging.status.battery.stateOfChargeInPercent', static fn (mixed $v): int => (int) $v);
         $this->setPathValue('Range', $vehicle, 'charging.status.battery.remainingCruisingRangeInMeters', static fn (mixed $v): int => (int) round((float) $v / 1000));
 
-        $mileage = (int) round((float) $this->path($vehicle, 'odometer.mileageInKm', 0));
-        if ($mileage > 0) {
-            $this->SetValue('Mileage', $mileage);
+        $mileage = $this->path($vehicle, 'odometer.mileageInKm', null);
+        if ($mileage !== null && (float) $mileage > 0) {
+            $this->setIfExists('Mileage', (int) round((float) $mileage));
         }
 
-        $this->SetValue('DoorsLocked', strtoupper((string) $this->path($vehicle, 'status.overall.doorsLocked', 'UNKNOWN')));
-        $this->SetValue('Locked', strtoupper((string) $this->path($vehicle, 'status.overall.locked', 'UNKNOWN')));
-        $this->SetValue('ReliableLockStatus', strtoupper((string) $this->path($vehicle, 'status.overall.reliableLockStatus', 'UNKNOWN')));
-        $this->SetValue('DoorsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.doors', 'UNKNOWN')));
-        $this->SetValue('WindowsOpen', strtoupper((string) $this->path($vehicle, 'status.overall.windows', 'UNKNOWN')));
+        $this->setPathValue('DoorsLocked', $vehicle, 'status.overall.doorsLocked', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('Locked', $vehicle, 'status.overall.locked', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('ReliableLockStatus', $vehicle, 'status.overall.reliableLockStatus', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('DoorsOpen', $vehicle, 'status.overall.doors', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('WindowsOpen', $vehicle, 'status.overall.windows', static fn (mixed $v): string => strtoupper((string) $v));
 
-        $chargeState = $this->chargingStatusValue($vehicle, 'state');
-        if (in_array($chargeState, ['CHARGING', 'CONSERVING'], true)) {
-            $this->SetValue('Charging', true);
-        } elseif (in_array($chargeState, ['READY_FOR_CHARGING', 'CONNECT_CABLE', 'CHARGING_INTERRUPTED', 'ERROR'], true)) {
-            $this->SetValue('Charging', false);
+        $chargeStateValue = $this->path($vehicle, 'charging.status.state', null);
+        if (is_string($chargeStateValue) && trim($chargeStateValue) !== '') {
+            $chargeState = strtoupper(trim($chargeStateValue));
+            if (in_array($chargeState, ['CHARGING', 'CONSERVING'], true)) {
+                $this->setIfExists('Charging', true);
+            } elseif (in_array($chargeState, ['READY_FOR_CHARGING', 'CONNECT_CABLE', 'CHARGING_INTERRUPTED', 'ERROR'], true)) {
+                $this->setIfExists('Charging', false);
+            }
         }
+
         $this->setPathValue('ChargePower', $vehicle, 'charging.status.chargePowerInKw', static fn (mixed $v): float => (float) $v * 1000.0);
         $this->setPathValue('TargetSOC', $vehicle, 'charging.settings.targetStateOfChargeInPercent', static fn (mixed $v): int => (int) $v);
 
@@ -219,15 +313,29 @@ trait MySkodaVariablesTrait
         if ($mode !== '') {
             $index = array_search($mode, self::CHARGE_MODES, true);
             if ($index !== false) {
-                $this->SetValue('ChargeMode', (int) $index);
+                $this->setIfExists('ChargeMode', (int) $index);
             } else {
                 $this->SendDebug('Charge mode', 'Unknown API value: ' . $mode, 0);
             }
         }
 
-        $climateState = strtoupper((string) $this->path($vehicle, 'airConditioning.state', 'UNKNOWN'));
-        $this->SetValue('Climate', in_array($climateState, ['ON', 'COOLING', 'HEATING', 'HEATING_AUXILIARY', 'VENTILATION'], true));
-        $this->SetValue('ClimateState', $climateState);
+        $auxiliaryHeatingStateValue = $this->path($vehicle, 'auxiliaryHeating.state', null);
+        if (is_string($auxiliaryHeatingStateValue) && trim($auxiliaryHeatingStateValue) !== '') {
+            $auxiliaryHeatingState = strtoupper(trim($auxiliaryHeatingStateValue));
+            if (in_array($auxiliaryHeatingState, ['ON', 'HEATING', 'HEATING_AUXILIARY', 'VENTILATION'], true)) {
+                $this->setIfExists('AuxiliaryHeating', true);
+            } elseif ($auxiliaryHeatingState === 'OFF') {
+                $this->setIfExists('AuxiliaryHeating', false);
+            }
+        }
+
+        $climateStateValue = $this->path($vehicle, 'airConditioning.state', null);
+        if (is_string($climateStateValue) && trim($climateStateValue) !== '') {
+            $climateState = strtoupper(trim($climateStateValue));
+            $this->setIfExists('Climate', in_array($climateState, ['ON', 'COOLING', 'HEATING', 'HEATING_AUXILIARY', 'VENTILATION'], true));
+            $this->setIfExists('ClimateState', $climateState);
+        }
+
         $this->setPathValue('TargetTemperature', $vehicle, 'airConditioning.targetTemperature.value', static fn (mixed $v): float => (float) $v);
     }
 
@@ -240,29 +348,35 @@ trait MySkodaVariablesTrait
     private function setPathValue(string $ident, array $source, string $path, Closure $convert): void
     {
         $value = $this->path($source, $path, null);
-        if ($value !== null) {
+        $id = @$this->GetIDForIdent($ident);
+        if ($value !== null && $id !== false && IPS_VariableExists($id)) {
             $this->SetValue($ident, $convert($value));
         }
     }
 
     private function updateDetailValues(array $vehicle, array $envelope): void
     {
-        $this->setIfExists('VehicleName', (string) $this->path($vehicle, 'name', ''));
-        $this->setIfExists('LicensePlate', (string) $this->path($vehicle, 'licensePlate', ''));
-        $this->setIfExists('ChargingState', $this->chargingStatusValue($vehicle, 'state'));
-        $this->setIfExists('ChargeType', strtoupper((string) $this->path($vehicle, 'charging.status.chargeType', 'OFF')));
-        $this->setIfExists('FullyChargedAt', $this->toTimestamp($this->path($vehicle, 'charging.status.fullyChargedAt', null)));
-        $this->setIfExists('TrunkOpen', strtoupper((string) $this->path($vehicle, 'status.detail.trunk', 'UNKNOWN')));
-        $this->setIfExists('BonnetOpen', strtoupper((string) $this->path($vehicle, 'status.detail.bonnet', 'UNKNOWN')));
-        $this->setIfExists('SunroofOpen', strtoupper((string) $this->path($vehicle, 'status.detail.sunroof', 'UNKNOWN')));
-        $this->setIfExists('LightsOn', strtoupper((string) $this->path($vehicle, 'status.overall.lights', 'UNKNOWN')));
-        $this->setIfExists('ParkingState', strtoupper((string) $this->path($vehicle, 'parkingPosition.state', 'UNKNOWN')));
-        $this->setIfExists('ParkingAddress', (string) $this->path($vehicle, 'parkingPosition.formattedAddress', ''));
+        $this->setPathValue('VehicleName', $vehicle, 'name', static fn (mixed $v): string => (string) $v);
+        $this->setPathValue('LicensePlate', $vehicle, 'licensePlate', static fn (mixed $v): string => (string) $v);
+        $this->setPathValue('ChargingState', $vehicle, 'charging.status.state', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('ChargeType', $vehicle, 'charging.status.chargeType', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('FullyChargedAt', $vehicle, 'charging.status.fullyChargedAt', fn (mixed $v): int => $this->toTimestamp($v));
+        $this->setPathValue('TrunkOpen', $vehicle, 'status.detail.trunk', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('BonnetOpen', $vehicle, 'status.detail.bonnet', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('SunroofOpen', $vehicle, 'status.detail.sunroof', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('LightsOn', $vehicle, 'status.overall.lights', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('ParkingState', $vehicle, 'parkingPosition.state', static fn (mixed $v): string => strtoupper((string) $v));
+        $this->setPathValue('ParkingAddress', $vehicle, 'parkingPosition.formattedAddress', static fn (mixed $v): string => (string) $v);
 
         $latitude = $this->firstPath($vehicle, ['parkingPosition.latitude', 'parkingPosition.gpsCoordinates.latitude', 'parkingPosition.gpsCoordinates.lat']);
         $longitude = $this->firstPath($vehicle, ['parkingPosition.longitude', 'parkingPosition.gpsCoordinates.longitude', 'parkingPosition.gpsCoordinates.lon', 'parkingPosition.gpsCoordinates.lng']);
-        $this->setIfExists('Latitude', $latitude !== null ? (float) $latitude : 0.0);
-        $this->setIfExists('Longitude', $longitude !== null ? (float) $longitude : 0.0);
+        if ($latitude !== null) {
+            $this->setIfExists('Latitude', (float) $latitude);
+        }
+        if ($longitude !== null) {
+            $this->setIfExists('Longitude', (float) $longitude);
+        }
+
         $this->setIfExists('ApiKeyExpiresAtVar', $this->ReadAttributeInteger('ApiKeyExpiresAt'));
         $this->setIfExists('RequestsRemaining', $this->ReadAttributeInteger('RateLimitRemaining'));
 

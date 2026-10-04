@@ -216,6 +216,11 @@ trait MySkodaCoreTrait
             json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
 
+        $this->ensureVehicleVariables($vehicle);
+        $this->ensurePublicApiVariables($vehicle);
+        $this->applyActions();
+        $this->initializeChargingHistory();
+
         $this->updateCoreValues($vehicle);
         $this->updateDetailValues($vehicle, $envelope);
         $this->WriteAttributeString('LastError', '');
@@ -248,6 +253,11 @@ trait MySkodaCoreTrait
                 $element['validModules'] = $validVisualizationModules;
             } elseif ($name === 'NotificationTargetFeedback') {
                 $element['caption'] = $notificationCaption;
+            } elseif ($name === 'ClimateWithoutExternalPower') {
+                $element['visible'] = $this->vehicleProvidesValue('airConditioning.airConditioningWithoutExternalPower');
+            } elseif ($name === 'SPIN') {
+                $element['visible'] = $this->vehicleProvidesValue('auxiliaryHeating.state')
+                    || $this->vehicleOperationAvailable('startAuxiliaryHeating');
             }
 
             if (isset($element['items']) && is_array($element['items'])) {
@@ -260,6 +270,16 @@ trait MySkodaCoreTrait
             }
         }
         unset($element);
+    }
+
+    private function vehicleProvidesValue(string $path): bool
+    {
+        $raw = json_decode($this->ReadAttributeString('RawData'), true);
+        if (!is_array($raw)) {
+            return false;
+        }
+        $vehicle = isset($raw['vehicle']) && is_array($raw['vehicle']) ? $raw['vehicle'] : [];
+        return $vehicle !== [] && $this->pathHasValue($vehicle, $path);
     }
 
     private function prepareConfigurationActions(array &$actions, bool $enabled): void

@@ -4,70 +4,111 @@ declare(strict_types=1);
 
 trait MySkodaPublicApiVariablesTrait
 {
-    private function ensurePublicApiVariables(): void
+    private function publicApiVariableDefinitions(): array
     {
-        $initialInformation = $this->Translate('Not retrieved yet');
-        $definitions = [
-            $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode')),
-            $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
-                ['CONNECTED', 'Connected', 'plug-circle-check', 0x22C55E],
-                ['DISCONNECTED', 'Disconnected', 'plug', 0x6B7280],
+        return [
+            'VIN' => ['path' => 'vin', 'definition' => $this->variable('VIN', 'VIN', VARIABLETYPE_STRING, 30, $this->valuePresentation('barcode'))],
+            'TargetTemperatureUnit' => ['path' => 'airConditioning.targetTemperature.unit', 'definition' => $this->variable('TargetTemperatureUnit', 'Target temperature unit', VARIABLETYPE_STRING, 130, $this->valuePresentation('temperature-half'))],
+            'APIAirConditioningEstimatedReachOfTargetTemperatureAt' => ['path' => 'airConditioning.estimatedReachOfTargetTemperatureAt', 'upgradeDynamic' => true, 'definition' => $this->variable('APIAirConditioningEstimatedReachOfTargetTemperatureAt', 'Estimated target temperature reached at', VARIABLETYPE_STRING, 135, $this->valuePresentation('temperature-half'))],
+            'AirConditioningAtUnlock' => ['path' => 'airConditioning.airConditioningAtUnlock', 'definition' => $this->variable('AirConditioningAtUnlock', 'Air conditioning at unlock', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(true, 'key'))],
+            'WindowHeatingEnabled' => ['path' => 'airConditioning.windowHeating.enabled', 'definition' => $this->variable('WindowHeatingEnabled', 'Window heating enabled', VARIABLETYPE_BOOLEAN, 140, $this->booleanYesNoPresentation(true, 'window-maximize'))],
+            'WindowHeatingFront' => ['path' => 'airConditioning.windowHeating.front', 'definition' => $this->variable('WindowHeatingFront', 'Front window heating', VARIABLETYPE_STRING, 150, $this->publicApiEnumPresentation('window-maximize', [
+                ['OFF', 'Off', 'window-maximize', 0x22C55E],
+                ['ON', 'On', 'window-maximize', 0xF59E0B],
+                ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
-            ]), 'UNKNOWN'),
-            $this->variable('PlugLockState', 'Plug lock state', VARIABLETYPE_STRING, 314, $this->publicApiEnumPresentation('lock', [
-                ['LOCKED', 'Locked', 'lock', 0x22C55E],
-                ['UNLOCKED', 'Unlocked', 'lock-open', 0xF59E0B],
+            ]))],
+            'WindowHeatingRear' => ['path' => 'airConditioning.windowHeating.rear', 'definition' => $this->variable('WindowHeatingRear', 'Rear window heating', VARIABLETYPE_STRING, 160, $this->publicApiEnumPresentation('car-rear', [
+                ['OFF', 'Off', 'car-rear', 0x22C55E],
+                ['ON', 'On', 'car-rear', 0xF59E0B],
+                ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
-            ]), 'UNKNOWN'),
-            $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0)),
-            $this->variable('AtSavedChargingLocation', 'At saved charging location', VARIABLETYPE_BOOLEAN, 200, $this->booleanYesNoPresentation(true, 'house')),
-            $this->variable('BatteryCareMode', 'Battery care mode', VARIABLETYPE_STRING, 240, $this->publicApiEnumPresentation('shield', [
+            ]))],
+            'AtSavedChargingLocation' => ['path' => 'charging.isVehicleInSavedLocation', 'definition' => $this->variable('AtSavedChargingLocation', 'At saved charging location', VARIABLETYPE_BOOLEAN, 200, $this->booleanYesNoPresentation(true, 'house'))],
+            'AutoUnlockPlug' => ['path' => 'charging.settings.autoUnlockPlugWhenCharged', 'definition' => $this->variable('AutoUnlockPlug', 'Automatic plug unlock', VARIABLETYPE_STRING, 210, $this->publicApiEnumPresentation('plug', [
+                ['OFF', 'Off', 'lock', -1],
+                ['ON', 'On', 'lock-open', 0x22C55E],
+                ['PERMANENT', 'Permanent', 'lock-open', 0x22C55E],
+                ['UNKNOWN', 'Unknown', 'circle-question', -1]
+            ]))],
+            'BatteryCareTargetSOC' => ['path' => 'charging.settings.batteryCareModeTargetValueInPercent', 'definition' => $this->variable('BatteryCareTargetSOC', 'Battery care target', VARIABLETYPE_INTEGER, 230, $this->valuePresentation('battery-half', ' %', 0))],
+            'BatteryCareMode' => ['path' => 'charging.settings.chargingCareMode', 'definition' => $this->variable('BatteryCareMode', 'Battery care mode', VARIABLETYPE_STRING, 240, $this->publicApiEnumPresentation('shield', [
                 ['ACTIVATED', 'Activated', 'shield', 0x22C55E],
                 ['DEACTIVATED', 'Deactivated', 'shield', 0xF59E0B],
                 ['ACTIVE', 'Activated', 'shield', 0x22C55E],
                 ['INACTIVE', 'Deactivated', 'shield', 0xF59E0B],
                 ['UNKNOWN', 'Unknown', 'circle-question', -1]
-            ])),
-            $this->variable('BatteryCareTargetSOC', 'Battery care target', VARIABLETYPE_INTEGER, 230, $this->valuePresentation('battery-half', ' %', 0)),
-            $this->variable('MaxChargeCurrentAC', 'Maximum AC charging current', VARIABLETYPE_STRING, 250, $this->publicApiEnumPresentation('bolt', [
+            ]))],
+            'MaxChargeCurrentAC' => ['path' => 'charging.settings.maxChargeCurrentAc', 'definition' => $this->variable('MaxChargeCurrentAC', 'Maximum AC charging current', VARIABLETYPE_STRING, 250, $this->publicApiEnumPresentation('bolt', [
                 ['MAXIMUM', 'Maximum', 'bolt', -1],
                 ['REDUCED', 'Reduced', 'gauge', -1],
                 ['UNKNOWN', 'Unknown', 'circle-question', -1]
-            ])),
-            $this->variable('AutoUnlockPlug', 'Automatic plug unlock', VARIABLETYPE_STRING, 210, $this->publicApiEnumPresentation('plug', [
-                ['OFF', 'Off', 'lock', -1],
-                ['ON', 'On', 'lock-open', 0x22C55E],
-                ['PERMANENT', 'Permanent', 'lock-open', 0x22C55E],
-                ['UNKNOWN', 'Unknown', 'circle-question', -1]
-            ])),
-            $this->variable('TargetTemperatureUnit', 'Target temperature unit', VARIABLETYPE_STRING, 130, $this->valuePresentation('temperature-half')),
-            $this->variable('AirConditioningAtUnlock', 'Air conditioning at unlock', VARIABLETYPE_BOOLEAN, 110, $this->booleanYesNoPresentation(true, 'key')),
-            $this->variable('WindowHeatingEnabled', 'Window heating enabled', VARIABLETYPE_BOOLEAN, 140, $this->booleanYesNoPresentation(true, 'window-maximize')),
-            $this->variable('WindowHeatingFront', 'Front window heating', VARIABLETYPE_STRING, 150, $this->publicApiEnumPresentation('window-maximize', [
-                ['OFF', 'Off', 'window-maximize', 0x22C55E],
-                ['ON', 'On', 'window-maximize', 0xF59E0B],
-                ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
+            ]))],
+            'APIChargingSettingsMaxChargeCurrentAcAmpere' => ['path' => 'charging.settings.maxChargeCurrentAcAmpere', 'upgradeDynamic' => true, 'definition' => $this->variable('APIChargingSettingsMaxChargeCurrentAcAmpere', 'Maximum AC charging current in ampere', VARIABLETYPE_INTEGER, 255, $this->valuePresentation('bolt', ' A', 0))],
+            'APIChargingSettingsAvailableChargeModes' => ['path' => 'charging.settings.availableChargeModes', 'upgradeDynamic' => true, 'definition' => $this->variable('APIChargingSettingsAvailableChargeModes', 'Available charging modes', VARIABLETYPE_STRING, 258, $this->valuePresentation('bolt'))],
+            'PlugConnectionState' => ['path' => 'charging.status.plugConnectionState', 'definition' => $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
+                ['CONNECTED', 'Connected', 'plug-circle-check', 0x22C55E],
+                ['DISCONNECTED', 'Disconnected', 'plug', 0x6B7280],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
-            ])),
-            $this->variable('WindowHeatingRear', 'Rear window heating', VARIABLETYPE_STRING, 160, $this->publicApiEnumPresentation('car-rear', [
-                ['OFF', 'Off', 'car-rear', 0x22C55E],
-                ['ON', 'On', 'car-rear', 0xF59E0B],
-                ['INVALID', 'Invalid', 'triangle-exclamation', 0x6B7280],
+            ]))],
+            'PlugLockState' => ['path' => 'charging.status.plugLockState', 'definition' => $this->variable('PlugLockState', 'Plug lock state', VARIABLETYPE_STRING, 314, $this->publicApiEnumPresentation('lock', [
+                ['LOCKED', 'Locked', 'lock', 0x22C55E],
+                ['UNLOCKED', 'Unlocked', 'lock-open', 0xF59E0B],
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
-            ])),
-            $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1300, [], $initialInformation),
-            $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1310, [], $initialInformation),
-            $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1320, [], $initialInformation),
-            $this->variable('APISupportedFeatures', 'API supported features', VARIABLETYPE_STRING, 1330, [], $initialInformation),
-            $this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1340, [], $initialInformation),
-            $this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1350, [], $initialInformation),
-            $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1360, [], $initialInformation),
-            $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, [], $initialInformation)
-        ];
+            ]))],
+            'RemainingChargingTime' => ['path' => 'charging.status.remainingTimeToFullyChargedInMinutes', 'definition' => $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0))],
+            'APIChargingStatusChargingRateInKilometersPerHour' => ['path' => 'charging.status.chargingRateInKilometersPerHour', 'upgradeDynamic' => true, 'definition' => $this->variable('APIChargingStatusChargingRateInKilometersPerHour', 'Charging rate', VARIABLETYPE_FLOAT, 325, $this->valuePresentation('gauge', ' km/h', 1))],
 
-        foreach ($definitions as $definition) {
-            $this->registerVariableOnce($definition);
+            'FuelLevelPercent' => ['path' => 'fuelStatus.primaryEngineRange.currentFuelLevelInPercent', 'definition' => $this->variable('FuelLevelPercent', 'Fuel level', VARIABLETYPE_INTEGER, 360, $this->valuePresentation('gas-pump', ' %', 0))],
+            'PrimaryEngineSOC' => ['path' => 'fuelStatus.primaryEngineRange.currentSoCInPercent', 'definition' => $this->variable('PrimaryEngineSOC', 'Primary engine state of charge', VARIABLETYPE_INTEGER, 370, $this->valuePresentation('gauge', ' %', 0))],
+            'FuelRange' => ['path' => 'fuelStatus.primaryEngineRange.remainingRangeInKm', 'definition' => $this->variable('FuelRange', 'Fuel range', VARIABLETYPE_INTEGER, 380, $this->valuePresentation('gas-pump', ' km', 0))],
+            'TotalRange' => ['path' => 'fuelStatus.totalRangeInKm', 'definition' => $this->variable('TotalRange', 'Total range', VARIABLETYPE_INTEGER, 390, $this->valuePresentation('route', ' km', 0))],
+            'APICarType' => ['path' => 'fuelStatus.carType', 'definition' => $this->variable('APICarType', 'API vehicle type', VARIABLETYPE_STRING, 1300, $this->engineTypePresentation())],
+            'APIPrimaryEngineType' => ['path' => 'fuelStatus.primaryEngineRange.engineType', 'definition' => $this->variable('APIPrimaryEngineType', 'API primary engine type', VARIABLETYPE_STRING, 1310, $this->engineTypePresentation())],
+            'APISecondaryEngineType' => ['path' => 'fuelStatus.secondaryEngineRange.engineType', 'definition' => $this->variable('APISecondaryEngineType', 'API secondary engine type', VARIABLETYPE_STRING, 1320, $this->engineTypePresentation())],
+            'APIAuxiliaryHeatingState' => ['path' => 'auxiliaryHeating.state', 'definition' => $this->variable('APIAuxiliaryHeatingState', 'API auxiliary heating state', VARIABLETYPE_STRING, 1360, $this->publicApiEnumPresentation('fire', [
+                ['OFF', 'Off', 'fire', 0x22C55E],
+                ['ON', 'On', 'fire', 0xF59E0B],
+                ['HEATING', 'Heating', 'fire', 0xF59E0B],
+                ['VENTILATION', 'Ventilation', 'fan', 0xF59E0B],
+                ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+            ]))],
+            'AuxiliaryHeatingDuration' => ['path' => 'auxiliaryHeating.durationInSeconds', 'definition' => $this->variable('AuxiliaryHeatingDuration', 'Auxiliary heating duration', VARIABLETYPE_INTEGER, 1380, $this->valuePresentation('clock', ' min', 0))],
+            'APIActiveVentilationState' => ['path' => 'activeVentilation.state', 'definition' => $this->variable('APIActiveVentilationState', 'API active ventilation state', VARIABLETYPE_STRING, 1370, $this->publicApiEnumPresentation('fan', [
+                ['OFF', 'Off', 'fan', 0x22C55E],
+                ['ON', 'On', 'fan', 0xF59E0B],
+                ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+            ]))]
+        ];
+    }
+
+    private function ensurePublicApiVariables(array $vehicle = []): void
+    {
+        if ($vehicle === []) {
+            return;
         }
+
+        foreach ($this->publicApiVariableDefinitions() as $entry) {
+            if ($this->pathHasValue($vehicle, (string) $entry['path'])) {
+                $this->registerVariableOnce($entry['definition']);
+                if ((bool) ($entry['upgradeDynamic'] ?? false)) {
+                    $this->upgradeKnownDynamicApiVariable($entry);
+                }
+            }
+        }
+
+        if (array_key_exists('operations', $vehicle) || array_key_exists('remoteOperations', $vehicle)) {
+            $this->registerVariableOnce($this->variable('APIRemoteOperations', 'API remote operations', VARIABLETYPE_STRING, 1350, []));
+        }
+
+        if ($this->ReadPropertyBoolean('ShowDetails')) {
+            $this->registerVariableOnce($this->variable('APISupportedFeatures', 'API supported features', VARIABLETYPE_STRING, 1330, []));
+            if ($this->pathHasValue($vehicle, 'charging.settings.availableChargeModes')) {
+                $this->registerVariableOnce($this->variable('APIAvailableChargeModes', 'API available charging modes', VARIABLETYPE_STRING, 1340, []));
+            }
+        }
+
+        $this->ensureDynamicApiVariables($vehicle);
     }
 
     private function updatePublicApiValuesFromRawData(): void
@@ -81,10 +122,19 @@ trait MySkodaPublicApiVariablesTrait
         if ($vehicle === []) {
             return;
         }
+
         $errors = isset($raw['errors']) && is_array($raw['errors']) ? $raw['errors'] : [];
+
+        // A field may appear only in a later vehicle response. Discover before writing
+        // so newly delivered values create their variables immediately.
+        $this->ensurePublicApiVariables($vehicle);
 
         $this->setPublicApiString('VIN', $this->path($vehicle, 'vin', null));
         $this->setPublicApiString('TargetTemperatureUnit', $this->path($vehicle, 'airConditioning.targetTemperature.unit', null));
+        $this->setPublicApiDateTimeString(
+            'APIAirConditioningEstimatedReachOfTargetTemperatureAt',
+            $this->path($vehicle, 'airConditioning.estimatedReachOfTargetTemperatureAt', null)
+        );
         $this->setPublicApiBoolean('AirConditioningAtUnlock', $this->path($vehicle, 'airConditioning.airConditioningAtUnlock', null));
         $this->setPublicApiBoolean('WindowHeatingEnabled', $this->path($vehicle, 'airConditioning.windowHeating.enabled', null));
         $this->setPublicApiString('WindowHeatingFront', $this->path($vehicle, 'airConditioning.windowHeating.front', null), true);
@@ -94,26 +144,232 @@ trait MySkodaPublicApiVariablesTrait
         $this->setPublicApiInteger('BatteryCareTargetSOC', $this->path($vehicle, 'charging.settings.batteryCareModeTargetValueInPercent', null));
         $this->setPublicApiString('BatteryCareMode', $this->path($vehicle, 'charging.settings.chargingCareMode', null), true);
         $this->setPublicApiString('MaxChargeCurrentAC', $this->path($vehicle, 'charging.settings.maxChargeCurrentAc', null), true);
-        $this->setPublicApiString('PlugConnectionState', $this->chargingStatusValue($vehicle, 'plugConnectionState'));
-        $this->setPublicApiString('PlugLockState', $this->chargingStatusValue($vehicle, 'plugLockState'));
+        $this->setPublicApiInteger('APIChargingSettingsMaxChargeCurrentAcAmpere', $this->path($vehicle, 'charging.settings.maxChargeCurrentAcAmpere', null));
+        $availableModes = $this->path($vehicle, 'charging.settings.availableChargeModes', null);
+        if (is_array($availableModes)) {
+            $availableModes = implode(', ', array_map(static fn (mixed $mode): string => (string) $mode, $availableModes));
+        }
+        $this->setPublicApiString('APIChargingSettingsAvailableChargeModes', $availableModes, true);
+        $this->setPublicApiString('PlugConnectionState', $this->path($vehicle, 'charging.status.plugConnectionState', null), true);
+        $this->setPublicApiString('PlugLockState', $this->path($vehicle, 'charging.status.plugLockState', null), true);
         $this->setPublicApiInteger('RemainingChargingTime', $this->path($vehicle, 'charging.status.remainingTimeToFullyChargedInMinutes', null));
-        $this->setPublicApiInformation('APICarType', $this->path($vehicle, 'fuelStatus.carType', null), $errors, 'FUEL_STATUS', true);
-        $this->setPublicApiInformation('APIPrimaryEngineType', $this->path($vehicle, 'fuelStatus.primaryEngineRange.engineType', null), $errors, 'FUEL_STATUS', true);
-        $this->setPublicApiInformation('APISecondaryEngineType', $this->path($vehicle, 'fuelStatus.secondaryEngineRange.engineType', null), $errors, 'FUEL_STATUS', true);
-        $this->setPublicApiInformation('APIAuxiliaryHeatingState', $this->path($vehicle, 'auxiliaryHeating.state', null), $errors, 'AUXILIARY_HEATING', true);
-        $this->setPublicApiInformation('APIActiveVentilationState', $this->path($vehicle, 'activeVentilation.state', null), $errors, 'ACTIVE_VENTILATION', true);
-        $this->setPublicApiInformation('APIAvailableChargeModes', $this->path($vehicle, 'charging.settings.availableChargeModes', null), $errors, 'CHARGING');
+        $this->setPublicApiFloat('APIChargingStatusChargingRateInKilometersPerHour', $this->path($vehicle, 'charging.status.chargingRateInKilometersPerHour', null));
 
-        $operations = $this->path($vehicle, 'operations', $this->path($vehicle, 'remoteOperations', null));
-        $this->setPublicApiInformation('APIRemoteOperations', $operations);
-        $this->setPublicApiInformation('APISupportedFeatures', $this->publicApiSupportedFeatures($vehicle, $errors));
+        $this->setPublicApiInteger('FuelLevelPercent', $this->path($vehicle, 'fuelStatus.primaryEngineRange.currentFuelLevelInPercent', null));
+        $this->setPublicApiInteger('PrimaryEngineSOC', $this->path($vehicle, 'fuelStatus.primaryEngineRange.currentSoCInPercent', null));
+        $this->setPublicApiInteger('FuelRange', $this->path($vehicle, 'fuelStatus.primaryEngineRange.remainingRangeInKm', null));
+        $this->setPublicApiInteger('TotalRange', $this->path($vehicle, 'fuelStatus.totalRangeInKm', null));
+        $this->setPublicApiString('APICarType', $this->path($vehicle, 'fuelStatus.carType', null), true);
+        $this->setPublicApiString('APIPrimaryEngineType', $this->path($vehicle, 'fuelStatus.primaryEngineRange.engineType', null), true);
+        $this->setPublicApiString('APISecondaryEngineType', $this->path($vehicle, 'fuelStatus.secondaryEngineRange.engineType', null), true);
+        $this->setPublicApiString('APIAuxiliaryHeatingState', $this->path($vehicle, 'auxiliaryHeating.state', null), true);
+
+        $duration = $this->path($vehicle, 'auxiliaryHeating.durationInSeconds', null);
+        if ($duration !== null) {
+            $this->setPublicApiInteger('AuxiliaryHeatingDuration', (int) round((float) $duration / 60));
+        }
+
+        $this->setPublicApiString('APIActiveVentilationState', $this->path($vehicle, 'activeVentilation.state', null), true);
+
+        if (@$this->GetIDForIdent('APIAvailableChargeModes') !== false) {
+            $this->setPublicApiInformation('APIAvailableChargeModes', $this->path($vehicle, 'charging.settings.availableChargeModes', null), $errors, 'CHARGING');
+        }
+
+        if (@$this->GetIDForIdent('APIRemoteOperations') !== false) {
+            $operations = $this->path($vehicle, 'operations', $this->path($vehicle, 'remoteOperations', null));
+            $this->setPublicApiInformation('APIRemoteOperations', $operations);
+        }
+
+        if (@$this->GetIDForIdent('APISupportedFeatures') !== false) {
+            $this->setPublicApiInformation('APISupportedFeatures', $this->publicApiSupportedFeatures($vehicle, $errors));
+        }
+
+        $this->updateDynamicApiVariables($vehicle);
     }
 
-    /**
-     * Stores API information or an explicit, localized explanation in the value.
-     * An absent field alone never establishes that a feature is unsupported.
-     * Only exact component error types from this response refine that reason.
-     */
+    private function upgradeKnownDynamicApiVariable(array $entry): void
+    {
+        $definition = (array) ($entry['definition'] ?? []);
+        $ident = (string) ($definition['ident'] ?? '');
+        $path = (string) ($entry['path'] ?? '');
+        if ($ident === '' || $path === '') {
+            return;
+        }
+
+        $id = @$this->GetIDForIdent($ident);
+        if ($id === false || !IPS_VariableExists($id)) {
+            return;
+        }
+
+        $variable = IPS_GetVariable($id);
+        $customPresentation = (array) ($variable['VariableCustomPresentation'] ?? []);
+        if ($customPresentation === []) {
+            $systemPresentation = (array) ($variable['VariablePresentation'] ?? []);
+            $genericPresentation = ($systemPresentation['PRESENTATION'] ?? null) === VARIABLE_PRESENTATION_VALUE_PRESENTATION
+                && trim((string) ($systemPresentation['ICON'] ?? '')) === ''
+                && trim((string) ($systemPresentation['SUFFIX'] ?? '')) === '';
+
+            if ($genericPresentation) {
+                IPS_SetVariableCustomPresentation($id, (array) $definition['presentation']);
+            }
+        }
+
+        $object = IPS_GetObject($id);
+        $currentName = (string) ($object['ObjectName'] ?? '');
+        $genericName = 'API ' . implode(' / ', array_map([$this, 'humanizeApiPathPart'], explode('.', $path)));
+        if ($currentName === $ident || $currentName === $genericName) {
+            IPS_SetName($id, $this->Translate((string) $definition['name']));
+        }
+    }
+
+    private function ensureDynamicApiVariables(array $vehicle): void
+    {
+        $known = [];
+        foreach ($this->knownVehicleDataPaths() as $path) {
+            $known[$path] = true;
+        }
+        foreach ($this->publicApiVariableDefinitions() as $entry) {
+            $known[(string) $entry['path']] = true;
+        }
+        foreach (['renderUrl', 'operations', 'remoteOperations'] as $path) {
+            $known[$path] = true;
+        }
+
+        foreach ($this->flattenVehicleScalars($vehicle) as $path => $value) {
+            if (isset($known[$path]) || str_ends_with($path, '.carCapturedTimestamp')) {
+                continue;
+            }
+            $definition = $this->dynamicApiVariableDefinition($path, $value);
+            if ($definition !== null) {
+                $this->registerVariableOnce($definition);
+            }
+        }
+    }
+
+    private function updateDynamicApiVariables(array $vehicle): void
+    {
+        $known = [];
+        foreach ($this->knownVehicleDataPaths() as $path) {
+            $known[$path] = true;
+        }
+        foreach ($this->publicApiVariableDefinitions() as $entry) {
+            $known[(string) $entry['path']] = true;
+        }
+        foreach (['renderUrl', 'operations', 'remoteOperations'] as $path) {
+            $known[$path] = true;
+        }
+
+        foreach ($this->flattenVehicleScalars($vehicle) as $path => $value) {
+            if (isset($known[$path]) || str_ends_with($path, '.carCapturedTimestamp')) {
+                continue;
+            }
+            $ident = $this->dynamicApiIdent($path);
+            $id = @$this->GetIDForIdent($ident);
+            if ($id === false || !IPS_VariableExists($id)) {
+                continue;
+            }
+            if (is_bool($value)) {
+                $this->SetValue($ident, $value);
+            } elseif (is_int($value)) {
+                $this->SetValue($ident, $value);
+            } elseif (is_float($value)) {
+                $this->SetValue($ident, $value);
+            } else {
+                $this->SetValue($ident, (string) $value);
+            }
+        }
+    }
+
+    private function flattenVehicleScalars(array $data, string $prefix = ''): array
+    {
+        $flat = [];
+        foreach ($data as $key => $value) {
+            $key = (string) $key;
+            $path = $prefix === '' ? $key : $prefix . '.' . $key;
+
+            if (is_array($value)) {
+                if ($value === []) {
+                    continue;
+                }
+                if (array_is_list($value)) {
+                    $allScalar = true;
+                    foreach ($value as $item) {
+                        if (!is_scalar($item)) {
+                            $allScalar = false;
+                            break;
+                        }
+                    }
+                    if ($allScalar) {
+                        $flat[$path] = implode(', ', array_map(static fn (mixed $v): string => (string) $v, $value));
+                    }
+                    continue;
+                }
+                $flat += $this->flattenVehicleScalars($value, $path);
+                continue;
+            }
+
+            if ($value !== null && is_scalar($value)) {
+                $flat[$path] = $value;
+            }
+        }
+        return $flat;
+    }
+
+    private function dynamicApiVariableDefinition(string $path, mixed $value): ?array
+    {
+        $ident = $this->dynamicApiIdent($path);
+        $name = 'API ' . implode(' / ', array_map([$this, 'humanizeApiPathPart'], explode('.', $path)));
+        $position = 2000 + (abs((int) crc32($path)) % 100000);
+
+        if (is_bool($value)) {
+            return $this->variable($ident, $name, VARIABLETYPE_BOOLEAN, $position, $this->booleanYesNoPresentation(true));
+        }
+        if (is_int($value)) {
+            return $this->variable($ident, $name, VARIABLETYPE_INTEGER, $position, $this->valuePresentation());
+        }
+        if (is_float($value)) {
+            return $this->variable($ident, $name, VARIABLETYPE_FLOAT, $position, $this->valuePresentation('', '', 2));
+        }
+        if (is_string($value)) {
+            return $this->variable($ident, $name, VARIABLETYPE_STRING, $position, $this->valuePresentation());
+        }
+        return null;
+    }
+
+    private function dynamicApiIdent(string $path): string
+    {
+        $parts = preg_split('/[^A-Za-z0-9]+/', $path) ?: [];
+        $ident = 'API';
+        foreach ($parts as $part) {
+            if ($part !== '') {
+                $ident .= ucfirst($part);
+            }
+        }
+        if (strlen($ident) > 60) {
+            $ident = substr($ident, 0, 51) . strtoupper(substr(sha1($path), 0, 8));
+        }
+        return $ident;
+    }
+
+    private function humanizeApiPathPart(string $part): string
+    {
+        $text = preg_replace('/([a-z0-9])([A-Z])/', '$1 $2', $part);
+        return ucfirst((string) $text);
+    }
+
+    private function engineTypePresentation(): array
+    {
+        return $this->publicApiEnumPresentation('gas-pump', [
+            ['GASOLINE', 'Gasoline', 'gas-pump', -1],
+            ['DIESEL', 'Diesel', 'gas-pump', -1],
+            ['ELECTRIC', 'Electric', 'bolt', -1],
+            ['BEV', 'Electric', 'bolt', -1],
+            ['HYBRID', 'Hybrid', 'leaf', -1],
+            ['PHEV', 'Plug-in hybrid', 'plug', -1],
+            ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+        ]);
+    }
+
     private function setPublicApiInformation(
         string $ident,
         mixed $value,
@@ -134,6 +390,7 @@ trait MySkodaPublicApiVariablesTrait
         $reason = $value === []
             ? $this->Translate('No entries')
             : $this->Translate('Not provided');
+
         if ($errorPrefix !== '') {
             $types = [];
             foreach ($errors as $error) {
@@ -159,11 +416,18 @@ trait MySkodaPublicApiVariablesTrait
         if ($value === null || @$this->GetIDForIdent($ident) === false) {
             return;
         }
-
         $text = trim((string) $value);
-        if ($uppercase) {
-            $text = strtoupper($text);
+        $this->SetValue($ident, $uppercase ? strtoupper($text) : $text);
+    }
+
+    private function setPublicApiDateTimeString(string $ident, mixed $value): void
+    {
+        if ($value === null || @$this->GetIDForIdent($ident) === false) {
+            return;
         }
+
+        $timestamp = $this->toTimestamp($value);
+        $text = $timestamp > 0 ? date('d.m.Y H:i:s', $timestamp) : trim((string) $value);
         $this->SetValue($ident, $text);
     }
 
@@ -173,6 +437,27 @@ trait MySkodaPublicApiVariablesTrait
             return;
         }
         $this->SetValue($ident, (int) $value);
+    }
+
+    private function setPublicApiFloat(string $ident, mixed $value): void
+    {
+        if ($value === null) {
+            return;
+        }
+        $id = @$this->GetIDForIdent($ident);
+        if ($id === false || !IPS_VariableExists($id)) {
+            return;
+        }
+
+        $variable = IPS_GetVariable($id);
+        if ((int) ($variable['VariableType'] ?? -1) === VARIABLETYPE_INTEGER) {
+            // Compatibility with 1.8 test builds that created this dynamic field
+            // as Integer when the API first returned an integral value such as 0.
+            $this->SetValue($ident, (int) round((float) $value));
+            return;
+        }
+
+        $this->SetValue($ident, (float) $value);
     }
 
     private function setPublicApiBoolean(string $ident, mixed $value): void
@@ -199,21 +484,14 @@ trait MySkodaPublicApiVariablesTrait
         }
         if (array_is_list($value)) {
             $items = [];
-            $onlyScalars = true;
             foreach ($value as $item) {
-                if (is_string($item) || is_int($item) || is_float($item)) {
-                    $text = trim((string) $item);
-                    if ($text !== '') {
-                        $items[] = $text;
-                    }
-                    continue;
+                if (!is_scalar($item)) {
+                    $json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+                    return is_string($json) ? $json : '';
                 }
-                $onlyScalars = false;
-                break;
+                $items[] = (string) $item;
             }
-            if ($onlyScalars) {
-                return implode(', ', $items);
-            }
+            return implode(', ', $items);
         }
 
         $json = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
@@ -222,63 +500,14 @@ trait MySkodaPublicApiVariablesTrait
 
     private function publicApiSupportedFeatures(array $vehicle, array $errors): string
     {
-        $parts = [
-            'status' => 'status',
-            'fuelStatus' => 'fuelStatus',
-            'odometer' => 'odometer',
-            'parkingPosition' => 'parkingPosition',
-            'airConditioning' => 'airConditioning',
-            'auxiliaryHeating' => 'auxiliaryHeating',
-            'activeVentilation' => 'activeVentilation',
-            'charging' => 'charging',
-            'chargingProfiles' => 'chargingProfiles'
-        ];
-
+        $parts = ['status', 'fuelStatus', 'odometer', 'parkingPosition', 'airConditioning', 'auxiliaryHeating', 'activeVentilation', 'charging', 'chargingProfiles'];
         $supported = [];
-        foreach ($parts as $key => $apiName) {
-            if (array_key_exists($key, $vehicle)) {
-                $supported[$apiName] = true;
+        foreach ($parts as $part) {
+            if (array_key_exists($part, $vehicle)) {
+                $supported[] = $part;
             }
         }
-
-        $errorPrefixes = [
-            'STATUS' => 'status',
-            'FUEL_STATUS' => 'fuelStatus',
-            'ODOMETER' => 'odometer',
-            'PARKING_POSITION' => 'parkingPosition',
-            'AIR_CONDITIONING' => 'airConditioning',
-            'AUXILIARY_HEATING' => 'auxiliaryHeating',
-            'ACTIVE_VENTILATION' => 'activeVentilation',
-            'CHARGING' => 'charging',
-            'CHARGING_PROFILES' => 'chargingProfiles'
-        ];
-
-        foreach ($errors as $error) {
-            if (!is_array($error) || !is_string($error['type'] ?? null)) {
-                continue;
-            }
-            $type = strtoupper(trim($error['type']));
-            if ($type === '' || str_ends_with($type, '_UNSUPPORTED')) {
-                continue;
-            }
-            if (!str_ends_with($type, '_DISABLED') && !str_ends_with($type, '_UNAVAILABLE')) {
-                continue;
-            }
-            foreach ($errorPrefixes as $prefix => $apiName) {
-                if (str_starts_with($type, $prefix . '_')) {
-                    $supported[$apiName] = true;
-                    break;
-                }
-            }
-        }
-
-        $ordered = [];
-        foreach ($parts as $apiName) {
-            if (isset($supported[$apiName])) {
-                $ordered[] = $apiName;
-            }
-        }
-        return implode(', ', $ordered);
+        return implode(', ', $supported);
     }
 
     private function publicApiEnumPresentation(string $icon, array $states): array

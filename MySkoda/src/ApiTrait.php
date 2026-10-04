@@ -98,7 +98,8 @@ trait MySkodaApiTrait
         $this->absorbHeaders($response['headers']);
 
         if (!$response['ok']) {
-            $this->setApiError($response);
+            // A rejected remote command does not mean the vehicle connection is broken.
+            $this->setApiError($response, false);
             return false;
         }
 
@@ -276,13 +277,15 @@ trait MySkodaApiTrait
         return $remaining > self::QUOTA_RESERVE;
     }
 
-    private function setApiError(array $response): void
+    private function setApiError(array $response, bool $updateInstanceStatus = true): void
     {
         $this->absorbHeaders($response['headers'] ?? []);
         $message = $this->problemText($response);
         $this->WriteAttributeString('LastError', $message);
         $this->SendDebug('API error', $message, 0);
-        $this->SetStatus(((int) ($response['status'] ?? 0)) === 429 ? 203 : 202);
+        if ($updateInstanceStatus) {
+            $this->SetStatus(((int) ($response['status'] ?? 0)) === 429 ? 203 : 202);
+        }
     }
 
     private function problemText(array $response): string
