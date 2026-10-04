@@ -214,8 +214,15 @@ trait MySkodaVariablesTrait
             }
 
             $variable = IPS_GetVariable($existingId);
-            if ((int) ($variable['VariableType'] ?? -1) !== (int) $definition['type']) {
-                $this->LogMessage(sprintf('MySkoda: variable "%s" has an unexpected type.', $ident), KL_ERROR);
+            $existingType = (int) ($variable['VariableType'] ?? -1);
+            $expectedType = (int) $definition['type'];
+            if ($existingType !== $expectedType) {
+                $legacyChargingRate = $ident === 'APIChargingStatusChargingRateInKilometersPerHour'
+                    && $existingType === VARIABLETYPE_INTEGER
+                    && $expectedType === VARIABLETYPE_FLOAT;
+                if (!$legacyChargingRate) {
+                    $this->LogMessage(sprintf('MySkoda: variable "%s" has an unexpected type.', $ident), KL_ERROR);
+                }
             }
             return;
         }
