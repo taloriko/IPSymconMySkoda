@@ -48,6 +48,7 @@ function IPS_GetMedia(int $id): array { return $GLOBALS['objects'][$id]; }
 function IPS_SetIcon(int $id, string $icon): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectIcon'] = $icon; }
 function IPS_SetName(int $id, string $name): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectName'] = $name; }
 function IPS_SetPosition(int $id, int $position): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectPosition'] = $position; }
+function IPS_SetVariableCustomPresentation(int $id, array $presentation): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['VariableCustomPresentation'] = $presentation; $GLOBALS['objects'][$id]['Presentation'] = $presentation; }
 function IPS_DeleteVariable(int $id): void { throw new RuntimeException('Variable deletion is forbidden in this test.'); }
 function GetValue(int $id): mixed { return $GLOBALS['objects'][$id]['Value']; }
 
@@ -109,7 +110,7 @@ class MySkodaTestHost
         $GLOBALS['objects'][$GLOBALS['nextId']++] = [
             'ParentID' => $this->InstanceID, 'ObjectIdent' => $ident, 'ObjectType' => 2,
             'ObjectName' => $name, 'ObjectPosition' => $position, 'ObjectIcon' => '',
-            'VariableType' => $type, 'Presentation' => $presentation,
+            'VariableType' => $type, 'Presentation' => $presentation, 'VariablePresentation' => $presentation, 'VariableCustomPresentation' => [],
             'Value' => match ($type) { 0 => false, 1 => 0, 2 => 0.0, 3 => '' }
         ];
     }
