@@ -43,6 +43,17 @@ trait MySkodaPublicApiVariablesTrait
                 ['REDUCED', 'Reduced', 'gauge', -1],
                 ['UNKNOWN', 'Unknown', 'circle-question', -1]
             ]))],
+            'APIChargingSettingsMaxChargeCurrentAcAmpere' => [
+                'path' => 'charging.settings.maxChargeCurrentAcAmpere',
+                'upgradeDynamic' => true,
+                'definition' => $this->variable(
+                    'APIChargingSettingsMaxChargeCurrentAcAmpere',
+                    'Maximum AC charging current in ampere',
+                    VARIABLETYPE_INTEGER,
+                    255,
+                    $this->valuePresentation('bolt', ' A', 0)
+                )
+            ],
             'PlugConnectionState' => ['path' => 'charging.status.plugConnectionState', 'definition' => $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
                 ['CONNECTED', 'Connected', 'plug-circle-check', 0x22C55E],
                 ['DISCONNECTED', 'Disconnected', 'plug', 0x6B7280],
@@ -54,7 +65,17 @@ trait MySkodaPublicApiVariablesTrait
                 ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
             ]))],
             'RemainingChargingTime' => ['path' => 'charging.status.remainingTimeToFullyChargedInMinutes', 'definition' => $this->variable('RemainingChargingTime', 'Remaining charging time', VARIABLETYPE_INTEGER, 320, $this->valuePresentation('hourglass-half', ' min', 0))],
-            'APIChargingStatusChargingRateInKilometersPerHour' => ['path' => 'charging.status.chargingRateInKilometersPerHour', 'definition' => $this->variable('APIChargingStatusChargingRateInKilometersPerHour', 'Charging rate', VARIABLETYPE_FLOAT, 325, $this->valuePresentation('route', ' km/h', 1))],
+            'APIChargingStatusChargingRateInKilometersPerHour' => [
+                'path' => 'charging.status.chargingRateInKilometersPerHour',
+                'upgradeDynamic' => true,
+                'definition' => $this->variable(
+                    'APIChargingStatusChargingRateInKilometersPerHour',
+                    'Charging rate',
+                    VARIABLETYPE_FLOAT,
+                    325,
+                    $this->valuePresentation('gauge', ' km/h', 1)
+                )
+            ],
 
             'FuelLevelPercent' => ['path' => 'fuelStatus.primaryEngineRange.currentFuelLevelInPercent', 'definition' => $this->variable('FuelLevelPercent', 'Fuel level', VARIABLETYPE_INTEGER, 360, $this->valuePresentation('gas-pump', ' %', 0))],
             'PrimaryEngineSOC' => ['path' => 'fuelStatus.primaryEngineRange.currentSoCInPercent', 'definition' => $this->variable('PrimaryEngineSOC', 'Primary engine state of charge', VARIABLETYPE_INTEGER, 370, $this->valuePresentation('gauge', ' %', 0))],
@@ -88,6 +109,9 @@ trait MySkodaPublicApiVariablesTrait
         foreach ($this->publicApiVariableDefinitions() as $entry) {
             if ($this->pathHasValue($vehicle, (string) $entry['path'])) {
                 $this->registerVariableOnce($entry['definition']);
+                if ((bool) ($entry['upgradeDynamic'] ?? false)) {
+                    $this->upgradeKnownDynamicApiVariable($entry);
+                }
             }
         }
 
@@ -134,6 +158,7 @@ trait MySkodaPublicApiVariablesTrait
         $this->setPublicApiInteger('BatteryCareTargetSOC', $this->path($vehicle, 'charging.settings.batteryCareModeTargetValueInPercent', null));
         $this->setPublicApiString('BatteryCareMode', $this->path($vehicle, 'charging.settings.chargingCareMode', null), true);
         $this->setPublicApiString('MaxChargeCurrentAC', $this->path($vehicle, 'charging.settings.maxChargeCurrentAc', null), true);
+        $this->setPublicApiInteger('APIChargingSettingsMaxChargeCurrentAcAmpere', $this->path($vehicle, 'charging.settings.maxChargeCurrentAcAmpere', null));
         $this->setPublicApiString('PlugConnectionState', $this->path($vehicle, 'charging.status.plugConnectionState', null), true);
         $this->setPublicApiString('PlugLockState', $this->path($vehicle, 'charging.status.plugLockState', null), true);
         $this->setPublicApiInteger('RemainingChargingTime', $this->path($vehicle, 'charging.status.remainingTimeToFullyChargedInMinutes', null));
@@ -169,6 +194,41 @@ trait MySkodaPublicApiVariablesTrait
         }
 
         $this->updateDynamicApiVariables($vehicle);
+    }
+
+    private function upgradeKnownDynamicApiVariable(array $entry): void
+    {
+        $definition = (array) ($entry['definition'] ?? []);
+        $ident = (string) ($definition['ident'] ?? '');
+        $path = (string) ($entry['path'] ?? '');
+        if ($ident === '' || $path === '') {
+            return;
+        }
+
+        $id = @$this->GetIDForIdent($ident);
+        if ($id === false || !IPS_VariableExists($id)) {
+            return;
+        }
+
+        $variable = IPS_GetVariable($id);
+        $customPresentation = (array) ($variable['VariableCustomPresentation'] ?? []);
+        if ($customPresentation === []) {
+            $systemPresentation = (array) ($variable['VariablePresentation'] ?? []);
+            $genericPresentation = ($systemPresentation['PRESENTATION'] ?? null) === VARIABLE_PRESENTATION_VALUE_PRESENTATION
+                && trim((string) ($systemPresentation['ICON'] ?? '')) === ''
+                && trim((string) ($systemPresentation['SUFFIX'] ?? '')) === '';
+
+            if ($genericPresentation) {
+                IPS_SetVariableCustomPresentation($id, (array) $definition['presentation']);
+            }
+        }
+
+        $object = IPS_GetObject($id);
+        $currentName = (string) ($object['ObjectName'] ?? '');
+        $genericName = 'API ' . implode(' / ', array_map([$this, 'humanizeApiPathPart'], explode('.', $path)));
+        if ($currentName === $ident || $currentName === $genericName) {
+            IPS_SetName($id, $this->Translate((string) $definition['name']));
+        }
     }
 
     private function ensureDynamicApiVariables(array $vehicle): void
