@@ -100,7 +100,7 @@
           "expanded": false,
           "items": [
             {"type": "CheckBox", "name": "ShowDetails", "caption": "Create detail and diagnostic variables"},
-            {"type": "Label", "caption": "Missing detail variables are created when enabled. Existing variables are kept when this option is disabled."}
+            {"type": "Label", "caption": "Creates diagnostic/API variables and saved charging location details (profile name, charging settings, preferred charging times and timers) with suitable Symcon icons and presentations. Disabling keeps existing variables; basic vehicle values are independent."}
           ]
         },
     {
