@@ -6,6 +6,7 @@
 - Fahrzeug-, Lade-, Kraftstoff-, Klima-, Standort- und Statusdaten als Symcon-Variablen mit festen Idents für bekannte Datenpunkte und deutschen Anzeigen.
 - Fahrzeugbezogene Variablen werden angelegt, sobald das zugehörige API-Feld vorhanden und nicht `null` ist. Zusätzliche skalare API-Felder werden automatisch als weitere Lesewerte erfasst.
 - Ladezustand, Reichweiten, Ladeleistung, Ladegeschwindigkeit, Ladelimit, Lademodi sowie Anschluss- und Verriegelungszustand des Ladesteckers.
+- Optional erweiterte Ladeortvariablen für gespeicherte Profile, Einstellungen, Ladezeiten und Timer mit eindeutigen Idents und Symcon-Icons/Darstellungen; die Erstanlage wird über `ShowDetails` gesteuert.
 - Tankfüllstand, gemeldeter SoC des primären Antriebs, Kraftstoff- und Gesamtreichweite sowie Fahrzeug- und Antriebstypen, soweit vom Fahrzeug geliefert.
 - Klimastatus, Solltemperatur und geschätzter Zeitpunkt zum Erreichen der Zieltemperatur. Bei ausgeschalteter Klimatisierung wird eine gewählte Solltemperatur bis zum nächsten Start lokal vorgemerkt.
 - Zyklischer Fahrzeugabruf mit Berücksichtigung von API-Kontingent und Wartezeiten. Fehlende oder mit `null` gelieferte Fahrzeugfelder lassen vorhandene Werte im Regelfall unverändert und sind keine Bestätigung eines aktuellen Fahrzeugzustands.

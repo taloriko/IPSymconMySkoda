@@ -18,11 +18,12 @@ MySkoda verbindet ein Škoda-Fahrzeug über die offizielle MyŠkoda Public API m
 - Laden starten/stoppen, Ladelimit und Lademodus ändern
 - Klimatisierung, Standheizung und aktive Lüftung steuern; Ladeprofile per PHP übertragen
 - bedarfsgerechte Anlage von Fahrzeugvariablen und automatische Erfassung zusätzlicher skalarer API-Felder
+- optionale Ladeortdetails mit Ladeeinstellungen, Zeitfenstern und Timern samt Icons und Darstellungen
 - optionale Diagnosevariablen, Archivierung ausgewählter Fahrzeugwerte und API-Key-Ablaufwarnung per Symcon-Mitteilung
 - lokale Fahrzeugbilder aus der gelieferten Render-URL und daraus abgeleiteten verfügbaren Ansichten
 - lokale FIN/VIN-Entschlüsselung mit optionalen String-Variablen
 
-Fahrzeugbezogene Variablen werden angelegt, sobald ihr API-Feld vorhanden und nicht `null` ist. Bereits angelegte Variablen bleiben erhalten. Die Option **Detail- und Diagnosevariablen anlegen** steuert ausschließlich zusätzliche Diagnose- und API-Informationsvariablen, nicht die normalen Fahrzeugdaten oder Standortvariablen. Die genaue Zuordnung steht in der [Modul-Dokumentation](MySkoda/README.md).
+Fahrzeugbezogene Variablen werden angelegt, sobald ihr API-Feld vorhanden und nicht `null` ist. Bereits angelegte Variablen bleiben erhalten. Die Option **Detail- und Diagnosevariablen anlegen** aktiviert zusätzliche Diagnose-/API-Variablen sowie Variablen für gespeicherte Ladeorte mit Einstellungen, Ladezeiten und Timern. Allgemeine Fahrzeug- und Standortwerte bleiben unabhängig davon verfügbar. Die genaue Zuordnung steht in der [Modul-Dokumentation](MySkoda/README.md).
 
 Die FIN/VIN-Entschlüsselung ist eine Zusatzfunktion. Details zur Zerlegung, Prüflogik, bekannten Codes und Grenzen stehen separat in [MySkoda/README_FIN_VIN.md](MySkoda/README_FIN_VIN.md).
 

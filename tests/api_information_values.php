@@ -104,4 +104,86 @@ foreach (['ObjectName', 'ObjectPosition', 'ObjectIcon', 'Presentation'] as $key)
     check($GLOBALS['objects'][$metadataId][$key] === $before[$key], 'Existing metadata remains untouched: ' . $key);
 }
 
+
+$vehicle['charging'] = ['isVehicleInSavedLocation' => true];
+$vehicle['chargingProfiles'] = [
+    'profiles' => [
+        [
+            'id' => 1,
+            'name' => 'Home',
+            'settings' => [
+                'autoUnlockPlugWhenCharged' => 'OFF',
+                'maxChargingCurrent' => 'MAXIMUM',
+                'minBatteryStateOfCharge' => ['minimumBatteryStateOfChargeInPercent' => 20],
+                'targetStateOfChargeInPercent' => 90,
+                'futureEnabled' => false, 'futureCount' => 0
+            ],
+            'preferredChargingTimes' => [
+                ['id' => 1, 'enabled' => false, 'startTime' => '22:00', 'endTime' => '06:00']
+            ],
+            'timers' => [
+                ['id' => 1, 'enabled' => false, 'type' => 'RECURRING',
+                    'recurringOn' => ['MONDAY', 'TUESDAY'], 'time' => '07:00']
+            ]
+        ],
+        ['id' => 3, 'name' => 'Work', 'settings' => ['targetStateOfChargeInPercent' => 75]]
+    ]
+];
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+invoke($m, 'updatePublicApiValuesFromRawData');
+check($m->GetValue('AtSavedChargingLocation') === true, 'Basic saved location is independent of details.');
+check($m->GetIDForIdent('APIChargingProfile1Name') === false, 'No profile variables with details disabled.');
+check(json_decode($m->GetChargingProfiles(), true)['profiles'][0]['name'] === 'Home', 'Full profiles remain readable.');
+
+$m->properties['ShowDetails'] = true;
+invoke($m, 'updatePublicApiValuesFromRawData');
+$expectedProfiles = [
+    'APIChargingProfile1ID' => 1,
+    'APIChargingProfile1Name' => 'Home',
+    'APIChargingProfile1AutoUnlockPlug' => 'OFF',
+    'APIChargingProfile1MaxChargingCurrent' => 'MAXIMUM',
+    'APIChargingProfile1MinimumSOC' => 20,
+    'APIChargingProfile1TargetSOC' => 90,
+    'APIChargingProfile1SettingsFutureEnabled' => false,
+    'APIChargingProfile1SettingsFutureCount' => 0,
+    'APIChargingProfile1PreferredTime1Enabled' => false,
+    'APIChargingProfile1PreferredTime1StartTime' => '22:00',
+    'APIChargingProfile1PreferredTime1EndTime' => '06:00',
+    'APIChargingProfile1Timer1Enabled' => false,
+    'APIChargingProfile1Timer1Type' => 'RECURRING',
+    'APIChargingProfile1Timer1RecurringOn' => 'MONDAY, TUESDAY',
+    'APIChargingProfile1Timer1Time' => '07:00',
+    'APIChargingProfile3Name' => 'Work',
+    'APIChargingProfile3TargetSOC' => 75
+];
+foreach ($expectedProfiles as $ident => $value) {
+    check($m->GetIDForIdent($ident) !== false, 'Missing saved location field: ' . $ident);
+    check($m->GetValue($ident) === $value, 'Unexpected saved location value: ' . $ident);
+    $presentation = IPS_GetVariable($m->GetIDForIdent($ident))['VariablePresentation'];
+    check(($presentation['PRESENTATION'] ?? null) === VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'Missing value presentation: ' . $ident);
+    check(trim((string) ($presentation['ICON'] ?? '')) !== '', 'Missing icon: ' . $ident);
+}
+check(IPS_GetVariable($m->GetIDForIdent('APIChargingProfile1TargetSOC'))['VariablePresentation']['SUFFIX'] === ' %',
+    'Charge target displays percent.');
+$varId = $m->GetIDForIdent('APIChargingProfile1Name');
+$GLOBALS['objects'][$varId]['ObjectName'] = 'Own label';
+$registrations = $m->registrations;
+$vehicle['chargingProfiles']['profiles'] = array_reverse($vehicle['chargingProfiles']['profiles']);
+$vehicle['chargingProfiles']['profiles'][1]['name'] = 'Home changed';
+$vehicle['chargingProfiles']['profiles'][1]['timers'][0]['time'] = '08:00';
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+invoke($m, 'updatePublicApiValuesFromRawData');
+check($m->GetValue('APIChargingProfile1Name') === 'Home changed', 'Stable ID after reordering.');
+check($m->GetValue('APIChargingProfile1Timer1Time') === '08:00', 'Timer ID survives reordering.');
+check($m->registrations === $registrations, 'No duplicate profile variables.');
+check($GLOBALS['objects'][$varId]['ObjectName'] === 'Own label', 'User-owned metadata preserved.');
+
+$m->properties['ShowDetails'] = false;
+$vehicle['chargingProfiles']['profiles'][] = ['id' => 2, 'name' => 'New location'];
+$vehicle['chargingProfiles']['profiles'][1]['name'] = 'Home again';
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+invoke($m, 'updatePublicApiValuesFromRawData');
+check($m->GetIDForIdent('APIChargingProfile2Name') === false, 'No new profiles while details disabled.');
+check($m->GetValue('APIChargingProfile1Name') === 'Home again', 'Existing detail values keep updating.');
+
 echo 'Dynamic API vehicle checks passed (' . $GLOBALS['checks'] . " total checks).\n";

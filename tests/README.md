@@ -84,7 +84,15 @@ Fehlt `status.state`, ist dies keine Bestätigung für „Kabel abgezogen“ ode
 
 | API | Deutsch | Enyaq 80<br>2022 | Enyaq 80<br>2023 | Datentyp | Mögliche Werte | Beispielwert | Bemerkung |
 |---|---|:---:|:---:|---|---|---|---|
-| `profiles` | Ladeprofile | 🟡 | ⚪ | Array[Object] | leer oder Ladeprofil-Objekte | `[]` | Im vorhandenen Test leer; der komplette Bereich `vehicle.chargingProfiles` ist über `MSKODA_GetChargingProfiles` abrufbar |
+| `profiles` | Ladeprofile | ✅ | ⚪ | Array[Object] | leer oder Ladeprofil-Objekte | `[{"id":1,"name":"Home",…}]` | Am 22.10.2026 mit einem gespeicherten Ladeort geliefert; Details über `ShowDetails` als Variablen (ab 1.9) |
+| `profiles[].id` | Ladeort-ID | ✅ | ⚪ | Integer | Profilkennung | `1` | Identifikation für Variablen |
+| `profiles[].name` | Ladeortname | ✅ | ⚪ | String | Freitext | `Home` | `APIChargingProfile1Name` |
+| `profiles[].settings.autoUnlockPlugWhenCharged` | Steckerentriegelung | ✅ | ⚪ | String | OFF / ON | `OFF` | Detailvariable |
+| `profiles[].settings.maxChargingCurrent` | Maximaler Ladestrommodus | ✅ | ⚪ | String | MAXIMUM / REDUCED | `MAXIMUM` | Detailvariable |
+| `profiles[].settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent` | Mindestladezustand | ✅ | ⚪ | Integer | Prozent | `20` | Detailvariable |
+| `profiles[].settings.targetStateOfChargeInPercent` | Zielladezustand | ✅ | ⚪ | Integer | Prozent | `90` | Detailvariable |
+| `profiles[].preferredChargingTimes` | Bevorzugte Ladezeiten | ✅ | ⚪ | Array[Object] | Zeitfenster | `22:00–06:00` | Bei ShowDetails getrennte Zeitfenster-Variablen |
+| `profiles[].timers` | Lade-Timer | ✅ | ⚪ | Array[Object] | Wochenprogramme | `07:00` | Bei ShowDetails getrennte Timer-Variablen |
 | `carCapturedTimestamp` | Erfassungszeitpunkt | ✅ | ⚪ | String | ISO-8601-Zeitstempel | `2026-09-18T08:49:35.868Z` | Keine eigene Variable unter der Instanz |
 
 ## vehicle.fuelStatus
