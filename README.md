@@ -18,7 +18,7 @@ MySkoda verbindet ein Škoda-Fahrzeug über die offizielle MyŠkoda Public API m
 - Laden starten/stoppen, Ladelimit und Lademodus ändern
 - Klimatisierung, Standheizung und aktive Lüftung steuern; Ladeprofile per PHP übertragen
 - bedarfsgerechte Anlage von Fahrzeugvariablen und automatische Erfassung zusätzlicher skalarer API-Felder
-- optionale Ladeortdetails mit Ladeeinstellungen, Zeitfenstern und Timern samt Icons und Darstellungen
+- optionale Ladeortdetails mit Ladeeinstellungen, Zeitfenstern und Timern
 - optionale Diagnosevariablen, Archivierung ausgewählter Fahrzeugwerte und API-Key-Ablaufwarnung per Symcon-Mitteilung
 - lokale Fahrzeugbilder aus der gelieferten Render-URL und daraus abgeleiteten verfügbaren Ansichten
 - lokale FIN/VIN-Entschlüsselung mit optionalen String-Variablen
