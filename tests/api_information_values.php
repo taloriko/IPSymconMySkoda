@@ -172,29 +172,29 @@ check(IPS_GetVariable($m->GetIDForIdent('APIChargingProfile1TargetSOC'))['Variab
 
 // Names start with a compact stable location ID; preferred charging times use "Zeit".
 $compactNames = [
-    'APIChargingProfile1ID' => 'L1 · Profile ID',
-    'APIChargingProfile1Name' => 'L1 · Name',
-    'APIChargingProfile1AutoUnlockPlug' => 'L1 · Unlock plug',
-    'APIChargingProfile1MaxChargingCurrent' => 'L1 · AC current',
-    'APIChargingProfile1MinimumSOC' => 'L1 · Min. SOC',
-    'APIChargingProfile1TargetSOC' => 'L1 · Target SOC',
-    'APIChargingProfile1SettingsFutureEnabled' => 'L1 · Future Enabled',
-    'APIChargingProfile1PreferredTime1Enabled' => 'L1 · Active Zeit1',
-    'APIChargingProfile1PreferredTime1StartTime' => 'L1 · Start Zeit1',
-    'APIChargingProfile1PreferredTime1EndTime' => 'L1 · End Zeit1',
-    'APIChargingProfile1Timer1Enabled' => 'L1 · Active T1',
-    'APIChargingProfile1Timer1Type' => 'L1 · Type T1',
-    'APIChargingProfile1Timer1RecurringOn' => 'L1 · Days T1',
-    'APIChargingProfile1Timer1Time' => 'L1 · Time T1',
-    'APIChargingProfile3Name' => 'L3 · Name',
-    'APIChargingProfile3TargetSOC' => 'L3 · Target SOC'
+    'APIChargingProfile1ID' => 'LO1 · Profile ID',
+    'APIChargingProfile1Name' => 'LO1 · Name',
+    'APIChargingProfile1AutoUnlockPlug' => 'LO1 · Unlock plug',
+    'APIChargingProfile1MaxChargingCurrent' => 'LO1 · AC current',
+    'APIChargingProfile1MinimumSOC' => 'LO1 · Min. SOC',
+    'APIChargingProfile1TargetSOC' => 'LO1 · Target SOC',
+    'APIChargingProfile1SettingsFutureEnabled' => 'LO1 · Future Enabled',
+    'APIChargingProfile1PreferredTime1Enabled' => 'LO1 · Active Zeit1',
+    'APIChargingProfile1PreferredTime1StartTime' => 'LO1 · Start Zeit1',
+    'APIChargingProfile1PreferredTime1EndTime' => 'LO1 · End Zeit1',
+    'APIChargingProfile1Timer1Enabled' => 'LO1 · Active T1',
+    'APIChargingProfile1Timer1Type' => 'LO1 · Type T1',
+    'APIChargingProfile1Timer1RecurringOn' => 'LO1 · Days T1',
+    'APIChargingProfile1Timer1Time' => 'LO1 · Time T1',
+    'APIChargingProfile3Name' => 'LO3 · Name',
+    'APIChargingProfile3TargetSOC' => 'LO3 · Target SOC'
 ];
 foreach ($compactNames as $ident => $expectedName) {
     $actualName = IPS_GetObject($m->GetIDForIdent($ident))['ObjectName'];
     check($actualName === $expectedName, 'Expected compact display name for ' . $ident);
     check(strlen($actualName) <= 22, 'Mobile label should be compact: ' . $ident);
     check(!str_starts_with($actualName, 'Charging location'), 'Avoid long common prefix: ' . $ident);
-    check(str_starts_with($actualName, str_contains($ident, 'Profile3') ? 'L3 · ' : 'L1 · '), 'Location ID must come first: ' . $ident);
+    check(str_starts_with($actualName, str_contains($ident, 'Profile3') ? 'LO3 · ' : 'LO1 · '), 'Location ID must come first: ' . $ident);
 }
 $germanNames = json_decode(file_get_contents(__DIR__ . '/../MySkoda/locale.json'), true, 512, JSON_THROW_ON_ERROR)['translations']['de'];
 foreach (['Profile ID', 'Unlock plug', 'AC current', 'Min. SOC', 'Target SOC', 'Active', 'Start', 'End', 'Type', 'Days'] as $key) {
@@ -231,7 +231,7 @@ $m->properties['ShowChargingLocations'] = true;
 invoke($m, 'updatePublicApiValuesFromRawData');
 $newTargetId = $m->GetIDForIdent('APIChargingProfile1TargetSOC');
 check($newTargetId !== false && $newTargetId !== $oldTargetId, 'Enabling location details recreates missing variables.');
-check(IPS_GetObject($newTargetId)['ObjectName'] === 'L1 · Target SOC', 'Recreated variable gets compact display name.');
+check(IPS_GetObject($newTargetId)['ObjectName'] === 'LO1 · Target SOC', 'Recreated variable gets compact display name.');
 check($m->GetValue('APIChargingProfile1TargetSOC') === 90, 'Recreated variable receives the current API value.');
 
 echo 'Dynamic API vehicle checks passed (' . $GLOBALS['checks'] . " total checks).\n";

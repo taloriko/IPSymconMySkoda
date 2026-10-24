@@ -403,8 +403,8 @@ trait MySkodaPublicApiVariablesTrait
         $field = $match[2];
         $position = 2000 + min(9999, (int) $match[1]) * 1000;
         // Keep the saved location ID concise and first for mobile displays.
-        // The descriptive field follows it: L1 = saved location with API ID 1.
-        $locationPrefix = 'L' . $match[1] . ' · ';
+        // The descriptive field follows it: LO1 = saved location with API ID 1.
+        $locationPrefix = 'LO' . $match[1] . ' · ';
         $icon = 'sliders-horizontal';
         $percent = false;
         $labels = [
@@ -462,7 +462,7 @@ trait MySkodaPublicApiVariablesTrait
             $shortLabel = isset($childLabels[$field])
                 ? $this->Translate($childLabels[$field])
                 : $fallbackLabel;
-            // "Zeit" = preferred charging time, T = timer, L = saved location.
+            // "Zeit" = preferred charging time, T = timer, LO = saved location.
             $title = $locationPrefix . $shortLabel . ' '
                 . ($group === 'timers' ? 'T' : 'Zeit') . $child[2];
             $position += ($group === 'timers' ? 500 : 200) + min(29, (int) $child[2]) * 10 + ($childPositions[$field] ?? 9);
