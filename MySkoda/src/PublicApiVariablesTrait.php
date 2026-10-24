@@ -402,16 +402,18 @@ trait MySkodaPublicApiVariablesTrait
         $ident = $this->dynamicApiIdent($path);
         $field = $match[2];
         $position = 2000 + min(9999, (int) $match[1]) * 1000;
-        $title = $this->Translate('Charging location') . ' ' . $match[1];
+        // Show the meaning first on narrow mobile screens; the stable API
+        // profile ID is kept as a short suffix (L1 = saved location ID 1).
+        $locationSuffix = ' · L' . $match[1];
         $icon = 'sliders-horizontal';
         $percent = false;
         $labels = [
-            'id' => 'ID',
+            'id' => 'Profile ID',
             'name' => 'Name',
-            'settings.autoUnlockPlugWhenCharged' => 'Automatic plug unlock',
-            'settings.maxChargingCurrent' => 'Maximum AC charging current',
-            'settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent' => 'Minimum state of charge',
-            'settings.targetStateOfChargeInPercent' => 'Charging limit'
+            'settings.autoUnlockPlugWhenCharged' => 'Unlock plug',
+            'settings.maxChargingCurrent' => 'AC current',
+            'settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent' => 'Min. SOC',
+            'settings.targetStateOfChargeInPercent' => 'Target SOC'
         ];
         $positions = [
             'id' => 0,
@@ -435,11 +437,11 @@ trait MySkodaPublicApiVariablesTrait
             $field = $child[3];
             $childLabels = [
                 'id' => 'ID',
-                'enabled' => 'Enabled',
-                'startTime' => 'Time window start',
-                'endTime' => 'Time window end',
-                'type' => 'Timer type',
-                'recurringOn' => 'Weekdays',
+                'enabled' => 'Active',
+                'startTime' => 'Start',
+                'endTime' => 'End',
+                'type' => 'Type',
+                'recurringOn' => 'Days',
                 'time' => 'Time'
             ];
             $childPositions = [
@@ -455,17 +457,23 @@ trait MySkodaPublicApiVariablesTrait
                 'recurringOn' => 'calendar-days',
                 'time' => 'clock'
             ];
-            $title .= ' / ' . $this->Translate($group === 'timers' ? 'Charging timer' : 'Preferred charging time');
-            $title .= ' ' . $child[2] . ' / ';
-            $title .= isset($childLabels[$field])
+            $fieldParts = explode('.', $field);
+            $fallbackLabel = $this->humanizeApiPathPart((string) end($fieldParts));
+            $shortLabel = isset($childLabels[$field])
                 ? $this->Translate($childLabels[$field])
-                : implode(' / ', array_map([$this, 'humanizeApiPathPart'], explode('.', $field)));
+                : $fallbackLabel;
+            // Z = preferred charging time, T = timer, L = saved location.
+            $title = $shortLabel . ' ' . ($group === 'timers' ? 'T' : 'Z')
+                . $child[2] . $locationSuffix;
             $position += ($group === 'timers' ? 500 : 200) + min(29, (int) $child[2]) * 10 + ($childPositions[$field] ?? 9);
             $icon = $childIcons[$field] ?? 'calendar-days';
         } else {
-            $title .= ' / ' . (isset($labels[$field])
+            $fieldParts = explode('.', $field);
+            $fallbackLabel = $this->humanizeApiPathPart((string) end($fieldParts));
+            $shortLabel = isset($labels[$field])
                 ? $this->Translate($labels[$field])
-                : implode(' / ', array_map([$this, 'humanizeApiPathPart'], explode('.', $field))));
+                : $fallbackLabel;
+            $title = $shortLabel . $locationSuffix;
             $position += $positions[$field] ?? (60 + (abs((int) crc32($field)) % 100));
             $icon = $icons[$field] ?? 'sliders-horizontal';
             $percent = in_array($field, [

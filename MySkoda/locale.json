@@ -276,7 +276,17 @@
       "No charging locations have been received yet; variable count is unknown.": "Noch keine Ladeorte aus der API erhalten; Variablenzahl unbekannt.",
       "Last API response: %d locations, %d possible variables, %d not yet created.": "Letzte API-Antwort: %d Ladeort(e), %d mögliche Variablen, davon %d noch nicht angelegt.",
       "Create VIN information variables (17)": "FIN-Informationsvariablen anlegen (17)",
-      "Adds 17 locally decoded information variables; the VIN decoder below is available independently of this option.": "Legt 17 lokal interpretierte FIN-Informationsvariablen an. Die FIN-Auswertung weiter unten ist auch ohne diese Option verfügbar."
+      "Adds 17 locally decoded information variables; the VIN decoder below is available independently of this option.": "Legt 17 lokal interpretierte FIN-Informationsvariablen an. Die FIN-Auswertung weiter unten ist auch ohne diese Option verfügbar.",
+      "Profile ID": "Profil-ID",
+      "Unlock plug": "Entriegeln",
+      "AC current": "AC-Strom",
+      "Min. SOC": "Min.-SoC",
+      "Target SOC": "Ziel-SoC",
+      "Active": "Aktiv",
+      "Start": "Start",
+      "End": "Ende",
+      "Type": "Typ",
+      "Days": "Tage"
     }
   }
 }

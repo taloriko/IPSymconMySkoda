@@ -169,6 +169,37 @@ foreach ($expectedProfiles as $ident => $value) {
 }
 check(IPS_GetVariable($m->GetIDForIdent('APIChargingProfile1TargetSOC'))['VariablePresentation']['SUFFIX'] === ' %',
     'Charge target displays percent.');
+
+// Names are field-first and compact; stable profile ID is only a short suffix.
+$compactNames = [
+    'APIChargingProfile1ID' => 'Profile ID · L1',
+    'APIChargingProfile1Name' => 'Name · L1',
+    'APIChargingProfile1AutoUnlockPlug' => 'Unlock plug · L1',
+    'APIChargingProfile1MaxChargingCurrent' => 'AC current · L1',
+    'APIChargingProfile1MinimumSOC' => 'Min. SOC · L1',
+    'APIChargingProfile1TargetSOC' => 'Target SOC · L1',
+    'APIChargingProfile1SettingsFutureEnabled' => 'Future Enabled · L1',
+    'APIChargingProfile1PreferredTime1Enabled' => 'Active Z1 · L1',
+    'APIChargingProfile1PreferredTime1StartTime' => 'Start Z1 · L1',
+    'APIChargingProfile1PreferredTime1EndTime' => 'End Z1 · L1',
+    'APIChargingProfile1Timer1Enabled' => 'Active T1 · L1',
+    'APIChargingProfile1Timer1Type' => 'Type T1 · L1',
+    'APIChargingProfile1Timer1RecurringOn' => 'Days T1 · L1',
+    'APIChargingProfile1Timer1Time' => 'Time T1 · L1',
+    'APIChargingProfile3Name' => 'Name · L3',
+    'APIChargingProfile3TargetSOC' => 'Target SOC · L3'
+];
+foreach ($compactNames as $ident => $expectedName) {
+    $actualName = IPS_GetObject($m->GetIDForIdent($ident))['ObjectName'];
+    check($actualName === $expectedName, 'Expected compact display name for ' . $ident);
+    check(strlen($actualName) <= 22, 'Mobile label should be compact: ' . $ident);
+    check(!str_starts_with($actualName, 'Charging location'), 'Avoid long common prefix: ' . $ident);
+}
+$germanNames = json_decode(file_get_contents(__DIR__ . '/../MySkoda/locale.json'), true, 512, JSON_THROW_ON_ERROR)['translations']['de'];
+foreach (['Profile ID', 'Unlock plug', 'AC current', 'Min. SOC', 'Target SOC', 'Active', 'Start', 'End', 'Type', 'Days'] as $key) {
+    check(isset($germanNames[$key]) && trim($germanNames[$key]) !== '', 'German compact label translation is missing: ' . $key);
+}
+check($germanNames['Target SOC'] === 'Ziel-SoC', 'Localized target SOC stays concise.');
 $varId = $m->GetIDForIdent('APIChargingProfile1Name');
 $GLOBALS['objects'][$varId]['ObjectName'] = 'Own label';
 $registrations = $m->registrations;
@@ -189,5 +220,17 @@ $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_TH
 invoke($m, 'updatePublicApiValuesFromRawData');
 check($m->GetIDForIdent('APIChargingProfile2Name') === false, 'No new profiles while details disabled.');
 check($m->GetValue('APIChargingProfile1Name') === 'Home again', 'Existing detail values keep updating.');
+
+// Simulate a user deleting an old variable while the option is off, then
+// re-enabling the option. Creation uses the new short name and keeps its ident.
+$oldTargetId = $m->GetIDForIdent('APIChargingProfile1TargetSOC');
+unset($GLOBALS['objects'][$oldTargetId]);
+check($m->GetIDForIdent('APIChargingProfile1TargetSOC') === false, 'Manually deleted variable is absent.');
+$m->properties['ShowChargingLocations'] = true;
+invoke($m, 'updatePublicApiValuesFromRawData');
+$newTargetId = $m->GetIDForIdent('APIChargingProfile1TargetSOC');
+check($newTargetId !== false && $newTargetId !== $oldTargetId, 'Enabling location details recreates missing variables.');
+check(IPS_GetObject($newTargetId)['ObjectName'] === 'Target SOC · L1', 'Recreated variable gets compact display name.');
+check($m->GetValue('APIChargingProfile1TargetSOC') === 90, 'Recreated variable receives the current API value.');
 
 echo 'Dynamic API vehicle checks passed (' . $GLOBALS['checks'] . " total checks).\n";
