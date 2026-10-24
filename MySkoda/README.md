@@ -210,23 +210,23 @@ Der Ident beginnt mit `API` und wird aus den Teilen des API-Pfades zusammengeset
 
 Bereits bekannte Quellfelder sowie `renderUrl`, `operations`, `remoteOperations` und untergeordnete `carCapturedTimestamp`-Felder werden nicht zusätzlich generisch angelegt. Eine automatische Variable ist ein Lesewert und erhält durch ihre Erkennung keinen Schreibbefehl. Ihre Einheit wird nicht automatisch umgerechnet.
 
-**Erweiterte Ladeortdetails ab 1.9:** Bei aktiviertem `ShowChargingLocations` werden aus `chargingProfiles.profiles` die gelieferten skalaren Werte je Ladeort als Symcon-Variablen angelegt: Profil-ID, Name, Ladeeinstellungen sowie bevorzugte Ladezeiten und Timer mit Aktivierung, Uhrzeiten und Wochentagen. Die Profil-, Zeitfenster- und Timer-IDs bilden stabile Idents unabhängig von der Reihenfolge in der API-Antwort. Jedes neu angelegte Feld erhält eine passende Symcon-Darstellung und ein Icon (z. B. Haus, Batterie mit Prozentangabe, Stecker, Uhr, Kalender oder Wiederholung). **Die sichtbaren Namen sind für Smartphones bewusst kurz:** zuerst die Bedeutung, danach die Zuordnung als Suffix. Dabei steht `L1` für Ladeort mit Profil-ID 1, `Z1` für bevorzugtes Ladezeitfenster 1 und `T1` für Timer 1. So wird beispielsweise statt `Ladeort 1 / Ladelimit` künftig `Ziel-SoC · L1` angezeigt. Weitere Beispiele für Profil-ID 1:
+**Erweiterte Ladeortdetails ab 1.9:** Bei aktiviertem `ShowChargingLocations` werden aus `chargingProfiles.profiles` die gelieferten skalaren Werte je Ladeort als Symcon-Variablen angelegt: Profil-ID, Name, Ladeeinstellungen sowie bevorzugte Ladezeiten und Timer mit Aktivierung, Uhrzeiten und Wochentagen. Die Profil-, Zeitfenster- und Timer-IDs bilden stabile Idents unabhängig von der Reihenfolge in der API-Antwort. Jedes neu angelegte Feld erhält eine passende Symcon-Darstellung und ein Icon (z. B. Haus, Batterie mit Prozentangabe, Stecker, Uhr, Kalender oder Wiederholung). **Die sichtbaren Namen sind für Smartphones bewusst kurz:** zuerst die Kennung des Ladeorts, danach die Bedeutung. Dabei steht `L1` für Ladeort mit Profil-ID 1, `Zeit1` für bevorzugtes Ladezeitfenster 1 und `T1` für Timer 1. So wird beispielsweise statt `Ladeort 1 / Ladelimit` künftig `L1 · Ziel-SoC` angezeigt. Weitere Beispiele für Profil-ID 1:
 
 | Variablen-Ident | Kurzer Anzeigename | Bedeutung |
 |---|---|---|
-| `APIChargingProfile1ID` | Profil-ID · L1 | Profilkennung |
-| `APIChargingProfile1Name` | Name · L1 | Ladeortname, z. B. Home |
-| `APIChargingProfile1AutoUnlockPlug` | Entriegeln · L1 | Stecker nach Ladung automatisch entriegeln |
-| `APIChargingProfile1MaxChargingCurrent` | AC-Strom · L1 | Maximaler Ladestrommodus |
-| `APIChargingProfile1MinimumSOC` | Min.-SoC · L1 | Mindestladezustand in % |
-| `APIChargingProfile1TargetSOC` | Ziel-SoC · L1 | Zielladezustand in % |
-| `APIChargingProfile1PreferredTime1Enabled` | Aktiv Z1 · L1 | Bevorzugte Ladezeit 1 aktiv |
-| `APIChargingProfile1PreferredTime1StartTime` | Start Z1 · L1 | Beginn der Ladezeit |
-| `APIChargingProfile1PreferredTime1EndTime` | Ende Z1 · L1 | Ende der Ladezeit |
-| `APIChargingProfile1Timer1Enabled` | Aktiv T1 · L1 | Timer 1 aktiv |
-| `APIChargingProfile1Timer1Type` | Typ T1 · L1 | Timerart |
-| `APIChargingProfile1Timer1RecurringOn` | Tage T1 · L1 | Wochentage |
-| `APIChargingProfile1Timer1Time` | Uhrzeit T1 · L1 | Uhrzeit des Timers |
+| `APIChargingProfile1ID` | L1 · Profil-ID | Profilkennung |
+| `APIChargingProfile1Name` | L1 · Name | Ladeortname, z. B. Home |
+| `APIChargingProfile1AutoUnlockPlug` | L1 · Entriegeln | Stecker nach Ladung automatisch entriegeln |
+| `APIChargingProfile1MaxChargingCurrent` | L1 · AC-Strom | Maximaler Ladestrommodus |
+| `APIChargingProfile1MinimumSOC` | L1 · Min.-SoC | Mindestladezustand in % |
+| `APIChargingProfile1TargetSOC` | L1 · Ziel-SoC | Zielladezustand in % |
+| `APIChargingProfile1PreferredTime1Enabled` | L1 · Aktiv Zeit1 | Bevorzugte Ladezeit 1 aktiv |
+| `APIChargingProfile1PreferredTime1StartTime` | L1 · Start Zeit1 | Beginn der Ladezeit |
+| `APIChargingProfile1PreferredTime1EndTime` | L1 · Ende Zeit1 | Ende der Ladezeit |
+| `APIChargingProfile1Timer1Enabled` | L1 · Aktiv T1 | Timer 1 aktiv |
+| `APIChargingProfile1Timer1Type` | L1 · Typ T1 | Timerart |
+| `APIChargingProfile1Timer1RecurringOn` | L1 · Tage T1 | Wochentage |
+| `APIChargingProfile1Timer1Time` | L1 · Uhrzeit T1 | Uhrzeit des Timers |
 
 Ohne aktiviertes `ShowChargingLocations` stehen die Profile weiterhin vollständig als JSON über `MSKODA_GetChargingProfiles` zur Verfügung. Bereits angelegte Variablen bleiben bei Deaktivierung erhalten und werden weiter aktualisiert. Die neuen Anzeigenamen gelten **nur bei Neuanlage**; vorhandene, vom Benutzer anpassbare Objektnamen bleiben unangetastet. Für eine bewusste Neuanlage: Ladeort-Schalter ausschalten, gewünschte alte Variablen von Hand entfernen, Schalter wieder einschalten und Fahrzeugdaten aktualisieren. Die internen Idents bleiben unverändert. Beim Löschen sind eventuell vorhandene Archivdaten und bestehende Verknüpfungen zu beachten. `AtSavedChargingLocation` sagt lediglich aus, **ob** sich das Fahrzeug an einem gespeicherten Ladeort befindet; der Name des tatsächlich aktiven Ladeorts lässt sich bei mehreren Profilen daraus allein nicht bestimmen.
 

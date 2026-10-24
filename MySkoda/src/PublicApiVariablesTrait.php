@@ -402,9 +402,9 @@ trait MySkodaPublicApiVariablesTrait
         $ident = $this->dynamicApiIdent($path);
         $field = $match[2];
         $position = 2000 + min(9999, (int) $match[1]) * 1000;
-        // Show the meaning first on narrow mobile screens; the stable API
-        // profile ID is kept as a short suffix (L1 = saved location ID 1).
-        $locationSuffix = ' · L' . $match[1];
+        // Keep the saved location ID concise and first for mobile displays.
+        // The descriptive field follows it: L1 = saved location with API ID 1.
+        $locationPrefix = 'L' . $match[1] . ' · ';
         $icon = 'sliders-horizontal';
         $percent = false;
         $labels = [
@@ -462,9 +462,9 @@ trait MySkodaPublicApiVariablesTrait
             $shortLabel = isset($childLabels[$field])
                 ? $this->Translate($childLabels[$field])
                 : $fallbackLabel;
-            // Z = preferred charging time, T = timer, L = saved location.
-            $title = $shortLabel . ' ' . ($group === 'timers' ? 'T' : 'Z')
-                . $child[2] . $locationSuffix;
+            // "Zeit" = preferred charging time, T = timer, L = saved location.
+            $title = $locationPrefix . $shortLabel . ' '
+                . ($group === 'timers' ? 'T' : 'Zeit') . $child[2];
             $position += ($group === 'timers' ? 500 : 200) + min(29, (int) $child[2]) * 10 + ($childPositions[$field] ?? 9);
             $icon = $childIcons[$field] ?? 'calendar-days';
         } else {
@@ -473,7 +473,7 @@ trait MySkodaPublicApiVariablesTrait
             $shortLabel = isset($labels[$field])
                 ? $this->Translate($labels[$field])
                 : $fallbackLabel;
-            $title = $shortLabel . $locationSuffix;
+            $title = $locationPrefix . $shortLabel;
             $position += $positions[$field] ?? (60 + (abs((int) crc32($field)) % 100));
             $icon = $icons[$field] ?? 'sliders-horizontal';
             $percent = in_array($field, [
