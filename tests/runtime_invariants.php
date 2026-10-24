@@ -44,6 +44,7 @@ function IPS_GetObjectIDByIdent(string $ident, int $parent): int|false
 function IPS_VariableExists(int $id): bool { return ($GLOBALS['objects'][$id]['ObjectType'] ?? -1) === 2; }
 function IPS_GetVariable(int $id): array { return $GLOBALS['objects'][$id]; }
 function IPS_GetObject(int $id): array { return $GLOBALS['objects'][$id]; }
+function IPS_GetName(int $id): string { return $GLOBALS['objects'][$id]['ObjectName'] ?? 'Test MySkoda'; }
 function IPS_GetMedia(int $id): array { return $GLOBALS['objects'][$id]; }
 function IPS_SetIcon(int $id, string $icon): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectIcon'] = $icon; }
 function IPS_SetName(int $id, string $name): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectName'] = $name; }
