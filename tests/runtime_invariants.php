@@ -310,8 +310,8 @@ $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_TH
 $form = json_decode($m->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
 $image = $form['elements'][0];
 check($image['type'] === 'Image' && $image['mediaID'] === $mediaId, 'Main vehicle image is preferred.');
-check($image['center'] === true && $image['width'] === '240px', 'Vehicle image is centered and twice as wide.');
-check($form['elements'][1]['type'] === 'Label', 'Vehicle information follows the centered image.');
+check($image['center'] === false && $image['width'] === '240px', 'Vehicle image is left-aligned and twice as wide.');
+check($form['elements'][1]['type'] === 'Label', 'Vehicle information follows the left-aligned image.');
 check(str_contains($form['elements'][1]['caption'], 'Enyaq with image') &&
     str_contains($form['elements'][1]['caption'], 'TEST M 123'), 'Vehicle name and plate are displayed.');
 check(!str_contains($form['elements'][1]['caption'], 'FIN'), 'Header must not display the VIN.');
@@ -326,8 +326,8 @@ $GLOBALS['objects'][$mediaId]['MediaIsAvailable'] = false;
 $form = json_decode($m->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
 check($form['elements'][0]['type'] === 'Image' && $form['elements'][0]['mediaID'] === $variantId,
     'First available vehicle image is selected if main image is missing.');
-check($form['elements'][0]['center'] === true && $form['elements'][0]['width'] === '240px',
-    'Fallback image keeps the same centered sizing.');
+check($form['elements'][0]['center'] === false && $form['elements'][0]['width'] === '240px',
+    'Fallback image keeps the same left-aligned sizing.');
 
 $GLOBALS['objects'][$variantId]['MediaIsAvailable'] = false;
 $form = json_decode($m->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);

@@ -88,7 +88,7 @@ Das Ausschalten der Option entfernt oder versteckt bereits angelegte Variablen n
 
 Unter **Zusätzliche Daten** gibt es drei unabhängige Schalter: Diagnose (5–7 Variablen), gespeicherte Ladeorte (ca. 1–40 oder mehr pro Ladeort) und FIN-Informationen (17 Variablen). Eine Übersicht zeigt die Richtwerte. Für Ladeorte wird zusätzlich anhand der zuletzt gespeicherten API-Antwort die konkrete Zahl möglicher und noch nicht angelegter Variablen angezeigt. Bereits vorhandene Variablen werden bei Abschalten nicht gelöscht.
 
-Oben im Konfigurationsformular zeigt eine Kopfzeile den dynamisch aus der jeweiligen Symcon-Instanz gelesenen Instanznamen sowie – sofern die zuletzt gespeicherten API-Daten zur konfigurierten FIN gehören – Fahrzeugname und Kennzeichen. Die FIN wird in der Überschrift nicht ausgegeben. Ein passendes gespeichertes Fahrzeugbild wird oberhalb der Beschriftung mittig und 240 Pixel breit eingeblendet: zuerst das Basisbild `VehicleImage`, ansonsten die erste verfügbare andere Ansicht. Fehlt ein geeignetes Bild, bleibt die Textüberschrift. Das Öffnen des Formulars löst keinen Bilddownload aus.
+Oben im Konfigurationsformular zeigt eine Kopfzeile den dynamisch aus der jeweiligen Symcon-Instanz gelesenen Instanznamen sowie – sofern die zuletzt gespeicherten API-Daten zur konfigurierten FIN gehören – Fahrzeugname und Kennzeichen. Die FIN wird in der Überschrift nicht ausgegeben. Ein passendes gespeichertes Fahrzeugbild wird oberhalb der Beschriftung linksbündig wie der Text und 240 Pixel breit eingeblendet: zuerst das Basisbild `VehicleImage`, ansonsten die erste verfügbare andere Ansicht. Fehlt ein geeignetes Bild, bleibt die Textüberschrift. Das Öffnen des Formulars löst keinen Bilddownload aus.
 
 ## 4. Variablen und Objektverwaltung
 

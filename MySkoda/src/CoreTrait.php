@@ -269,12 +269,12 @@ trait MySkodaCoreTrait
         $header = [];
         $mediaId = $this->vehicleConfigurationMediaId();
         if ($mediaId !== false) {
-            // Image.center is only effective outside RowLayout.
+            // Keep the image left-aligned above the header label.
             $header[] = [
                 'type' => 'Image',
                 'name' => 'VehicleConfigurationImage',
                 'mediaID' => $mediaId,
-                'center' => true,
+                'center' => false,
                 'width' => '240px'
             ];
         }

@@ -3,7 +3,7 @@
 ## Initiale Veröffentlichung
 
 - Die Instanzkonfiguration bietet unabhängige Schalter für Diagnose, Ladeorte und FIN-Daten inklusive Variablen-Richtwerten und konkreter Ladeort-Vorschau.
-- Kopfzeile mit dynamischer Instanzbezeichnung, geliefertem Fahrzeugnamen und Kennzeichen (ohne FIN); passendes vorhandenes Fahrzeugbild mittig mit 240 px Breite (Basisbild zuerst, sonst verfügbare Ansicht).
+- Kopfzeile mit dynamischer Instanzbezeichnung, geliefertem Fahrzeugnamen und Kennzeichen (ohne FIN); passendes vorhandenes Fahrzeugbild linksbündig mit 240 px Breite (Basisbild zuerst, sonst verfügbare Ansicht).
 
 - Anbindung eines Škoda-Fahrzeugs je Instanz über die offizielle MyŠkoda Public API mit FIN/VIN und API-Key.
 - Fahrzeug-, Lade-, Kraftstoff-, Klima-, Standort- und Statusdaten als Symcon-Variablen mit festen Idents für bekannte Datenpunkte und deutschen Anzeigen.
