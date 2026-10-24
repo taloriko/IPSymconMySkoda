@@ -132,33 +132,35 @@ $vehicle['chargingProfiles'] = [
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
 check($m->GetValue('AtSavedChargingLocation') === true, 'Basic saved location is independent of details.');
-check($m->GetIDForIdent('APIChargingProfile1Name') === false, 'No profile variables with saved locations disabled.');
+check($m->GetIDForIdent('APIChargingProfile1Name') === false,
+    'Legacy API prefix is not used for saved charging location idents.');
+check($m->GetIDForIdent('ChargingProfile1Name') === false, 'No profile variables with saved locations disabled.');
 $m->properties['ShowDetails'] = true;
 invoke($m, 'updatePublicApiValuesFromRawData');
-check($m->GetIDForIdent('APIChargingProfile1Name') === false, 'Diagnostics must not create charging locations.');
+check($m->GetIDForIdent('ChargingProfile1Name') === false, 'Diagnostics must not create charging locations.');
 check(json_decode($m->GetChargingProfiles(), true)['profiles'][0]['name'] === 'Home', 'Full profiles remain readable.');
 
 $m->properties['ShowDetails'] = false;
 $m->properties['ShowChargingLocations'] = true;
 invoke($m, 'updatePublicApiValuesFromRawData');
 $expectedProfiles = [
-    'APIChargingProfile1ID' => 1,
-    'APIChargingProfile1Name' => 'Home',
-    'APIChargingProfile1AutoUnlockPlug' => 'OFF',
-    'APIChargingProfile1MaxChargingCurrent' => 'MAXIMUM',
-    'APIChargingProfile1MinimumSOC' => 20,
-    'APIChargingProfile1TargetSOC' => 90,
-    'APIChargingProfile1SettingsFutureEnabled' => false,
-    'APIChargingProfile1SettingsFutureCount' => 0,
-    'APIChargingProfile1PreferredTime1Enabled' => false,
-    'APIChargingProfile1PreferredTime1StartTime' => '22:00',
-    'APIChargingProfile1PreferredTime1EndTime' => '06:00',
-    'APIChargingProfile1Timer1Enabled' => false,
-    'APIChargingProfile1Timer1Type' => 'RECURRING',
-    'APIChargingProfile1Timer1RecurringOn' => 'MONDAY, TUESDAY',
-    'APIChargingProfile1Timer1Time' => '07:00',
-    'APIChargingProfile3Name' => 'Work',
-    'APIChargingProfile3TargetSOC' => 75
+    'ChargingProfile1ID' => 1,
+    'ChargingProfile1Name' => 'Home',
+    'ChargingProfile1AutoUnlockPlug' => 'OFF',
+    'ChargingProfile1MaxChargingCurrent' => 'MAXIMUM',
+    'ChargingProfile1MinimumSOC' => 20,
+    'ChargingProfile1TargetSOC' => 90,
+    'ChargingProfile1SettingsFutureEnabled' => false,
+    'ChargingProfile1SettingsFutureCount' => 0,
+    'ChargingProfile1PreferredTime1Enabled' => false,
+    'ChargingProfile1PreferredTime1StartTime' => '22:00',
+    'ChargingProfile1PreferredTime1EndTime' => '06:00',
+    'ChargingProfile1Timer1Enabled' => false,
+    'ChargingProfile1Timer1Type' => 'RECURRING',
+    'ChargingProfile1Timer1RecurringOn' => 'MONDAY, TUESDAY',
+    'ChargingProfile1Timer1Time' => '07:00',
+    'ChargingProfile3Name' => 'Work',
+    'ChargingProfile3TargetSOC' => 75
 ];
 foreach ($expectedProfiles as $ident => $value) {
     check($m->GetIDForIdent($ident) !== false, 'Missing saved location field: ' . $ident);
@@ -167,27 +169,27 @@ foreach ($expectedProfiles as $ident => $value) {
     check(($presentation['PRESENTATION'] ?? null) === VARIABLE_PRESENTATION_VALUE_PRESENTATION, 'Missing value presentation: ' . $ident);
     check(trim((string) ($presentation['ICON'] ?? '')) !== '', 'Missing icon: ' . $ident);
 }
-check(IPS_GetVariable($m->GetIDForIdent('APIChargingProfile1TargetSOC'))['VariablePresentation']['SUFFIX'] === ' %',
+check(IPS_GetVariable($m->GetIDForIdent('ChargingProfile1TargetSOC'))['VariablePresentation']['SUFFIX'] === ' %',
     'Charge target displays percent.');
 
 // Names start with a compact stable location ID; preferred charging times use "Zeit".
 $compactNames = [
-    'APIChargingProfile1ID' => 'LO1 · Profile ID',
-    'APIChargingProfile1Name' => 'LO1 · Name',
-    'APIChargingProfile1AutoUnlockPlug' => 'LO1 · Unlock plug',
-    'APIChargingProfile1MaxChargingCurrent' => 'LO1 · AC current',
-    'APIChargingProfile1MinimumSOC' => 'LO1 · Min. SOC',
-    'APIChargingProfile1TargetSOC' => 'LO1 · Target SOC',
-    'APIChargingProfile1SettingsFutureEnabled' => 'LO1 · Future Enabled',
-    'APIChargingProfile1PreferredTime1Enabled' => 'LO1 · Active Zeit1',
-    'APIChargingProfile1PreferredTime1StartTime' => 'LO1 · Start Zeit1',
-    'APIChargingProfile1PreferredTime1EndTime' => 'LO1 · End Zeit1',
-    'APIChargingProfile1Timer1Enabled' => 'LO1 · Active T1',
-    'APIChargingProfile1Timer1Type' => 'LO1 · Type T1',
-    'APIChargingProfile1Timer1RecurringOn' => 'LO1 · Days T1',
-    'APIChargingProfile1Timer1Time' => 'LO1 · Time T1',
-    'APIChargingProfile3Name' => 'LO3 · Name',
-    'APIChargingProfile3TargetSOC' => 'LO3 · Target SOC'
+    'ChargingProfile1ID' => 'LO1 · Profile ID',
+    'ChargingProfile1Name' => 'LO1 · Name',
+    'ChargingProfile1AutoUnlockPlug' => 'LO1 · Unlock plug',
+    'ChargingProfile1MaxChargingCurrent' => 'LO1 · AC current',
+    'ChargingProfile1MinimumSOC' => 'LO1 · Min. SOC',
+    'ChargingProfile1TargetSOC' => 'LO1 · Target SOC',
+    'ChargingProfile1SettingsFutureEnabled' => 'LO1 · Future Enabled',
+    'ChargingProfile1PreferredTime1Enabled' => 'LO1 · Active Zeit1',
+    'ChargingProfile1PreferredTime1StartTime' => 'LO1 · Start Zeit1',
+    'ChargingProfile1PreferredTime1EndTime' => 'LO1 · End Zeit1',
+    'ChargingProfile1Timer1Enabled' => 'LO1 · Active T1',
+    'ChargingProfile1Timer1Type' => 'LO1 · Type T1',
+    'ChargingProfile1Timer1RecurringOn' => 'LO1 · Days T1',
+    'ChargingProfile1Timer1Time' => 'LO1 · Time T1',
+    'ChargingProfile3Name' => 'LO3 · Name',
+    'ChargingProfile3TargetSOC' => 'LO3 · Target SOC'
 ];
 foreach ($compactNames as $ident => $expectedName) {
     $actualName = IPS_GetObject($m->GetIDForIdent($ident))['ObjectName'];
@@ -201,7 +203,7 @@ foreach (['Profile ID', 'Unlock plug', 'AC current', 'Min. SOC', 'Target SOC', '
     check(isset($germanNames[$key]) && trim($germanNames[$key]) !== '', 'German compact label translation is missing: ' . $key);
 }
 check($germanNames['Target SOC'] === 'Ziel-SoC', 'Localized target SOC stays concise.');
-$varId = $m->GetIDForIdent('APIChargingProfile1Name');
+$varId = $m->GetIDForIdent('ChargingProfile1Name');
 $GLOBALS['objects'][$varId]['ObjectName'] = 'Own label';
 $registrations = $m->registrations;
 $vehicle['chargingProfiles']['profiles'] = array_reverse($vehicle['chargingProfiles']['profiles']);
@@ -209,8 +211,8 @@ $vehicle['chargingProfiles']['profiles'][1]['name'] = 'Home changed';
 $vehicle['chargingProfiles']['profiles'][1]['timers'][0]['time'] = '08:00';
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
-check($m->GetValue('APIChargingProfile1Name') === 'Home changed', 'Stable ID after reordering.');
-check($m->GetValue('APIChargingProfile1Timer1Time') === '08:00', 'Timer ID survives reordering.');
+check($m->GetValue('ChargingProfile1Name') === 'Home changed', 'Stable ID after reordering.');
+check($m->GetValue('ChargingProfile1Timer1Time') === '08:00', 'Timer ID survives reordering.');
 check($m->registrations === $registrations, 'No duplicate profile variables.');
 check($GLOBALS['objects'][$varId]['ObjectName'] === 'Own label', 'User-owned metadata preserved.');
 
@@ -219,19 +221,23 @@ $vehicle['chargingProfiles']['profiles'][] = ['id' => 2, 'name' => 'New location
 $vehicle['chargingProfiles']['profiles'][1]['name'] = 'Home again';
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
-check($m->GetIDForIdent('APIChargingProfile2Name') === false, 'No new profiles while details disabled.');
-check($m->GetValue('APIChargingProfile1Name') === 'Home again', 'Existing detail values keep updating.');
+check($m->GetIDForIdent('ChargingProfile2Name') === false, 'No new profiles while details disabled.');
+check($m->GetValue('ChargingProfile1Name') === 'Home again', 'Existing detail values keep updating.');
 
 // Simulate a user deleting an old variable while the option is off, then
 // re-enabling the option. Creation uses the new short name and keeps its ident.
-$oldTargetId = $m->GetIDForIdent('APIChargingProfile1TargetSOC');
+$oldTargetId = $m->GetIDForIdent('ChargingProfile1TargetSOC');
 unset($GLOBALS['objects'][$oldTargetId]);
-check($m->GetIDForIdent('APIChargingProfile1TargetSOC') === false, 'Manually deleted variable is absent.');
+check($m->GetIDForIdent('ChargingProfile1TargetSOC') === false, 'Manually deleted variable is absent.');
 $m->properties['ShowChargingLocations'] = true;
 invoke($m, 'updatePublicApiValuesFromRawData');
-$newTargetId = $m->GetIDForIdent('APIChargingProfile1TargetSOC');
+$newTargetId = $m->GetIDForIdent('ChargingProfile1TargetSOC');
 check($newTargetId !== false && $newTargetId !== $oldTargetId, 'Enabling location details recreates missing variables.');
 check(IPS_GetObject($newTargetId)['ObjectName'] === 'LO1 · Target SOC', 'Recreated variable gets compact display name.');
-check($m->GetValue('APIChargingProfile1TargetSOC') === 90, 'Recreated variable receives the current API value.');
+check($m->GetValue('ChargingProfile1TargetSOC') === 90, 'Recreated variable receives the current API value.');
+check($m->GetIDForIdent('APIChargingProfile1TargetSOC') === false,
+    'New saved charging locations never recreate old API-prefixed idents.');
+check($m->GetIDForIdent('APIFutureDataNewNumber') !== false,
+    'Ordinary dynamically discovered API fields retain their API prefix.');
 
 echo 'Dynamic API vehicle checks passed (' . $GLOBALS['checks'] . " total checks).\n";

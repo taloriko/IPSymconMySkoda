@@ -86,7 +86,7 @@ Fehlt `status.state`, ist dies keine Bestätigung für „Kabel abgezogen“ ode
 |---|---|:---:|:---:|---|---|---|---|
 | `profiles` | Ladeprofile | ✅ | ⚪ | Array[Object] | leer oder Ladeprofil-Objekte | `[{"id":1,"name":"Home",…}]` | Am 22.10.2026 mit einem gespeicherten Ladeort geliefert; Details über `ShowDetails` als Variablen (ab 1.9) |
 | `profiles[].id` | Ladeort-ID | ✅ | ⚪ | Integer | Profilkennung | `1` | Identifikation für Variablen |
-| `profiles[].name` | Ladeortname | ✅ | ⚪ | String | Freitext | `Home` | `APIChargingProfile1Name` |
+| `profiles[].name` | Ladeortname | ✅ | ⚪ | String | Freitext | `Home` | `ChargingProfile1Name` |
 | `profiles[].settings.autoUnlockPlugWhenCharged` | Steckerentriegelung | ✅ | ⚪ | String | OFF / ON | `OFF` | Detailvariable |
 | `profiles[].settings.maxChargingCurrent` | Maximaler Ladestrommodus | ✅ | ⚪ | String | MAXIMUM / REDUCED | `MAXIMUM` | Detailvariable |
 | `profiles[].settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent` | Mindestladezustand | ✅ | ⚪ | Integer | Prozent | `20` | Detailvariable |

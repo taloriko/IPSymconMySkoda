@@ -537,7 +537,7 @@ trait MySkodaPublicApiVariablesTrait
                 'settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent' => 'MinimumSOC',
                 'settings.targetStateOfChargeInPercent' => 'TargetSOC'
             ];
-            $ident = 'APIChargingProfile' . $match[1];
+            $ident = 'ChargingProfile' . $match[1];
             $suffix = $match[2];
             if (isset($known[$suffix])) {
                 $ident .= $known[$suffix];

@@ -10,6 +10,7 @@
 - Fahrzeugbezogene Variablen werden angelegt, sobald das zugehörige API-Feld vorhanden und nicht `null` ist. Zusätzliche skalare API-Felder werden automatisch als weitere Lesewerte erfasst.
 - Ladezustand, Reichweiten, Ladeleistung, Ladegeschwindigkeit, Ladelimit, Lademodi sowie Anschluss- und Verriegelungszustand des Ladesteckers.
 - Optional erweiterte Ladeortvariablen für gespeicherte Profile, Einstellungen, Ladezeiten und Timer mit eindeutigen Idents und Symcon-Icons/Darstellungen; die Erstanlage wird separat über `ShowChargingLocations` gesteuert.
+- Die gezielt angelegten Ladeort-Idents verzichten auf das generische `API`-Präfix (`ChargingProfile1Name` statt `APIChargingProfile1Name`); andere dynamische API-Idents bleiben unverändert. Bereits bestehende Variablen mit alten Idents werden nicht automatisch migriert.
 - Kompakte, mobilgeeignete Anzeigenamen für neue Ladeort-Variablen: kurze Ladeortkennung zuerst (z. B. `LO1 · Ziel-SoC`), bevorzugte Ladezeitfenster als `Zeit1` statt `Z1` (z. B. `LO1 · Start Zeit1`) und Timer weiterhin mit `T1`. Bestehende Objektnamen bleiben erhalten; Idents und Variablentypen unverändert.
 - Tankfüllstand, gemeldeter SoC des primären Antriebs, Kraftstoff- und Gesamtreichweite sowie Fahrzeug- und Antriebstypen, soweit vom Fahrzeug geliefert.
 - Klimastatus, Solltemperatur und geschätzter Zeitpunkt zum Erreichen der Zieltemperatur. Bei ausgeschalteter Klimatisierung wird eine gewählte Solltemperatur bis zum nächsten Start lokal vorgemerkt.
