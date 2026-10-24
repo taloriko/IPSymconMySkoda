@@ -66,6 +66,11 @@ def main() -> None:
     actual_actions = {item.get("caption") for item in walk(form["actions"]) if item.get("type") == "Button"}
     require(actual_actions == expected_actions, "Unexpected action buttons")
     require("Test notification" in {item.get("caption") for item in walk(form["elements"])}, "Notification test missing")
+    addons = next(item for item in form["elements"] if item.get("caption") == "Additional data")
+    switches = [item["name"] for item in addons["items"] if item.get("type") == "CheckBox"]
+    require(switches == ["ShowDetails", "ShowChargingLocations", "CreateVINVariables"], "Independent additional-data switches required")
+    require(sum(item.get("name") == "CreateVINVariables" for item in walk(form["elements"])) == 1, "FIN switch must not be duplicated")
+    require(any(item.get("type") == "List" for item in addons["items"]), "Variable overview missing")
     allowed_status_icons = {"active", "inactive", "error"}
     for status in form["status"]:
         require(status.get("icon") in allowed_status_icons, f"Unsupported status icon: {status.get('icon')}")

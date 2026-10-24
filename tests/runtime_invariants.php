@@ -44,6 +44,7 @@ function IPS_GetObjectIDByIdent(string $ident, int $parent): int|false
 function IPS_VariableExists(int $id): bool { return ($GLOBALS['objects'][$id]['ObjectType'] ?? -1) === 2; }
 function IPS_GetVariable(int $id): array { return $GLOBALS['objects'][$id]; }
 function IPS_GetObject(int $id): array { return $GLOBALS['objects'][$id]; }
+function IPS_GetName(int $id): string { return $GLOBALS['objects'][$id]['ObjectName'] ?? 'Test MySkoda'; }
 function IPS_GetMedia(int $id): array { return $GLOBALS['objects'][$id]; }
 function IPS_SetIcon(int $id, string $icon): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectIcon'] = $icon; }
 function IPS_SetName(int $id, string $name): void { ++$GLOBALS['metadataWrites']; $GLOBALS['objects'][$id]['ObjectName'] = $name; }
@@ -139,6 +140,33 @@ $m->ApplyChanges();
 check($m->registrations === 24, 'Only technical/detail and VIN variables exist before vehicle data is received.');
 check(count($GLOBALS['objects']) === 24, 'No duplicate identifiers.');
 check(json_decode($m->GetConfigurationForm(), true) !== null, 'Configuration form must remain valid JSON.');
+$form = json_decode($m->GetConfigurationForm(), true);
+check($form['elements'][0]['type'] === 'Label', 'Text header appears first without an image.');
+check($form['elements'][0]['caption'] === 'MySkoda - Test MySkoda', 'Text header uses the dynamically resolved instance name.');
+check(invoke($m, 'vehicleConfigurationMediaId') === false, 'Missing vehicle media falls back to text.');
+$identity = ['vehicle' => [
+    'vin' => $m->properties['VIN'],
+    'name' => 'Enyaq Demo',
+    'licensePlate' => 'TEST EV 42'
+]];
+$m->WriteAttributeString('RawData', json_encode($identity, JSON_THROW_ON_ERROR));
+$form = json_decode($m->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
+$caption = $form['elements'][0]['caption'];
+check(str_contains($caption, 'Enyaq Demo') && str_contains($caption, 'TEST EV 42'),
+    'Matched vehicle name and registration appear in header.');
+check(!str_contains($caption, $m->properties['VIN']) && !str_contains($caption, 'FIN'),
+    'VIN must never be shown in vehicle header.');
+
+$identity['vehicle']['vin'] = 'OTHER_VEHICLE';
+$m->WriteAttributeString('RawData', json_encode($identity, JSON_THROW_ON_ERROR));
+$caption = json_decode($m->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR)['elements'][0]['caption'];
+check(!str_contains($caption, 'Enyaq Demo') && !str_contains($caption, 'TEST EV 42'),
+    'Stale data from a different VIN must not appear in the header.');
+
+$m->WriteAttributeString('RawData', '');
+
+check(count(invoke($m, 'optionalVariableOverview')) === 3, 'Three optional categories listed.');
+check($m->ReadPropertyBoolean('ShowChargingLocations') === false, 'Saved locations are disabled by default.');
 
 // User-owned metadata must survive repeated configuration and data updates.
 foreach ($GLOBALS['objects'] as &$object) {
@@ -275,4 +303,34 @@ $saved = $GLOBALS['objects'][$mediaId];
 check(invoke($m, 'syncVehicleImage', false) === true, 'Valid image cache should be reused.');
 check($GLOBALS['objects'][$mediaId] === $saved, 'Cached image metadata remains unchanged.');
 check($GLOBALS['metadataWrites'] === $writes, 'No metadata repair writes after initial creation.');
+
+$vehicle['name'] = 'Enyaq with image';
+$vehicle['licensePlate'] = 'TEST M 123';
+$m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
+$form = json_decode($m->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
+$image = $form['elements'][0];
+check($image['type'] === 'Image' && $image['mediaID'] === $mediaId, 'Main vehicle image is preferred.');
+check($image['center'] === false && $image['width'] === '240px', 'Vehicle image is left-aligned and twice as wide.');
+check($form['elements'][1]['type'] === 'Label', 'Vehicle information follows the left-aligned image.');
+check(str_contains($form['elements'][1]['caption'], 'Enyaq with image') &&
+    str_contains($form['elements'][1]['caption'], 'TEST M 123'), 'Vehicle name and plate are displayed.');
+check(!str_contains($form['elements'][1]['caption'], 'FIN'), 'Header must not display the VIN.');
+
+$variantId = $GLOBALS['nextId']++;
+$GLOBALS['objects'][$variantId] = [
+    'ParentID' => $m->InstanceID, 'ObjectIdent' => 'VehicleImageFront', 'ObjectType' => 5,
+    'ObjectName' => 'Vehicle image front', 'ObjectPosition' => 41, 'MediaType' => 1, 'MediaIsAvailable' => true,
+    'ObjectInfo' => json_encode(['vehicleFingerprint' => hash('sha256', $m->properties['VIN'])], JSON_THROW_ON_ERROR)
+];
+$GLOBALS['objects'][$mediaId]['MediaIsAvailable'] = false;
+$form = json_decode($m->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
+check($form['elements'][0]['type'] === 'Image' && $form['elements'][0]['mediaID'] === $variantId,
+    'First available vehicle image is selected if main image is missing.');
+check($form['elements'][0]['center'] === false && $form['elements'][0]['width'] === '240px',
+    'Fallback image keeps the same left-aligned sizing.');
+
+$GLOBALS['objects'][$variantId]['MediaIsAvailable'] = false;
+$form = json_decode($m->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
+check($form['elements'][0]['type'] === 'Label', 'Header falls back to text when all images are unavailable.');
+
 echo 'Runtime invariants passed (' . $GLOBALS['checks'] . " checks).\n";

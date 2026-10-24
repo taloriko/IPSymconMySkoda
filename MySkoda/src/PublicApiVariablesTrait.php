@@ -235,7 +235,7 @@ trait MySkodaPublicApiVariablesTrait
             $known[$path] = true;
         }
 
-        foreach ($this->flattenVehicleScalars($vehicle) as $path => $value) {
+        foreach ($this->flattenDynamicApiScalars($vehicle, $this->ReadPropertyBoolean('ShowChargingLocations')) as $path => $value) {
             if (isset($known[$path]) || str_ends_with($path, '.carCapturedTimestamp')) {
                 continue;
             }
@@ -259,7 +259,7 @@ trait MySkodaPublicApiVariablesTrait
             $known[$path] = true;
         }
 
-        foreach ($this->flattenVehicleScalars($vehicle) as $path => $value) {
+        foreach ($this->flattenDynamicApiScalars($vehicle, true) as $path => $value) {
             if (isset($known[$path]) || str_ends_with($path, '.carCapturedTimestamp')) {
                 continue;
             }
@@ -278,6 +278,60 @@ trait MySkodaPublicApiVariablesTrait
                 $this->SetValue($ident, (string) $value);
             }
         }
+    }
+
+    private function flattenDynamicApiScalars(array $vehicle, bool $includeChargingProfiles): array
+    {
+        $flat = $this->flattenVehicleScalars($vehicle);
+        // Creation is opt-in, but existing charging-location variables keep updating.
+        if ($includeChargingProfiles) {
+            $flat += $this->flattenChargingProfileScalars($vehicle);
+        }
+        return $flat;
+    }
+
+    private function flattenChargingProfileScalars(array $vehicle): array
+    {
+        $profiles = $this->path($vehicle, 'chargingProfiles.profiles', null);
+        if (!is_array($profiles)) {
+            return [];
+        }
+        $flat = [];
+        foreach ($profiles as $profile) {
+            if (!is_array($profile) || !$this->validChargingProfileId($profile['id'] ?? null)) {
+                continue;
+            }
+            $id = (int) $profile['id'];
+            $prefix = 'chargingProfiles.profiles.' . $id;
+            $fields = ['id' => $id];
+            foreach (['name', 'settings'] as $key) {
+                if (array_key_exists($key, $profile)) {
+                    $fields[$key] = $profile[$key];
+                }
+            }
+            $flat += $this->flattenVehicleScalars($fields, $prefix);
+            foreach (['preferredChargingTimes', 'timers'] as $section) {
+                if (!is_array($profile[$section] ?? null)) {
+                    continue;
+                }
+                foreach ($profile[$section] as $entry) {
+                    if (!is_array($entry) || !$this->validChargingProfileId($entry['id'] ?? null)) {
+                        continue;
+                    }
+                    // API IDs are stable even if array order changes.
+                    $flat += $this->flattenVehicleScalars(
+                        $entry,
+                        $prefix . '.' . $section . '.' . (int) $entry['id']
+                    );
+                }
+            }
+        }
+        return $flat;
+    }
+
+    private function validChargingProfileId(mixed $id): bool
+    {
+        return (is_int($id) || (is_string($id) && ctype_digit($id))) && (int) $id >= 0;
     }
 
     private function flattenVehicleScalars(array $data, string $prefix = ''): array
@@ -317,6 +371,9 @@ trait MySkodaPublicApiVariablesTrait
 
     private function dynamicApiVariableDefinition(string $path, mixed $value): ?array
     {
+        if (str_starts_with($path, 'chargingProfiles.profiles.')) {
+            return $this->chargingProfileVariableDefinition($path, $value);
+        }
         $ident = $this->dynamicApiIdent($path);
         $name = 'API ' . implode(' / ', array_map([$this, 'humanizeApiPathPart'], explode('.', $path)));
         $position = 2000 + (abs((int) crc32($path)) % 100000);
@@ -336,8 +393,171 @@ trait MySkodaPublicApiVariablesTrait
         return null;
     }
 
+    private function chargingProfileVariableDefinition(string $path, mixed $value): ?array
+    {
+        if (preg_match('/^chargingProfiles\.profiles\.([0-9]+)\.(.+)$/', $path, $match) !== 1) {
+            return null;
+        }
+
+        $ident = $this->dynamicApiIdent($path);
+        $field = $match[2];
+        $position = 2000 + min(9999, (int) $match[1]) * 1000;
+        // Keep the saved location ID concise and first for mobile displays.
+        // The descriptive field follows it: LO1 = saved location with API ID 1.
+        $locationPrefix = 'LO' . $match[1] . ' · ';
+        $icon = 'sliders-horizontal';
+        $percent = false;
+        $labels = [
+            'id' => 'Profile ID',
+            'name' => 'Name',
+            'settings.autoUnlockPlugWhenCharged' => 'Unlock plug',
+            'settings.maxChargingCurrent' => 'AC current',
+            'settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent' => 'Min. SOC',
+            'settings.targetStateOfChargeInPercent' => 'Target SOC'
+        ];
+        $positions = [
+            'id' => 0,
+            'name' => 10,
+            'settings.autoUnlockPlugWhenCharged' => 20,
+            'settings.maxChargingCurrent' => 30,
+            'settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent' => 40,
+            'settings.targetStateOfChargeInPercent' => 50
+        ];
+        $icons = [
+            'id' => 'hash',
+            'name' => 'house',
+            'settings.autoUnlockPlugWhenCharged' => 'plug',
+            'settings.maxChargingCurrent' => 'bolt',
+            'settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent' => 'battery-half',
+            'settings.targetStateOfChargeInPercent' => 'battery-full'
+        ];
+
+        if (preg_match('/^(preferredChargingTimes|timers)\.([0-9]+)\.(.+)$/', $field, $child) === 1) {
+            $group = $child[1];
+            $field = $child[3];
+            $childLabels = [
+                'id' => 'ID',
+                'enabled' => 'Active',
+                'startTime' => 'Start',
+                'endTime' => 'End',
+                'type' => 'Type',
+                'recurringOn' => 'Days',
+                'time' => 'Time'
+            ];
+            $childPositions = [
+                'id' => 0, 'enabled' => 1, 'startTime' => 2,
+                'endTime' => 3, 'type' => 2, 'recurringOn' => 3, 'time' => 4
+            ];
+            $childIcons = [
+                'id' => 'hash',
+                'enabled' => $group === 'timers' ? 'calendar-check' : 'clock',
+                'startTime' => 'clock',
+                'endTime' => 'clock',
+                'type' => 'repeat',
+                'recurringOn' => 'calendar-days',
+                'time' => 'clock'
+            ];
+            $fieldParts = explode('.', $field);
+            $fallbackLabel = $this->humanizeApiPathPart((string) end($fieldParts));
+            $shortLabel = isset($childLabels[$field])
+                ? $this->Translate($childLabels[$field])
+                : $fallbackLabel;
+            // "Zeit" = preferred charging time, "Timer" = timer, LO = saved location.
+            $title = $locationPrefix . $shortLabel . ' '
+                . ($group === 'timers' ? 'Timer' : 'Zeit') . $child[2];
+            $position += ($group === 'timers' ? 500 : 200) + min(29, (int) $child[2]) * 10 + ($childPositions[$field] ?? 9);
+            $icon = $childIcons[$field] ?? 'calendar-days';
+        } else {
+            $fieldParts = explode('.', $field);
+            $fallbackLabel = $this->humanizeApiPathPart((string) end($fieldParts));
+            $shortLabel = isset($labels[$field])
+                ? $this->Translate($labels[$field])
+                : $fallbackLabel;
+            $title = $locationPrefix . $shortLabel;
+            $position += $positions[$field] ?? (60 + (abs((int) crc32($field)) % 100));
+            $icon = $icons[$field] ?? 'sliders-horizontal';
+            $percent = in_array($field, [
+                'settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent',
+                'settings.targetStateOfChargeInPercent'
+            ], true);
+        }
+
+        if (is_bool($value)) {
+            return $this->variable($ident, $title, VARIABLETYPE_BOOLEAN, $position,
+                $this->booleanYesNoPresentation(true, $icon));
+        }
+        if (is_int($value)) {
+            return $this->variable($ident, $title, VARIABLETYPE_INTEGER, $position,
+                $this->valuePresentation($icon, $percent ? ' %' : '', 0));
+        }
+        if (is_float($value)) {
+            return $this->variable($ident, $title, VARIABLETYPE_FLOAT, $position,
+                $this->valuePresentation($icon, $percent ? ' %' : '', 2));
+        }
+        if (!is_string($value)) {
+            return null;
+        }
+        if ($field === 'settings.autoUnlockPlugWhenCharged') {
+            return $this->variable($ident, $title, VARIABLETYPE_STRING, $position,
+                $this->publicApiEnumPresentation('plug', [
+                    ['OFF', 'Off', 'lock', -1],
+                    ['ON', 'On', 'lock-open', 0x22C55E],
+                    ['PERMANENT', 'Permanent', 'lock-open', 0x22C55E],
+                    ['UNKNOWN', 'Unknown', 'circle-question', -1]
+                ]));
+        }
+        if ($field === 'settings.maxChargingCurrent') {
+            return $this->variable($ident, $title, VARIABLETYPE_STRING, $position,
+                $this->publicApiEnumPresentation('bolt', [
+                    ['MAXIMUM', 'Maximum', 'bolt', -1],
+                    ['REDUCED', 'Reduced', 'gauge', -1],
+                    ['UNKNOWN', 'Unknown', 'circle-question', -1]
+                ]));
+        }
+        if ($field === 'type') {
+            return $this->variable($ident, $title, VARIABLETYPE_STRING, $position,
+                $this->publicApiEnumPresentation('repeat', [
+                    ['RECURRING', 'Recurring', 'repeat', -1],
+                    ['ONE_TIME', 'One time', 'calendar-days', -1],
+                    ['UNKNOWN', 'Unknown', 'circle-question', -1]
+                ]));
+        }
+        return $this->variable($ident, $title, VARIABLETYPE_STRING, $position,
+            $this->valuePresentation($icon));
+    }
+
     private function dynamicApiIdent(string $path): string
     {
+        if (preg_match('/^chargingProfiles\.profiles\.([0-9]+)\.(.+)$/', $path, $match) === 1) {
+            $known = [
+                'id' => 'ID',
+                'name' => 'Name',
+                'settings.autoUnlockPlugWhenCharged' => 'AutoUnlockPlug',
+                'settings.maxChargingCurrent' => 'MaxChargingCurrent',
+                'settings.minBatteryStateOfCharge.minimumBatteryStateOfChargeInPercent' => 'MinimumSOC',
+                'settings.targetStateOfChargeInPercent' => 'TargetSOC'
+            ];
+            $ident = 'ChargingProfile' . $match[1];
+            $suffix = $match[2];
+            if (isset($known[$suffix])) {
+                $ident .= $known[$suffix];
+            } elseif (preg_match('/^(preferredChargingTimes|timers)\.([0-9]+)\.(.+)$/', $suffix, $child) === 1) {
+                $ident .= ($child[1] === 'timers' ? 'Timer' : 'PreferredTime') . $child[2];
+                $parts = preg_split('/[^A-Za-z0-9]+/', $child[3]) ?: [];
+                foreach ($parts as $part) {
+                    $ident .= $part === 'id' ? 'ID' : ucfirst($part);
+                }
+            } else {
+                $parts = preg_split('/[^A-Za-z0-9]+/', $suffix) ?: [];
+                foreach ($parts as $part) {
+                    $ident .= ucfirst($part);
+                }
+            }
+            return strlen($ident) > 60
+                ? substr($ident, 0, 51) . strtoupper(substr(sha1($path), 0, 8))
+                : $ident;
+        }
+
         $parts = preg_split('/[^A-Za-z0-9]+/', $path) ?: [];
         $ident = 'API';
         foreach ($parts as $part) {
