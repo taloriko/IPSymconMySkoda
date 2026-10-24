@@ -23,7 +23,7 @@ MySkoda verbindet ein Škoda-Fahrzeug über die offizielle MyŠkoda Public API m
 - lokale Fahrzeugbilder aus der gelieferten Render-URL und daraus abgeleiteten verfügbaren Ansichten
 - lokale FIN/VIN-Entschlüsselung mit optionalen String-Variablen
 
-Fahrzeugbezogene Variablen werden angelegt, sobald ihr API-Feld vorhanden und nicht `null` ist. Bereits angelegte Variablen bleiben erhalten. Die Option **Detail- und Diagnosevariablen anlegen** aktiviert zusätzliche Diagnose-/API-Variablen sowie Variablen für gespeicherte Ladeorte mit Einstellungen, Ladezeiten und Timern. Allgemeine Fahrzeug- und Standortwerte bleiben unabhängig davon verfügbar. Die genaue Zuordnung steht in der [Modul-Dokumentation](MySkoda/README.md).
+Fahrzeugbezogene Variablen werden angelegt, sobald ihr API-Feld vorhanden und nicht `null` ist. Bereits angelegte Variablen bleiben erhalten. Unter **Zusätzliche Daten** sind Diagnosevariablen (5–7), gespeicherte Ladeorte (ca. 1–40 oder mehr je Profil) und FIN-Informationen (17) getrennt zuschaltbar. Die Konfiguration zeigt den möglichen Ladeort-Variablenumfang anhand der letzten API-Antwort. Der Fahrzeugkopf zeigt Instanzname, FIN-Endung und ein vorhandenes Fahrzeugbild mit Fallback. Bereits angelegte Variablen bleiben beim Ausschalten erhalten.
 
 Die FIN/VIN-Entschlüsselung ist eine Zusatzfunktion. Details zur Zerlegung, Prüflogik, bekannten Codes und Grenzen stehen separat in [MySkoda/README_FIN_VIN.md](MySkoda/README_FIN_VIN.md).
 

@@ -53,7 +53,8 @@ Anschließend kann unter **Instanz hinzufügen** eine Instanz **MySkoda** angele
 | `EnableRemote` | Remote-Steuerung | an; steuert Standard-Bedienaktionen und die Ausführung von Remote-Befehlen |
 | `ClimateWithoutExternalPower` | Klimatisierung ohne externe Stromversorgung erlauben | an; nur sichtbar und beim Klimastart mitgesendet, wenn `airConditioning.airConditioningWithoutExternalPower` vorhanden und nicht `null` ist |
 | `SPIN` | S-PIN | leer; nur für die separate `auxiliaryHeating`-Standheizung; nicht für normale Klimatisierung oder Laden; sichtbar bei geliefertem Standheizungsstatus oder angebotener Startoperation |
-| `ShowDetails` | Detail- und Diagnosevariablen anlegen | aus; legt zusätzlich Diagnose-/API-Variablen sowie gespeicherte Ladeorte mit Einstellungen, Ladezeitfenstern und Timern als Einzelvariablen mit Symcon-Darstellungen an |
+| `ShowDetails` | Diagnose-/API-Statusvariablen | aus; 5–7 Diagnosevariablen |
+| `ShowChargingLocations` | Gespeicherte Ladeorte als Variablen | aus; etwa 1–40 Variablen je Ladeort, bei vielen Timern mehr |
 | `CreateVINVariables` | FIN-Informationsvariablen anlegen | aus; legt 17 lokale String-Variablen an |
 | `EnableChargingHistory` | Fahrzeugdaten archivieren | aus; richtet Logging einmalig ein, sobald alle vier benötigten Variablen vorhanden sind; siehe Abschnitt 10 |
 | `NotifyKeyExpiry` | API-Key-Ablaufwarnung | aus; Mitteilung bei höchstens 30 Tagen Restlaufzeit |
@@ -77,11 +78,17 @@ Im Formular ist zunächst nur **Verbindung** aufgeklappt. Weitere Einstellungen 
 
 ### Bedeutung von „Detail- und Diagnosevariablen anlegen“
 
-`ShowDetails` wird für normale Fahrzeugdaten und Remote-Befehle nicht benötigt. Fahrzeugname, Kennzeichen, Parkadresse, Koordinaten, Türen, Fenster und allgemeine Lade-/Klimadetails werden unabhängig von dieser Option angelegt. Zusätzlich schaltet die Option die Einzelvariablen für gespeicherte Ladeorte frei.
+`ShowDetails` wird für normale Fahrzeugdaten und Remote-Befehle nicht benötigt. Fahrzeugname, Kennzeichen, Parkadresse, Koordinaten, Türen, Fenster und allgemeine Lade-/Klimadetails werden unabhängig von dieser Option angelegt. Gespeicherte Ladeorte haben einen eigenen, unabhängigen Schalter `ShowChargingLocations`.
 
 Die Option steuert die Erstanlage von `ApiKeyExpiresAtVar`, `RequestsRemaining`, `PartialErrors`, `PendingCommands` und `CommandStatus`. Sobald ein Fahrzeugdatensatz vorliegt, kommen `APISupportedFeatures` und bei geliefertem `charging.settings.availableChargeModes` zusätzlich `APIAvailableChargeModes` hinzu. Die Daten dienen Diagnose, Befehlsrückmeldung und Übersicht über die API. Die eigentlichen Fahrzeugabfragen, Kontingentverwaltung und Befehlsverarbeitung verwenden interne Attribute und funktionieren auch ohne diese sichtbaren Variablen.
 
-Das Ausschalten der Option entfernt oder versteckt bereits angelegte Variablen nicht. Auch bestehende Ladeortdetails werden bei weiteren Fahrzeugantworten aktualisiert; neue Ladeort-Variablen entstehen bei ausgeschalteter Option nicht. `LastUpdate` und `ApiKeyWarning` sind unabhängig von der Option vorhanden. Der normale Datenpunkt `APIChargingSettingsAvailableChargeModes` ist ebenfalls unabhängig von ihr und wird bei geliefertem API-Feld angelegt.
+Das Ausschalten der Option entfernt oder versteckt bereits angelegte Variablen nicht. Bereits angelegte Ladeortdetails bleiben erhalten und werden weiter aktualisiert; neue Ladeort-Variablen entstehen nur bei aktiviertem `ShowChargingLocations`. `LastUpdate` und `ApiKeyWarning` sind unabhängig von der Option vorhanden. Der normale Datenpunkt `APIChargingSettingsAvailableChargeModes` ist ebenfalls unabhängig von ihr und wird bei geliefertem API-Feld angelegt.
+
+### Zusatzdaten und Fahrzeugkopf
+
+Unter **Zusätzliche Daten** gibt es drei unabhängige Schalter: Diagnose (5–7 Variablen), gespeicherte Ladeorte (ca. 1–40 oder mehr pro Ladeort) und FIN-Informationen (17 Variablen). Eine Übersicht zeigt die Richtwerte. Für Ladeorte wird zusätzlich anhand der zuletzt gespeicherten API-Antwort die konkrete Zahl möglicher und noch nicht angelegter Variablen angezeigt. Bereits vorhandene Variablen werden bei Abschalten nicht gelöscht.
+
+Oben im Konfigurationsformular zeigt eine Kopfzeile Instanzname und FIN-Endung. Bei einem zur VIN passenden, bereits gespeicherten Fahrzeugbild wird zuerst das Basisbild `VehicleImage`, ansonsten die erste verfügbare andere Ansicht eingeblendet. Fehlt ein geeignetes Bild, bleibt die Textüberschrift. Das Öffnen des Formulars löst keinen Bilddownload aus.
 
 ## 4. Variablen und Objektverwaltung
 
@@ -197,13 +204,13 @@ Diese Werte werden aus den zuletzt empfangenen API-Daten aktualisiert; sie sind 
 
 ### 4.5 Zusätzliche automatisch erkannte API-Felder
 
-Nicht bereits zugeordnete skalare API-Felder werden unabhängig von `ShowDetails` als weitere Variablen angelegt. Der Datentyp wird aus dem gelieferten JSON-Wert abgeleitet: Boolean, Integer, Float oder String. Nicht leere Listen aus einfachen Werten werden als durch Kommas getrennter String zusammengefasst. `null`, leere Listen und sonstige Listen mit Objekten werden nicht als generische Einzelvariablen übernommen. Verschachtelte Objekte werden bis zu ihren skalaren Feldern durchlaufen. Eine Ausnahme bei aktiviertem `ShowDetails` sind gespeicherte Ladeprofile.
+Nicht bereits zugeordnete skalare API-Felder werden unabhängig von `ShowDetails` als weitere Variablen angelegt. Der Datentyp wird aus dem gelieferten JSON-Wert abgeleitet: Boolean, Integer, Float oder String. Nicht leere Listen aus einfachen Werten werden als durch Kommas getrennter String zusammengefasst. `null`, leere Listen und sonstige Listen mit Objekten werden nicht als generische Einzelvariablen übernommen. Verschachtelte Objekte werden bis zu ihren skalaren Feldern durchlaufen. Eine Ausnahme bei aktiviertem `ShowChargingLocations` sind gespeicherte Ladeprofile.
 
 Der Ident beginnt mit `API` und wird aus den Teilen des API-Pfades zusammengesetzt, beispielsweise `APIAirConditioningAirConditioningWithoutExternalPower`. Sehr lange Idents werden gekürzt und durch einen Hash ergänzt. Der Anzeigename wird aus dem API-Pfad abgeleitet und ist nicht zwangsläufig deutsch. Die Position wird aus dem Pfad berechnet und liegt zwischen 2000 und 101999; diese Zusatzfelder folgen deshalb nicht der Reihenfolge der API-Antwort.
 
 Bereits bekannte Quellfelder sowie `renderUrl`, `operations`, `remoteOperations` und untergeordnete `carCapturedTimestamp`-Felder werden nicht zusätzlich generisch angelegt. Eine automatische Variable ist ein Lesewert und erhält durch ihre Erkennung keinen Schreibbefehl. Ihre Einheit wird nicht automatisch umgerechnet.
 
-**Erweiterte Ladeortdetails ab 1.9:** Bei aktiviertem `ShowDetails` werden aus `chargingProfiles.profiles` die gelieferten skalaren Werte je Ladeort als Symcon-Variablen angelegt: Profil-ID, Name, Ladeeinstellungen sowie bevorzugte Ladezeiten und Timer mit Aktivierung, Uhrzeiten und Wochentagen. Die Profil-, Zeitfenster- und Timer-IDs bilden stabile Idents unabhängig von der Reihenfolge in der API-Antwort. Jedes neu angelegte Feld erhält eine passende Symcon-Darstellung und ein Icon (z. B. Haus, Batterie mit Prozentangabe, Stecker, Uhr, Kalender oder Wiederholung). Beispiel für Profil-ID 1:
+**Erweiterte Ladeortdetails ab 1.9:** Bei aktiviertem `ShowChargingLocations` werden aus `chargingProfiles.profiles` die gelieferten skalaren Werte je Ladeort als Symcon-Variablen angelegt: Profil-ID, Name, Ladeeinstellungen sowie bevorzugte Ladezeiten und Timer mit Aktivierung, Uhrzeiten und Wochentagen. Die Profil-, Zeitfenster- und Timer-IDs bilden stabile Idents unabhängig von der Reihenfolge in der API-Antwort. Jedes neu angelegte Feld erhält eine passende Symcon-Darstellung und ein Icon (z. B. Haus, Batterie mit Prozentangabe, Stecker, Uhr, Kalender oder Wiederholung). Beispiel für Profil-ID 1:
 
 | Variablen-Ident | Bedeutung |
 |---|---|
@@ -221,7 +228,7 @@ Bereits bekannte Quellfelder sowie `renderUrl`, `operations`, `remoteOperations`
 | `APIChargingProfile1Timer1RecurringOn` | Wochentage |
 | `APIChargingProfile1Timer1Time` | Uhrzeit des Timers |
 
-Ohne aktivierte Option stehen die Profile weiterhin vollständig als JSON über `MSKODA_GetChargingProfiles` zur Verfügung. Bereits angelegte Variablen bleiben bei Deaktivierung erhalten und werden weiter aktualisiert. `AtSavedChargingLocation` sagt lediglich aus, **ob** sich das Fahrzeug an einem gespeicherten Ladeort befindet; der Name des tatsächlich aktiven Ladeorts lässt sich bei mehreren Profilen daraus allein nicht bestimmen.
+Ohne aktiviertes `ShowChargingLocations` stehen die Profile weiterhin vollständig als JSON über `MSKODA_GetChargingProfiles` zur Verfügung. Bereits angelegte Variablen bleiben bei Deaktivierung erhalten und werden weiter aktualisiert. `AtSavedChargingLocation` sagt lediglich aus, **ob** sich das Fahrzeug an einem gespeicherten Ladeort befindet; der Name des tatsächlich aktiven Ladeorts lässt sich bei mehreren Profilen daraus allein nicht bestimmen.
 
 ## 5. Zustände und Einheiten
 

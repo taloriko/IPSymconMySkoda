@@ -139,6 +139,11 @@ $m->ApplyChanges();
 check($m->registrations === 24, 'Only technical/detail and VIN variables exist before vehicle data is received.');
 check(count($GLOBALS['objects']) === 24, 'No duplicate identifiers.');
 check(json_decode($m->GetConfigurationForm(), true) !== null, 'Configuration form must remain valid JSON.');
+$form = json_decode($m->GetConfigurationForm(), true);
+check($form['elements'][0]['type'] === 'RowLayout', 'Vehicle header appears first.');
+check(invoke($m, 'vehicleConfigurationMediaId') === false, 'Missing vehicle media falls back to text.');
+check(count(invoke($m, 'optionalVariableOverview')) === 3, 'Three optional categories listed.');
+check($m->ReadPropertyBoolean('ShowChargingLocations') === false, 'Saved locations are disabled by default.');
 
 // User-owned metadata must survive repeated configuration and data updates.
 foreach ($GLOBALS['objects'] as &$object) {

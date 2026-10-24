@@ -132,10 +132,14 @@ $vehicle['chargingProfiles'] = [
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
 check($m->GetValue('AtSavedChargingLocation') === true, 'Basic saved location is independent of details.');
-check($m->GetIDForIdent('APIChargingProfile1Name') === false, 'No profile variables with details disabled.');
+check($m->GetIDForIdent('APIChargingProfile1Name') === false, 'No profile variables with saved locations disabled.');
+$m->properties['ShowDetails'] = true;
+invoke($m, 'updatePublicApiValuesFromRawData');
+check($m->GetIDForIdent('APIChargingProfile1Name') === false, 'Diagnostics must not create charging locations.');
 check(json_decode($m->GetChargingProfiles(), true)['profiles'][0]['name'] === 'Home', 'Full profiles remain readable.');
 
-$m->properties['ShowDetails'] = true;
+$m->properties['ShowDetails'] = false;
+$m->properties['ShowChargingLocations'] = true;
 invoke($m, 'updatePublicApiValuesFromRawData');
 $expectedProfiles = [
     'APIChargingProfile1ID' => 1,
@@ -178,7 +182,7 @@ check($m->GetValue('APIChargingProfile1Timer1Time') === '08:00', 'Timer ID survi
 check($m->registrations === $registrations, 'No duplicate profile variables.');
 check($GLOBALS['objects'][$varId]['ObjectName'] === 'Own label', 'User-owned metadata preserved.');
 
-$m->properties['ShowDetails'] = false;
+$m->properties['ShowChargingLocations'] = false;
 $vehicle['chargingProfiles']['profiles'][] = ['id' => 2, 'name' => 'New location'];
 $vehicle['chargingProfiles']['profiles'][1]['name'] = 'Home again';
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
