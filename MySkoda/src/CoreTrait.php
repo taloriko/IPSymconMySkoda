@@ -243,6 +243,7 @@ trait MySkodaCoreTrait
      */
     private function prependVehicleConfigurationHeader(array $elements): array
     {
+        // The instance name belongs to this individual Symcon instance.
         $instanceName = trim((string) IPS_GetName($this->InstanceID));
         if ($instanceName === '') {
             $instanceName = (string) $this->InstanceID;
@@ -255,27 +256,31 @@ trait MySkodaCoreTrait
         $receivedVIN = strtoupper(trim((string) ($vehicle['vin'] ?? '')));
         if ($configuredVIN !== '' && $configuredVIN === $receivedVIN) {
             $vehicleName = trim((string) ($vehicle['name'] ?? ''));
+            $licensePlate = trim((string) ($vehicle['licensePlate'] ?? ''));
+
             if ($vehicleName !== '' && strcasecmp($vehicleName, $instanceName) !== 0) {
                 $caption .= ' | ' . $vehicleName;
             }
+            if ($licensePlate !== '') {
+                $caption .= ' | ' . $licensePlate;
+            }
         }
 
-        if ($configuredVIN !== '') {
-            $caption .= ' | FIN ...' . substr($configuredVIN, -6);
-        }
-
-        $items = [['type' => 'Label', 'caption' => $caption, 'bold' => true]];
+        $header = [];
         $mediaId = $this->vehicleConfigurationMediaId();
         if ($mediaId !== false) {
-            array_unshift($items, [
+            // Image.center is only effective outside RowLayout.
+            $header[] = [
                 'type' => 'Image',
                 'name' => 'VehicleConfigurationImage',
                 'mediaID' => $mediaId,
-                'width' => '120px'
-            ]);
+                'center' => true,
+                'width' => '240px'
+            ];
         }
+        $header[] = ['type' => 'Label', 'caption' => $caption, 'bold' => true];
 
-        array_unshift($elements, ['type' => 'RowLayout', 'items' => $items]);
+        array_unshift($elements, ...$header);
         return $elements;
     }
 
