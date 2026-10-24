@@ -256,7 +256,27 @@
       "Charging rate": "Ladegeschwindigkeit",
       "Maximum AC charging current in ampere": "Maximaler AC-Ladestrom",
       "Available charging modes": "Verfügbare Lademodi",
-      "Estimated target temperature reached at": "Voraussichtliche Zieltemperatur erreicht um"
+      "Estimated target temperature reached at": "Voraussichtliche Zieltemperatur erreicht um",
+      "Choose optional variables separately. Actual creation depends on API data; disabling an option preserves existing variables.": "Zusätzliche Variablen können unabhängig voneinander aktiviert werden. Die tatsächliche Anlage hängt von den API-Daten ab; beim Abschalten bleiben bestehende Variablen erhalten.",
+      "Optional variable overview": "Übersicht der Zusatzvariablen",
+      "Area": "Bereich",
+      "Estimated variables": "Zusätzliche Variablen (ca.)",
+      "Contents": "Inhalt",
+      "Diagnosis and API status": "Diagnose / API-Status",
+      "API key, quota, partial errors, remote commands": "API-Schlüssel, Kontingent, Teilfehler, Befehle",
+      "Saved charging locations": "Gespeicherte Ladeorte",
+      "approx. 1-40 per location": "ca. 1–40 je Ladeort*",
+      "Name, charge settings, preferred times, timers": "Name, Ladeeinstellungen, Ladezeiten, Timer",
+      "VIN information": "FIN-Informationen",
+      "Locally decoded vehicle information": "Lokal interpretierte FIN-Daten",
+      "Create diagnostic and API status variables (5-7)": "Diagnose- und API-Statusvariablen anlegen (5–7)",
+      "Shows API key expiry, quota, partial errors, command status and available API functions.": "Zeigt API-Schlüsselgültigkeit, Kontingent, Teilfehler, Befehlsstatus und verfügbare API-Funktionen.",
+      "Create saved charging location variables": "Ladeorte als zusätzliche Variablen anlegen",
+      "Includes saved profile names, charging settings, preferred charging times and timers. Each available field receives a Symcon icon and presentation.": "Zeigt je Ladeort Namen, Ladeeinstellungen, bevorzugte Ladezeiten und Timer. Jedes gelieferte Feld erhält ein Symcon-Icon und eine passende Darstellung. *Mehr als 40 Felder je Ladeort sind möglich.",
+      "No charging locations have been received yet; variable count is unknown.": "Noch keine Ladeorte aus der API erhalten; Variablenzahl unbekannt.",
+      "Last API response: %d locations, %d possible variables, %d not yet created.": "Letzte API-Antwort: %d Ladeort(e), %d mögliche Variablen, davon %d noch nicht angelegt.",
+      "Create VIN information variables (17)": "FIN-Informationsvariablen anlegen (17)",
+      "Adds 17 locally decoded information variables; the VIN decoder below is available independently of this option.": "Legt 17 lokal interpretierte FIN-Informationsvariablen an. Die FIN-Auswertung weiter unten ist auch ohne diese Option verfügbar."
     }
   }
 }

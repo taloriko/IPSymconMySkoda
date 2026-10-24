@@ -235,7 +235,7 @@ trait MySkodaPublicApiVariablesTrait
             $known[$path] = true;
         }
 
-        foreach ($this->flattenDynamicApiScalars($vehicle, $this->ReadPropertyBoolean('ShowDetails')) as $path => $value) {
+        foreach ($this->flattenDynamicApiScalars($vehicle, $this->ReadPropertyBoolean('ShowChargingLocations')) as $path => $value) {
             if (isset($known[$path]) || str_ends_with($path, '.carCapturedTimestamp')) {
                 continue;
             }

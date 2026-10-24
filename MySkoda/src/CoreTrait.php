@@ -16,6 +16,7 @@ trait MySkodaCoreTrait
         $this->RegisterPropertyBoolean('ClimateWithoutExternalPower', true);
         $this->RegisterPropertyString('SPIN', '');
         $this->RegisterPropertyBoolean('ShowDetails', false);
+        $this->RegisterPropertyBoolean('ShowChargingLocations', false);
         $this->RegisterPropertyBoolean('EnableChargingHistory', false);
         $this->RegisterPropertyBoolean('NotifyKeyExpiry', false);
         $this->RegisterPropertyInteger('NotificationInstanceID', 0);
@@ -113,6 +114,7 @@ trait MySkodaCoreTrait
         $validVisualizationModules = $this->getVisualizationModuleIds();
 
         if (isset($form['elements']) && is_array($form['elements'])) {
+            $form['elements'] = $this->prependVehicleConfigurationHeader($form['elements']);
             $this->prepareConfigurationElements(
                 $form['elements'],
                 $connectionCaption,
@@ -235,6 +237,120 @@ trait MySkodaCoreTrait
         return true;
     }
 
+    /**
+     * Uses existing, vehicle-matched media only; opening the configuration
+     * never downloads images or creates new media objects.
+     */
+    private function prependVehicleConfigurationHeader(array $elements): array
+    {
+        $instanceName = trim((string) IPS_GetName($this->InstanceID));
+        if ($instanceName === '') {
+            $instanceName = (string) $this->InstanceID;
+        }
+
+        $caption = 'MySkoda - ' . $instanceName;
+        $configuredVIN = strtoupper(trim($this->ReadPropertyString('VIN')));
+        $raw = json_decode($this->ReadAttributeString('RawData'), true);
+        $vehicle = is_array($raw) && is_array($raw['vehicle'] ?? null) ? $raw['vehicle'] : [];
+        $receivedVIN = strtoupper(trim((string) ($vehicle['vin'] ?? '')));
+        if ($configuredVIN !== '' && $configuredVIN === $receivedVIN) {
+            $vehicleName = trim((string) ($vehicle['name'] ?? ''));
+            if ($vehicleName !== '' && strcasecmp($vehicleName, $instanceName) !== 0) {
+                $caption .= ' | ' . $vehicleName;
+            }
+        }
+
+        if ($configuredVIN !== '') {
+            $caption .= ' | FIN ...' . substr($configuredVIN, -6);
+        }
+
+        $items = [['type' => 'Label', 'caption' => $caption, 'bold' => true]];
+        $mediaId = $this->vehicleConfigurationMediaId();
+        if ($mediaId !== false) {
+            array_unshift($items, [
+                'type' => 'Image',
+                'name' => 'VehicleConfigurationImage',
+                'mediaID' => $mediaId,
+                'width' => '120px'
+            ]);
+        }
+
+        array_unshift($elements, ['type' => 'RowLayout', 'items' => $items]);
+        return $elements;
+    }
+
+    private function vehicleConfigurationMediaId(): int|false
+    {
+        $idents = [self::VEHICLE_IMAGE_IDENT];
+        foreach (self::VEHICLE_IMAGE_VARIANTS as $variant) {
+            $idents[] = (string) $variant['ident'];
+        }
+
+        foreach ($idents as $ident) {
+            $mediaId = $this->vehicleImageMediaId($ident);
+            if ($mediaId !== false && $this->vehicleImageBelongsToCurrentVehicle($mediaId)) {
+                return $mediaId;
+            }
+        }
+        return false;
+    }
+
+    private function chargingLocationVariableEstimateCaption(): string
+    {
+        $raw = json_decode($this->ReadAttributeString('RawData'), true);
+        $vehicle = is_array($raw) && is_array($raw['vehicle'] ?? null) ? $raw['vehicle'] : [];
+        $profiles = $this->path($vehicle, 'chargingProfiles.profiles', null);
+        if (!is_array($profiles)) {
+            return $this->Translate('No charging locations have been received yet; variable count is unknown.');
+        }
+
+        $ids = [];
+        foreach ($profiles as $profile) {
+            if (is_array($profile) && $this->validChargingProfileId($profile['id'] ?? null)) {
+                $ids[(string) (int) $profile['id']] = true;
+            }
+        }
+
+        $scalars = $this->flattenChargingProfileScalars($vehicle);
+        $missing = 0;
+        foreach ($scalars as $path => $value) {
+            if (str_ends_with($path, '.carCapturedTimestamp')) {
+                continue;
+            }
+            if (@$this->GetIDForIdent($this->dynamicApiIdent($path)) === false) {
+                $missing++;
+            }
+        }
+
+        return sprintf(
+            $this->Translate('Last API response: %d locations, %d possible variables, %d not yet created.'),
+            count($ids),
+            count($scalars),
+            $missing
+        );
+    }
+
+    private function optionalVariableOverview(): array
+    {
+        return [
+            [
+                'Area' => $this->Translate('Diagnosis and API status'),
+                'Quantity' => '5-7',
+                'Content' => $this->Translate('API key, quota, partial errors, remote commands')
+            ],
+            [
+                'Area' => $this->Translate('Saved charging locations'),
+                'Quantity' => $this->Translate('approx. 1-40 per location'),
+                'Content' => $this->Translate('Name, charge settings, preferred times, timers')
+            ],
+            [
+                'Area' => $this->Translate('VIN information'),
+                'Quantity' => '17',
+                'Content' => $this->Translate('Locally decoded vehicle information')
+            ]
+        ];
+    }
+
     private function prepareConfigurationElements(
         array &$elements,
         string $connectionCaption,
@@ -253,6 +369,11 @@ trait MySkodaCoreTrait
                 $element['validModules'] = $validVisualizationModules;
             } elseif ($name === 'NotificationTargetFeedback') {
                 $element['caption'] = $notificationCaption;
+            } elseif ($name === 'ChargingLocationVariableEstimate') {
+                $element['caption'] = $this->chargingLocationVariableEstimateCaption();
+            } elseif (($element['type'] ?? '') === 'List'
+                && ($element['caption'] ?? '') === 'Optional variable overview') {
+                $element['values'] = $this->optionalVariableOverview();
             } elseif ($name === 'ClimateWithoutExternalPower') {
                 $element['visible'] = $this->vehicleProvidesValue('airConditioning.airConditioningWithoutExternalPower');
             } elseif ($name === 'SPIN') {
