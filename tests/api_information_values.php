@@ -184,10 +184,10 @@ $compactNames = [
     'ChargingProfile1PreferredTime1Enabled' => 'LO1 · Active Zeit1',
     'ChargingProfile1PreferredTime1StartTime' => 'LO1 · Start Zeit1',
     'ChargingProfile1PreferredTime1EndTime' => 'LO1 · End Zeit1',
-    'ChargingProfile1Timer1Enabled' => 'LO1 · Active T1',
-    'ChargingProfile1Timer1Type' => 'LO1 · Type T1',
-    'ChargingProfile1Timer1RecurringOn' => 'LO1 · Days T1',
-    'ChargingProfile1Timer1Time' => 'LO1 · Time T1',
+    'ChargingProfile1Timer1Enabled' => 'LO1 · Active Timer1',
+    'ChargingProfile1Timer1Type' => 'LO1 · Type Timer1',
+    'ChargingProfile1Timer1RecurringOn' => 'LO1 · Days Timer1',
+    'ChargingProfile1Timer1Time' => 'LO1 · Time Timer1',
     'ChargingProfile3Name' => 'LO3 · Name',
     'ChargingProfile3TargetSOC' => 'LO3 · Target SOC'
 ];

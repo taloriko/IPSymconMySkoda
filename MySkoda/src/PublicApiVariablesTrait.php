@@ -462,9 +462,9 @@ trait MySkodaPublicApiVariablesTrait
             $shortLabel = isset($childLabels[$field])
                 ? $this->Translate($childLabels[$field])
                 : $fallbackLabel;
-            // "Zeit" = preferred charging time, T = timer, LO = saved location.
+            // "Zeit" = preferred charging time, "Timer" = timer, LO = saved location.
             $title = $locationPrefix . $shortLabel . ' '
-                . ($group === 'timers' ? 'T' : 'Zeit') . $child[2];
+                . ($group === 'timers' ? 'Timer' : 'Zeit') . $child[2];
             $position += ($group === 'timers' ? 500 : 200) + min(29, (int) $child[2]) * 10 + ($childPositions[$field] ?? 9);
             $icon = $childIcons[$field] ?? 'calendar-days';
         } else {
