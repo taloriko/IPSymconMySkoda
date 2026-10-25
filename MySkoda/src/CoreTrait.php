@@ -42,6 +42,10 @@ trait MySkodaCoreTrait
         $this->RegisterAttributeString('DisabledServicesNotifiedSignature', '');
         $this->RegisterAttributeString('DisabledServicesLastAttemptSignature', '');
         $this->RegisterAttributeInteger('DisabledServicesLastAttemptAt', 0);
+        $this->RegisterAttributeBoolean('DisabledServicesNotificationSent', false);
+        $this->RegisterAttributeString('DisabledServicesPendingRecovery', '');
+        $this->RegisterAttributeInteger('DisabledServicesNotificationLastAttempt', 0);
+        $this->RegisterAttributeInteger('DisabledServicesNotificationSentAt', 0);
         $this->RegisterAttributeBoolean('ChargingHistoryInitialized', false);
 
         $this->RegisterTimer('UpdateTimer', 0, 'MSKODA_Update($_IPS[\'TARGET\']);');
@@ -71,6 +75,10 @@ trait MySkodaCoreTrait
             $this->WriteAttributeString('DisabledServicesNotifiedSignature', '');
             $this->WriteAttributeString('DisabledServicesLastAttemptSignature', '');
             $this->WriteAttributeInteger('DisabledServicesLastAttemptAt', 0);
+            $this->WriteAttributeBoolean('DisabledServicesNotificationSent', false);
+            $this->WriteAttributeString('DisabledServicesPendingRecovery', '');
+            $this->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', 0);
+            $this->WriteAttributeInteger('DisabledServicesNotificationSentAt', 0);
             $this->updateKeyExpiryWarning();
             $this->setConnectionFeedback(
                 'not_configured',
@@ -93,6 +101,10 @@ trait MySkodaCoreTrait
             $this->WriteAttributeString('DisabledServicesNotifiedSignature', '');
             $this->WriteAttributeString('DisabledServicesLastAttemptSignature', '');
             $this->WriteAttributeInteger('DisabledServicesLastAttemptAt', 0);
+            $this->WriteAttributeBoolean('DisabledServicesNotificationSent', false);
+            $this->WriteAttributeString('DisabledServicesPendingRecovery', '');
+            $this->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', 0);
+            $this->WriteAttributeInteger('DisabledServicesNotificationSentAt', 0);
         }
 
         $this->updateKeyExpiryWarning();
