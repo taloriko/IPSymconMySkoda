@@ -98,6 +98,12 @@ trait MySkodaCoreTrait
         $this->updateKeyExpiryWarning();
         $this->validateNotificationTarget(false);
 
+        // Also notify about previously received disabled-service errors on
+        // upgrades or when a notification destination is configured later.
+        if (!$configurationChanged) {
+            $this->updateDisabledVehicleServicesFromStoredData();
+        }
+
         if ($configurationChanged || $this->ReadAttributeString('RawData') === '') {
             $this->setConnectionFeedback(
                 'checking',
