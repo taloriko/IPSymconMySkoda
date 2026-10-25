@@ -5,6 +5,11 @@ declare(strict_types=1);
 trait MySkodaNotificationTrait
 {
     private const KEY_WARNING_SECONDS = 30 * 86400;
+    private const DISABLED_VEHICLE_SERVICES = [
+        'VEHICLE_STATUS_DISABLED' => 'Vehicle status (doors, windows and locking)',
+        'ODOMETER_DISABLED' => 'Odometer reading',
+        'PARKING_POSITION_DISABLED' => 'Parking position and address'
+    ];
 
     public function TestNotification(): bool
     {
@@ -58,6 +63,112 @@ trait MySkodaNotificationTrait
             $text
         )) {
             $this->WriteAttributeInteger('KeyExpiryNotifiedFor', $expiry);
+        }
+    }
+
+    /**
+     * The Public API can return a valid vehicle response with partial errors.
+     * These codes mean Škoda has disabled the corresponding services, not
+     * that the local API key itself has expired.
+     */
+    private function disabledVehicleServiceCodes(array $envelope): array
+    {
+        $errors = $envelope['errors'] ?? [];
+        if (!is_array($errors)) {
+            return [];
+        }
+
+        $received = [];
+        foreach ($errors as $error) {
+            if (!is_array($error) || !is_string($error['type'] ?? null)) {
+                continue;
+            }
+            $type = strtoupper(trim($error['type']));
+            if (array_key_exists($type, self::DISABLED_VEHICLE_SERVICES)) {
+                $received[$type] = true;
+            }
+        }
+
+        // Stable order is important for one-time notification deduplication.
+        return array_values(array_filter(
+            array_keys(self::DISABLED_VEHICLE_SERVICES),
+            static fn (string $code): bool => isset($received[$code])
+        ));
+    }
+
+    private function disabledVehicleServiceNoticeText(array $codes): string
+    {
+        $names = [];
+        foreach ($codes as $code) {
+            if (isset(self::DISABLED_VEHICLE_SERVICES[$code])) {
+                $names[] = $this->Translate(self::DISABLED_VEHICLE_SERVICES[$code]);
+            }
+        }
+        return sprintf(
+            $this->Translate('Skoda has disabled these vehicle services: %s. The affected information is not being updated; existing values may be outdated. A possible reason is an expired Car Connect remote access service.'),
+            implode(', ', $names)
+        );
+    }
+
+    /**
+     * Use only the last successfully fetched response for the configured VIN.
+     * A VIN change must not show the previous vehicle's warning.
+     */
+    private function disabledVehicleServiceWarningCaption(): string
+    {
+        $raw = json_decode($this->ReadAttributeString('RawData'), true);
+        if (!is_array($raw)) {
+            return '';
+        }
+
+        $configuredVin = strtoupper(trim($this->ReadPropertyString('VIN')));
+        $receivedVin = strtoupper(trim((string) ($raw['vehicle']['vin'] ?? '')));
+        if ($configuredVin === '' || $receivedVin !== $configuredVin) {
+            return '';
+        }
+
+        $codes = $this->disabledVehicleServiceCodes($raw);
+        return $codes === [] ? '' : '⚠️ ' . $this->disabledVehicleServiceNoticeText($codes);
+    }
+
+    /**
+     * A successful API response is required before clearing a previous alert.
+     * The message is sent once per disabled-service combination, and a failed
+     * delivery is retried no more often than once per day.
+     */
+    private function updateDisabledVehicleServices(array $envelope): void
+    {
+        $codes = $this->disabledVehicleServiceCodes($envelope);
+        $signature = implode('|', $codes);
+        if ($signature === '') {
+            $this->WriteAttributeString('DisabledServicesNotifiedSignature', '');
+            $this->WriteAttributeString('DisabledServicesLastAttemptSignature', '');
+            $this->WriteAttributeInteger('DisabledServicesLastAttemptAt', 0);
+            return;
+        }
+
+        if (!$this->ReadPropertyBoolean('NotifyKeyExpiry') || !$this->validateNotificationTarget(false)) {
+            return;
+        }
+        if ($this->ReadAttributeString('DisabledServicesNotifiedSignature') === $signature) {
+            return;
+        }
+
+        $lastAttemptSignature = $this->ReadAttributeString('DisabledServicesLastAttemptSignature');
+        $lastAttemptAt = $this->ReadAttributeInteger('DisabledServicesLastAttemptAt');
+        if ($lastAttemptSignature === $signature && $lastAttemptAt > 0 && time() - $lastAttemptAt < 86400) {
+            return;
+        }
+
+        $this->WriteAttributeString('DisabledServicesLastAttemptSignature', $signature);
+        $this->WriteAttributeInteger('DisabledServicesLastAttemptAt', time());
+
+        if ($this->sendSymconNotification(
+            $this->ReadPropertyInteger('NotificationInstanceID'),
+            $this->Translate('MySkoda: Vehicle services disabled'),
+            $this->disabledVehicleServiceNoticeText($codes)
+        )) {
+            $this->WriteAttributeString('DisabledServicesNotifiedSignature', $signature);
         }
     }
 
