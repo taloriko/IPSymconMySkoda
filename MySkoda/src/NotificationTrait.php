@@ -147,7 +147,9 @@ trait MySkodaNotificationTrait
             return;
         }
 
-        if (!$this->ReadPropertyBoolean('NotifyKeyExpiry') || !$this->validateNotificationTarget(false)) {
+        // Service availability alerts use the configured visualization. The
+        // API-key expiry checkbox must not suppress unrelated service alerts.
+        if (!$this->validateNotificationTarget(false)) {
             return;
         }
         if ($this->ReadAttributeString('DisabledServicesNotifiedSignature') === $signature) {
@@ -170,6 +172,28 @@ trait MySkodaNotificationTrait
         )) {
             $this->WriteAttributeString('DisabledServicesNotifiedSignature', $signature);
         }
+    }
+
+    /**
+     * Recheck the last valid response after module/configuration updates.
+     * The API may already have reported disabled services before this
+     * feature or notification target was configured. Never send a warning
+     * for cached data belonging to a different configured vehicle.
+     */
+    private function updateDisabledVehicleServicesFromStoredData(): void
+    {
+        $raw = json_decode($this->ReadAttributeString('RawData'), true);
+        if (!is_array($raw) || !is_array($raw['vehicle'] ?? null)) {
+            return;
+        }
+
+        $configuredVin = strtoupper(trim($this->ReadPropertyString('VIN')));
+        $responseVin = strtoupper(trim((string) ($raw['vehicle']['vin'] ?? '')));
+        if ($configuredVin === '' || $responseVin !== $configuredVin) {
+            return;
+        }
+
+        $this->updateDisabledVehicleServices($raw);
     }
 
     private function getVisualizationModuleIds(): array
