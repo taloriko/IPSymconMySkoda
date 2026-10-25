@@ -76,7 +76,6 @@
       "Archive vehicle data": "Fahrzeugdaten archivieren",
       "After explicit activation, archive logging is configured once for state of charge, charging limit, charging power and mileage. Later Archive Control changes remain untouched.": "Nach ausdrücklicher Aktivierung wird die Archivierung für Ladezustand, Ladelimit, Ladeleistung und Kilometerstand einmalig eingerichtet. Spätere Änderungen im Archive Control bleiben unberührt.",
       "Notifications": "Mitteilungen",
-      "Send a Symcon notification when the API key has 30 days or less remaining": "Symcon-Mitteilung senden, wenn der API-Key höchstens noch 30 Tage gültig ist",
       "Visualization for notifications": "Visualisierung für Mitteilungen",
       "Select a Tile Visualization or WebFront for notifications.": "Kachel-Visualisierung oder WebFront für Mitteilungen auswählen.",
       "Additional data": "Zusätzliche Daten",
@@ -286,7 +285,13 @@
       "Start": "Start",
       "End": "Ende",
       "Type": "Typ",
-      "Days": "Tage"
+      "Days": "Tage",
+      "Notify about API key expiry and Skoda-disabled vehicle services": "Mitteilung bei API-Key-Ablauf oder von Škoda deaktivierten Fahrzeugdiensten senden",
+      "Vehicle status (doors, windows and locking)": "Fahrzeugstatus (Türen, Fenster und Verriegelung)",
+      "Odometer reading": "Kilometerstand",
+      "Parking position and address": "Parkposition und Parkadresse",
+      "Skoda has disabled these vehicle services: %s. The affected information is not being updated; existing values may be outdated. A possible reason is an expired Car Connect remote access service.": "Škoda hat folgende Fahrzeugdienste deaktiviert: %s. Die betroffenen Informationen werden daher nicht aktualisiert; vorhandene Werte können veraltet sein. Ein möglicher Grund ist ein abgelaufener Car Connect-Fernzugriff.",
+      "MySkoda: Vehicle services disabled": "MySkoda: Fahrzeugdienste deaktiviert"
     }
   }
 }

@@ -2,6 +2,8 @@
 
 ## Initiale Veröffentlichung
 
+- Erkennung von Škoda-seitig deaktivierten Fahrzeugdiensten anhand der API-Teilfehler: Warnung direkt beim API-Token und optionale einmalige Info-Mitteilung über die konfigurierte Visualisierung. Die betroffenen Werte werden nicht mehr aktualisiert; ein abgelaufener Car Connect-Fernzugriff wird nur als mögliche Ursache genannt.
+
 - Die Instanzkonfiguration bietet unabhängige Schalter für Diagnose, Ladeorte und FIN-Daten inklusive Variablen-Richtwerten und konkreter Ladeort-Vorschau.
 - Kopfzeile mit dynamischer Instanzbezeichnung, geliefertem Fahrzeugnamen und Kennzeichen (ohne FIN); passendes vorhandenes Fahrzeugbild linksbündig mit 240 px Breite (Basisbild zuerst, sonst verfügbare Ansicht).
 
