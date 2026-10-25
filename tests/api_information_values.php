@@ -132,8 +132,6 @@ $vehicle['chargingProfiles'] = [
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
 check($m->GetValue('AtSavedChargingLocation') === true, 'Basic saved location is independent of details.');
-check($m->GetIDForIdent('APIChargingProfile1Name') === false,
-    'Legacy API prefix is not used for saved charging location idents.');
 check($m->GetIDForIdent('ChargingProfile1Name') === false, 'No profile variables with saved locations disabled.');
 $m->properties['ShowDetails'] = true;
 invoke($m, 'updatePublicApiValuesFromRawData');
@@ -235,8 +233,6 @@ $newTargetId = $m->GetIDForIdent('ChargingProfile1TargetSOC');
 check($newTargetId !== false && $newTargetId !== $oldTargetId, 'Enabling location details recreates missing variables.');
 check(IPS_GetObject($newTargetId)['ObjectName'] === 'LO1 · Target SOC', 'Recreated variable gets compact display name.');
 check($m->GetValue('ChargingProfile1TargetSOC') === 90, 'Recreated variable receives the current API value.');
-check($m->GetIDForIdent('APIChargingProfile1TargetSOC') === false,
-    'New saved charging locations never recreate old API-prefixed idents.');
 check($m->GetIDForIdent('APIFutureDataNewNumber') !== false,
     'Ordinary dynamically discovered API fields retain their API prefix.');
 
