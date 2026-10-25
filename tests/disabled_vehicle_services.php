@@ -101,14 +101,14 @@ $n->properties['VIN'] = $envelope['vehicle']['vin'];
 $n->properties['NotifyKeyExpiry'] = false;
 invoke($n, 'updateDisabledVehicleServices', $healthy);
 invoke($n, 'updateDisabledVehicleServices', $envelope);
-check(count($GLOBALS['serviceNotificationCalls']) === 2, 'Disabled notifications setting prevents sending without hiding warning');
+check(count($GLOBALS['serviceNotificationCalls']) === 3, 'Service alert is independent of API key expiry switch');
 $n->properties['NotifyKeyExpiry'] = true;
 $n->properties['NotificationInstanceID'] = 0;
 invoke($n, 'updateDisabledVehicleServices', $envelope);
-check(count($GLOBALS['serviceNotificationCalls']) === 2, 'Missing notification target prevents sending');
+check(count($GLOBALS['serviceNotificationCalls']) === 3, 'Missing notification target prevents sending');
 $n->properties['NotificationInstanceID'] = 900;
 invoke($n, 'updateDisabledVehicleServices', $envelope);
-check(count($GLOBALS['serviceNotificationCalls']) === 3, 'Adding a valid target enables info notifications');
+check(count($GLOBALS['serviceNotificationCalls']) === 3, 'Repeated event is not resent when target returns');
 
 invoke($n, 'updateDisabledVehicleServices', $healthy);
 $GLOBALS['serviceNotificationFail'] = true;
@@ -116,6 +116,20 @@ invoke($n, 'updateDisabledVehicleServices', $envelope);
 check(count($GLOBALS['serviceNotificationCalls']) === 4, 'Failed notification is attempted');
 invoke($n, 'updateDisabledVehicleServices', $envelope);
 check(count($GLOBALS['serviceNotificationCalls']) === 4, 'Failed notification is throttled for 24 hours');
+
+// A saved response can be evaluated when the module configuration is applied.
+invoke($n, 'updateDisabledVehicleServices', $healthy);
+$n->WriteAttributeString('RawData', json_encode($envelope, JSON_THROW_ON_ERROR));
+$GLOBALS['serviceNotificationFail'] = false;
+$n->properties['NotificationInstanceID'] = 900;
+$n->properties['NotifyKeyExpiry'] = false;
+invoke($n, 'updateDisabledVehicleServicesFromStoredData');
+check(count($GLOBALS['serviceNotificationCalls']) === 5, 'Stored matching vehicle response triggers info notification');
+invoke($n, 'updateDisabledVehicleServicesFromStoredData');
+check(count($GLOBALS['serviceNotificationCalls']) === 5, 'Stored response does not send duplicate notification');
+$n->properties['VIN'] = 'TMBJC7NY0N0000002';
+invoke($n, 'updateDisabledVehicleServicesFromStoredData');
+check(count($GLOBALS['serviceNotificationCalls']) === 5, 'Stored response for a different vehicle is ignored');
 
 $translations = json_decode((string) file_get_contents(__DIR__ . '/../MySkoda/locale.json'), true, 512, JSON_THROW_ON_ERROR)['translations']['de'];
 $notice = $translations['Skoda has disabled these vehicle services: %s. The affected information is not being updated; existing values may be outdated. A possible reason is an expired Car Connect remote access service.'] ?? '';
