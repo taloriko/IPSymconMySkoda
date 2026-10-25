@@ -57,7 +57,8 @@ Anschließend kann unter **Instanz hinzufügen** eine Instanz **MySkoda** angele
 | `ShowChargingLocations` | Gespeicherte Ladeorte als Variablen | aus; etwa 1–40 Variablen je Ladeort, bei vielen Timern mehr |
 | `CreateVINVariables` | FIN-Informationsvariablen anlegen | aus; legt 17 lokale String-Variablen an |
 | `EnableChargingHistory` | Fahrzeugdaten archivieren | aus; richtet Logging einmalig ein, sobald alle vier benötigten Variablen vorhanden sind; siehe Abschnitt 10 |
-| `NotifyKeyExpiry` | API-Key- und Fahrzeugdienst-Mitteilungen | aus; Mitteilung bei höchstens 30 Tagen API-Key-Restlaufzeit oder von Škoda deaktivierten Fahrzeugdiensten |
+| `NotifyKeyExpiry` | API-Key-Ablaufmitteilung | aus; Mitteilung bei höchstens 30 Tagen API-Key-Restlaufzeit |
+| `NotifyDisabledVehicleServices` | Mitteilung bei deaktivierten Fahrzeugdiensten | aus; einmalige Info je Störung, nach tatsächlicher Wiederherstellung erneut möglich |
 | `NotificationInstanceID` | Visualisierung für Mitteilungen | 0; Kachel-Visualisierung oder WebFront auswählen |
 
 ### Wofür wird die S-PIN benötigt?
@@ -383,7 +384,7 @@ Bei bekanntem API-Key-Ablaufdatum wird ab 30 Tagen Restlaufzeit gewarnt, auch we
 
 Erkennt eine erfolgreiche Fahrzeugantwort im Feld `errors` einen der Codes `VEHICLE_STATUS_DISABLED`, `ODOMETER_DISABLED` oder `PARKING_POSITION_DISABLED`, zeigt die Instanz unmittelbar **unter dem API-Token** eine Warnung zu den deaktivierten Bereichen. Sie weist darauf hin, dass Škoda die entsprechenden Informationen deaktiviert hat und vorhandene Variablenwerte veraltet sein können. Ein abgelaufener Car-Connect-Fernzugriff wird nur als **mögliche Ursache** genannt – die Antwort bestätigt weder den Grund noch das Ablaufdatum. Auch bei einer solchen Teilantwort bleibt die API-Verbindung grundsätzlich funktionsfähig.
 
-Ist eine gültige Visualisierung für Mitteilungen ausgewählt, sendet das Modul einmal pro zusammenhängender Störung eine Symcon-Mitteilung vom Typ **Info**. Identische Antworten lösen keine weiteren Mitteilungen aus. Der interne Merker wird erst zurückgesetzt, wenn die zuvor fehlenden Fahrzeugdaten wieder tatsächlich in einer erfolgreichen API-Antwort vorliegen. Fehlende Fehlercodes allein reichen nicht. Erst nach dieser Wiederherstellung kann eine neue Störung erneut eine Mitteilung auslösen. Ein fehlgeschlagener Mitteilungsversand setzt den Merker nicht und kann nach einer Stunde erneut versucht werden. Der Schalter `NotifyKeyExpiry` steuert ausschließlich die API-Key-Ablaufwarnung; Fahrzeugdienst-Infos werden bei konfigurierter Visualisierung unabhängig davon versendet.
+Ist `NotifyDisabledVehicleServices` aktiviert und eine gültige Visualisierung für Mitteilungen ausgewählt, sendet das Modul einmal pro zusammenhängender Störung eine Symcon-Mitteilung vom Typ **Info**. Identische Antworten lösen keine weiteren Mitteilungen aus. Der interne Merker wird erst zurückgesetzt, wenn die zuvor fehlenden Fahrzeugdaten wieder tatsächlich in einer erfolgreichen API-Antwort vorliegen. Fehlende Fehlercodes allein reichen nicht. Erst nach dieser Wiederherstellung kann eine neue Störung erneut eine Mitteilung auslösen. Ein fehlgeschlagener Mitteilungsversand setzt den Merker nicht und kann nach einer Stunde erneut versucht werden. Der Schalter `NotifyKeyExpiry` steuert ausschließlich die API-Key-Ablaufwarnung; Fahrzeugdienst-Infos werden separat über `NotifyDisabledVehicleServices` ein- oder ausgeschaltet; die Warnung in der Instanz bleibt immer sichtbar.
 
 ## 11. Diagnose und Status
 
