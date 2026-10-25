@@ -54,7 +54,7 @@ $form = json_decode($n->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
 $connection = $form['elements'][0]['caption'] === 'Connection'
     ? $form['elements'][0]
     : array_values(array_filter($form['elements'], static fn (array $e): bool => ($e['caption'] ?? '') === 'Connection'))[0];
-$names = array_column($connection['items'], 'name');
+$names = array_map(static fn (array $item): string => (string) ($item['name'] ?? ''), $connection['items']);
 $tokenIndex = array_search('APIToken', $names, true);
 check($tokenIndex !== false, 'Token control exists');
 check(($names[$tokenIndex + 1] ?? '') === 'DisabledVehicleServicesWarning', 'Warning is immediately after token');
