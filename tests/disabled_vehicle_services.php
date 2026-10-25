@@ -37,6 +37,7 @@ $n->Create();
 $n->properties['VIN'] = 'TMBJC7NY0N0000001';
 $n->properties['APIToken'] = 'test-token-only';
 $n->properties['NotifyKeyExpiry'] = true;
+$n->properties['NotifyDisabledVehicleServices'] = true;
 $n->properties['NotificationInstanceID'] = 900;
 
 $errors = [
@@ -65,6 +66,16 @@ check(str_contains($warning['caption'], 'Odometer reading'), 'Warning explains o
 check(str_contains($warning['caption'], 'Parking position'), 'Warning explains parking position');
 check(str_contains($warning['caption'], 'not being updated'), 'Warning identifies stale data');
 check(str_contains($warning['caption'], 'possible reason'), 'Service expiry is only a possible reason');
+
+// Separate opt-in does not affect the on-screen warning and must not latch.
+$n->WriteAttributeBoolean('DisabledServicesNotificationSent', false);
+$n->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', 0);
+$n->properties['NotifyDisabledVehicleServices'] = false;
+invoke($n, 'updateDisabledVehicleServices', $envelope);
+check(count($GLOBALS['serviceNotificationCalls']) === 0, 'Disabled service option suppresses notification');
+check(!$n->ReadAttributeBoolean('DisabledServicesNotificationSent'), 'Disabled option does not latch notification');
+check($n->ReadAttributeString('DisabledServicesPendingRecovery') !== '', 'Outage remains tracked while disabled');
+$n->properties['NotifyDisabledVehicleServices'] = true;
 
 invoke($n, 'updateDisabledVehicleServices', $envelope);
 check(count($GLOBALS['serviceNotificationCalls']) === 1, 'One info notification is sent for disabled services');
