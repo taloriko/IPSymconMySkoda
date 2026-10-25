@@ -25,3 +25,5 @@ jobs:
         run: php -d disable_functions=curl_init,curl_exec tests/runtime_invariants.php
       - name: Test API information values without network
         run: php -d disable_functions=curl_init,curl_exec tests/api_information_values.php
+      - name: Test vehicle refresh regression
+        run: php -d disable_functions=curl_init,curl_exec tests/vehicle_refresh_regression.php
