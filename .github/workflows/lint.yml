@@ -27,3 +27,5 @@ jobs:
         run: php -d disable_functions=curl_init,curl_exec tests/api_information_values.php
       - name: Test vehicle refresh regression
         run: php -d disable_functions=curl_init,curl_exec tests/vehicle_refresh_regression.php
+      - name: Test disabled service warnings and notifications
+        run: php -d disable_functions=curl_init,curl_exec tests/disabled_vehicle_services.php
