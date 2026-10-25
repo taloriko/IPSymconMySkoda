@@ -286,12 +286,12 @@
       "End": "Ende",
       "Type": "Typ",
       "Days": "Tage",
-      "Notify about API key expiry and Skoda-disabled vehicle services": "Mitteilung bei API-Key-Ablauf oder von Škoda deaktivierten Fahrzeugdiensten senden",
       "Vehicle status (doors, windows and locking)": "Fahrzeugstatus (Türen, Fenster und Verriegelung)",
       "Odometer reading": "Kilometerstand",
       "Parking position and address": "Parkposition und Parkadresse",
       "Skoda has disabled these vehicle services: %s. The affected information is not being updated; existing values may be outdated. A possible reason is an expired Car Connect remote access service.": "Škoda hat folgende Fahrzeugdienste deaktiviert: %s. Die betroffenen Informationen werden daher nicht aktualisiert; vorhandene Werte können veraltet sein. Ein möglicher Grund ist ein abgelaufener Car Connect-Fernzugriff.",
-      "MySkoda: Vehicle services disabled": "MySkoda: Fahrzeugdienste deaktiviert"
+      "MySkoda: Vehicle services disabled": "MySkoda: Fahrzeugdienste deaktiviert",
+      "Notify when the API key is expiring": "Mitteilung bei bevorstehendem Ablauf des API-Keys senden"
     }
   }
 }
