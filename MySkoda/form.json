@@ -97,7 +97,7 @@
         {
           "type": "CheckBox",
           "name": "NotifyKeyExpiry",
-          "caption": "Notify about API key expiry and Skoda-disabled vehicle services"
+          "caption": "Notify when the API key is expiring"
         },
         {
           "type": "SelectInstance",
