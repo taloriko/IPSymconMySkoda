@@ -267,12 +267,8 @@ trait MySkodaPublicApiVariablesTrait
             if (isset($known[$path]) || str_ends_with($path, '.carCapturedTimestamp')) {
                 continue;
             }
-            $idents = [$this->dynamicApiIdent($path)];
-            if (str_starts_with($path, 'chargingProfiles.profiles.')) {
-                // Earlier development builds used the API prefix for these idents.
-                $idents[] = 'API' . $idents[0];
-            }
-            foreach (array_unique($idents) as $ident) {
+            $ident = $this->dynamicApiIdent($path);
+            {
                 $id = @$this->GetIDForIdent($ident);
                 if ($id === false || !IPS_VariableExists($id)) {
                     continue;
