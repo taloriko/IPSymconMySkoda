@@ -218,15 +218,17 @@ trait MySkodaCoreTrait
             json_encode($envelope, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
         );
 
+        // Refresh core values before optional API data. An unsupported dynamic
+        // variable must not prevent odometer, location or status updates.
         $this->ensureVehicleVariables($vehicle);
-        $this->ensurePublicApiVariables($vehicle);
         $this->applyActions();
         $this->initializeChargingHistory();
-
         $this->updateCoreValues($vehicle);
         $this->updateDetailValues($vehicle, $envelope);
-        $this->WriteAttributeString('LastError', '');
         $this->SetValue('LastUpdate', time());
+
+        $this->ensurePublicApiVariables($vehicle);
+        $this->WriteAttributeString('LastError', '');
         $this->updateKeyExpiryWarning();
         $this->setConnectionFeedback(
             'success',
