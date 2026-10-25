@@ -39,6 +39,9 @@ trait MySkodaCoreTrait
         $this->RegisterAttributeString('VehicleImageVariantsFingerprint', '');
         $this->RegisterAttributeInteger('KeyExpiryNotifiedFor', 0);
         $this->RegisterAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
+        $this->RegisterAttributeString('DisabledServicesNotifiedSignature', '');
+        $this->RegisterAttributeString('DisabledServicesLastAttemptSignature', '');
+        $this->RegisterAttributeInteger('DisabledServicesLastAttemptAt', 0);
         $this->RegisterAttributeBoolean('ChargingHistoryInitialized', false);
 
         $this->RegisterTimer('UpdateTimer', 0, 'MSKODA_Update($_IPS[\'TARGET\']);');
@@ -65,6 +68,9 @@ trait MySkodaCoreTrait
             $this->WriteAttributeInteger('ApiKeyExpiresAt', 0);
             $this->WriteAttributeInteger('KeyExpiryNotifiedFor', 0);
             $this->WriteAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
+            $this->WriteAttributeString('DisabledServicesNotifiedSignature', '');
+            $this->WriteAttributeString('DisabledServicesLastAttemptSignature', '');
+            $this->WriteAttributeInteger('DisabledServicesLastAttemptAt', 0);
             $this->updateKeyExpiryWarning();
             $this->setConnectionFeedback(
                 'not_configured',
@@ -84,6 +90,9 @@ trait MySkodaCoreTrait
             $this->WriteAttributeInteger('ApiKeyExpiresAt', 0);
             $this->WriteAttributeInteger('KeyExpiryNotifiedFor', 0);
             $this->WriteAttributeInteger('KeyExpiryNotificationLastAttempt', 0);
+            $this->WriteAttributeString('DisabledServicesNotifiedSignature', '');
+            $this->WriteAttributeString('DisabledServicesLastAttemptSignature', '');
+            $this->WriteAttributeInteger('DisabledServicesLastAttemptAt', 0);
         }
 
         $this->updateKeyExpiryWarning();
@@ -230,6 +239,7 @@ trait MySkodaCoreTrait
         $this->ensurePublicApiVariables($vehicle);
         $this->WriteAttributeString('LastError', '');
         $this->updateKeyExpiryWarning();
+        $this->updateDisabledVehicleServices($envelope);
         $this->setConnectionFeedback(
             'success',
             $this->Translate('Connection successful. Vehicle data was received from MySkoda.')
@@ -372,6 +382,10 @@ trait MySkodaCoreTrait
             $name = (string) ($element['name'] ?? '');
             if ($name === 'ConnectionFeedback') {
                 $element['caption'] = $connectionCaption;
+            } elseif ($name === 'DisabledVehicleServicesWarning') {
+                $warning = $this->disabledVehicleServiceWarningCaption();
+                $element['caption'] = $warning;
+                $element['visible'] = $warning !== '';
             } elseif ($name === 'NotificationInstanceID') {
                 $element['validModules'] = $validVisualizationModules;
             } elseif ($name === 'NotificationTargetFeedback') {
@@ -456,6 +470,9 @@ trait MySkodaCoreTrait
                 'enabled',
                 $this->instanceActionsAvailable()
             );
+            $warning = $this->disabledVehicleServiceWarningCaption();
+            $this->UpdateFormField('DisabledVehicleServicesWarning', 'caption', $warning);
+            $this->UpdateFormField('DisabledVehicleServicesWarning', 'visible', $warning !== '');
         } catch (Throwable) {
         }
     }
