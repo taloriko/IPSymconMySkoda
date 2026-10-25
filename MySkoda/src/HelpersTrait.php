@@ -88,7 +88,15 @@ trait MySkodaHelpersTrait
     {
         $id = @$this->GetIDForIdent($ident);
         if ($id !== false && IPS_VariableExists($id)) {
+            $this->safeSetVehicleValue($ident, $value);
+        }
+    }
+    private function safeSetVehicleValue(string $ident, mixed $value): void
+    {
+        try {
             $this->SetValue($ident, $value);
+        } catch (Throwable $error) {
+            $this->LogMessage(sprintf('MySkoda: variable %s: %s', $ident, $error->getMessage()), KL_WARNING);
         }
     }
 }
