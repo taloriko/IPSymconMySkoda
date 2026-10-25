@@ -2,6 +2,7 @@
 
 ## Initiale Veröffentlichung
 
+- Info-Mitteilungen zu Škoda-seitig deaktivierten Fahrzeugdiensten werden unabhängig von der API-Key-Ablaufwarnung versendet und beim Modulupdate auch anhand einer gültigen gespeicherten Fahrzeugantwort geprüft.
 - Erkennung von Škoda-seitig deaktivierten Fahrzeugdiensten anhand der API-Teilfehler: Warnung direkt beim API-Token und optionale einmalige Info-Mitteilung über die konfigurierte Visualisierung. Die betroffenen Werte werden nicht mehr aktualisiert; ein abgelaufener Car Connect-Fernzugriff wird nur als mögliche Ursache genannt.
 
 - Die Instanzkonfiguration bietet unabhängige Schalter für Diagnose, Ladeorte und FIN-Daten inklusive Variablen-Richtwerten und konkreter Ladeort-Vorschau.
