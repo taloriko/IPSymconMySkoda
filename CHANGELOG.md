@@ -2,6 +2,7 @@
 
 ## Initiale Veröffentlichung
 
+- Eigener, standardmäßig deaktivierter Schalter `NotifyDisabledVehicleServices` im Bereich Mitteilungen; unabhängig von `NotifyKeyExpiry`. Deaktivieren unterdrückt ausschließlich den Versand, nicht die Warnung oder das Merken einer bestehenden Störung.
 - Interner Versandmerker für deaktivierte Fahrzeugdienste: nach erfolgreicher Info-Mitteilung gesetzt, erst bei tatsächlicher Wiederkehr aller betroffenen Fahrzeugdaten zurückgesetzt. Vor dem Update bestehende Fehler werden erkannt.
 - Info-Mitteilungen zu Škoda-seitig deaktivierten Fahrzeugdiensten werden unabhängig von der API-Key-Ablaufwarnung versendet und beim Modulupdate auch anhand einer gültigen gespeicherten Fahrzeugantwort geprüft.
 - Erkennung von Škoda-seitig deaktivierten Fahrzeugdiensten anhand der API-Teilfehler: Warnung direkt beim API-Token und optionale einmalige Info-Mitteilung über die konfigurierte Visualisierung. Die betroffenen Werte werden nicht mehr aktualisiert; ein abgelaufener Car Connect-Fernzugriff wird nur als mögliche Ursache genannt.

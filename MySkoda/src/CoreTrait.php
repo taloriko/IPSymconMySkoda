@@ -19,6 +19,7 @@ trait MySkodaCoreTrait
         $this->RegisterPropertyBoolean('ShowChargingLocations', false);
         $this->RegisterPropertyBoolean('EnableChargingHistory', false);
         $this->RegisterPropertyBoolean('NotifyKeyExpiry', false);
+        $this->RegisterPropertyBoolean('NotifyDisabledVehicleServices', false);
         $this->RegisterPropertyInteger('NotificationInstanceID', 0);
 
         // Runtime state

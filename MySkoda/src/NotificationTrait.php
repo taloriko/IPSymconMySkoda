@@ -153,6 +153,13 @@ trait MySkodaNotificationTrait
             $pendingCodes = array_values(array_unique(array_merge($pendingCodes, $codes)));
             $this->WriteAttributeString('DisabledServicesPendingRecovery', implode('|', $pendingCodes));
 
+            // Service alerts have their own opt-in independently of API-key
+            // expiry warnings. Leaving this disabled must not set the
+            // sent flag or discard the current outage information.
+            if (!$this->ReadPropertyBoolean('NotifyDisabledVehicleServices')) {
+                return;
+            }
+
             if ($this->ReadAttributeBoolean('DisabledServicesNotificationSent')) {
                 return;
             }

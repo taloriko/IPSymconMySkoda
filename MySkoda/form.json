@@ -100,6 +100,15 @@
           "caption": "Notify when the API key is expiring"
         },
         {
+          "type": "CheckBox",
+          "name": "NotifyDisabledVehicleServices",
+          "caption": "Notify when Skoda disables vehicle services"
+        },
+        {
+          "type": "Label",
+          "caption": "One Info notification per service outage. A new notification is possible when the vehicle data becomes available again."
+        },
+        {
           "type": "SelectInstance",
           "name": "NotificationInstanceID",
           "caption": "Visualization for notifications",
