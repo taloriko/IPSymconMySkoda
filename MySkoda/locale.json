@@ -291,7 +291,9 @@
       "Parking position and address": "Parkposition und Parkadresse",
       "Skoda has disabled these vehicle services: %s. The affected information is not being updated; existing values may be outdated. A possible reason is an expired Car Connect remote access service.": "Škoda hat folgende Fahrzeugdienste deaktiviert: %s. Die betroffenen Informationen werden daher nicht aktualisiert; vorhandene Werte können veraltet sein. Ein möglicher Grund ist ein abgelaufener Car Connect-Fernzugriff.",
       "MySkoda: Vehicle services disabled": "MySkoda: Fahrzeugdienste deaktiviert",
-      "Notify when the API key is expiring": "Mitteilung bei bevorstehendem Ablauf des API-Keys senden"
+      "Notify when the API key is expiring": "Mitteilung bei bevorstehendem Ablauf des API-Keys senden",
+      "Notify when Skoda disables vehicle services": "Mitteilung senden, wenn Škoda Fahrzeugdienste deaktiviert",
+      "One Info notification per service outage. A new notification is possible when the vehicle data becomes available again.": "Einmalige Info-Mitteilung je Störung. Erst wenn die Fahrzeugdaten wieder verfügbar sind, kann bei einer neuen Störung erneut eine Mitteilung erfolgen."
     }
   }
 }
