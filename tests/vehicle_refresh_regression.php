@@ -36,10 +36,9 @@ $refresh = static function (array $vehicle) use ($m): void {
     $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
     invoke($m, 'updatePublicApiValuesFromRawData');
 };
-$m->RegisterVariableString('APIChargingProfile1Name', 'Legacy profile', [], 2000);
 $refresh($vehicle);
 check($m->GetValue('Mileage') === 113421, 'Initial mileage');
-check($m->GetValue('APIChargingProfile1Name') === 'Home', 'Legacy profile updated');
+check($m->GetValue('ChargingProfile1Name') === 'Home', 'Current charging profile updated');
 
 $vehicle['odometer']['mileageInKm'] = 113450;
 $vehicle['parkingPosition']['formattedAddress'] = 'New address';
@@ -58,7 +57,7 @@ check($m->GetValue('DoorsLocked') === 'NO', 'Lock updated');
 check($m->GetValue('DoorsOpen') === 'OPEN', 'Doors updated');
 check($m->GetValue('WindowsOpen') === 'OPEN', 'Windows updated');
 check($m->GetValue('TrunkOpen') === 'OPEN', 'Trunk updated');
-check($m->GetValue('APIChargingProfile1Name') === 'Other home', 'Legacy profile survives update');
+check($m->GetValue('ChargingProfile1Name') === 'Other home', 'Current charging profile survives update');
 check($m->GetValue('APIFutureDataValue') === 1, 'Incompatible dynamic type is skipped');
 
 echo 'Vehicle refresh regression passed (' . $GLOBALS['checks'] . " checks).\n";
