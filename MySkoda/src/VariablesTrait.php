@@ -350,7 +350,7 @@ trait MySkodaVariablesTrait
         $value = $this->path($source, $path, null);
         $id = @$this->GetIDForIdent($ident);
         if ($value !== null && $id !== false && IPS_VariableExists($id)) {
-            $this->SetValue($ident, $convert($value));
+            $this->safeSetVehicleValue($ident, $convert($value));
         }
     }
 
