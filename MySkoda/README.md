@@ -57,7 +57,7 @@ Anschließend kann unter **Instanz hinzufügen** eine Instanz **MySkoda** angele
 | `ShowChargingLocations` | Gespeicherte Ladeorte als Variablen | aus; etwa 1–40 Variablen je Ladeort, bei vielen Timern mehr |
 | `CreateVINVariables` | FIN-Informationsvariablen anlegen | aus; legt 17 lokale String-Variablen an |
 | `EnableChargingHistory` | Fahrzeugdaten archivieren | aus; richtet Logging einmalig ein, sobald alle vier benötigten Variablen vorhanden sind; siehe Abschnitt 10 |
-| `NotifyKeyExpiry` | API-Key-Ablaufwarnung | aus; Mitteilung bei höchstens 30 Tagen Restlaufzeit |
+| `NotifyKeyExpiry` | API-Key- und Fahrzeugdienst-Mitteilungen | aus; Mitteilung bei höchstens 30 Tagen API-Key-Restlaufzeit oder von Škoda deaktivierten Fahrzeugdiensten |
 | `NotificationInstanceID` | Visualisierung für Mitteilungen | 0; Kachel-Visualisierung oder WebFront auswählen |
 
 ### Wofür wird die S-PIN benötigt?
@@ -381,6 +381,10 @@ Archivierung ist standardmäßig aus. Nach ausdrücklicher Aktivierung richtet d
 
 Bei bekanntem API-Key-Ablaufdatum wird ab 30 Tagen Restlaufzeit gewarnt, auch wenn der Key bereits abgelaufen ist. Die Variable `ApiKeyWarning` ist unabhängig von `ShowDetails` vorhanden. Mitteilungen sind optional und benötigen das ausgewählte Visualisierungsziel. Eine erfolgreich gesendete Ablaufwarnung wird für dasselbe Ablaufdatum nicht erneut gesendet; fehlgeschlagene Versuche werden höchstens einmal innerhalb von 24 Stunden wiederholt. **Mitteilung testen** ist davon unabhängig.
 
+Erkennt eine erfolgreiche Fahrzeugantwort im Feld `errors` einen der Codes `VEHICLE_STATUS_DISABLED`, `ODOMETER_DISABLED` oder `PARKING_POSITION_DISABLED`, zeigt die Instanz unmittelbar **unter dem API-Token** eine Warnung zu den deaktivierten Bereichen. Sie weist darauf hin, dass Škoda die entsprechenden Informationen deaktiviert hat und vorhandene Variablenwerte veraltet sein können. Ein abgelaufener Car-Connect-Fernzugriff wird nur als **mögliche Ursache** genannt – die Antwort bestätigt weder den Grund noch das Ablaufdatum. Auch bei einer solchen Teilantwort bleibt die API-Verbindung grundsätzlich funktionsfähig.
+
+Ist **API-Key- und Fahrzeugdienst-Mitteilungen** aktiviert und eine gültige Visualisierung ausgewählt, sendet das Modul bei erstmaligem Erkennen oder bei einer Änderung der betroffenen Bereiche eine Symcon-Mitteilung vom Typ **Info**. Identische Antworten lösen keine weiteren Mitteilungen aus. Bei einem erfolgreich abgerufenen Fahrzeugdatensatz ohne diese Fehler verschwindet die Warnung; danach kann ein neuer Fehlerfall erneut eine Mitteilung auslösen. Fehlgeschlagene Mitteilungen werden höchstens einmal innerhalb von 24 Stunden für dieselbe Fehlerkombination erneut versucht. Das Ausschalten der Mitteilungen unterdrückt die Info, aber **nicht** die Warnung in der Instanzkonfiguration.
+
 ## 11. Diagnose und Status
 
 | Status | Bedeutung |
@@ -395,7 +399,7 @@ Ein von der API abgelehnter, nicht leerer API-Key kann beim Abruf zu 202 führen
 
 Für eine Fehlerprüfung sind Instanzstatus, Verbindungsrückmeldung, die optionalen `PartialErrors`, `PendingCommands`, `CommandStatus` und der Symcon-Debugbereich vorgesehen. Die Anzeige **Rohe Fahrzeugantwort anzeigen** formatiert gültiges JSON zur Lesbarkeit. Die zugehörige PHP-Funktion liefert dagegen den exakten gespeicherten Text.
 
-Bei API-Störungen ist der letzte gültige Arbeitsdatensatz weiterhin vorhanden; er ist dadurch nicht automatisch aktuell. Fehlende Fahrzeugbereiche oder nicht bestätigte Zustände dürfen nicht als erfolgreich ausgeführter Befehl interpretiert werden. Auch die Rückmeldung „Bestätigt“ im Befehlsstatus bezeichnet die API-Annahme, nicht eine separate Ausführungsbestätigung aus dem Fahrzeug.
+Bei API-Störungen ist der letzte gültige Arbeitsdatensatz weiterhin vorhanden; er ist dadurch nicht automatisch aktuell. Insbesondere bei den API-Fehlern `VEHICLE_STATUS_DISABLED`, `ODOMETER_DISABLED` und `PARKING_POSITION_DISABLED` bleiben bestehende Werte der jeweiligen Bereiche gegebenenfalls unverändert, weil Škoda diese Informationen nicht mehr liefert. Fehlende Fahrzeugbereiche oder nicht bestätigte Zustände dürfen nicht als erfolgreich ausgeführter Befehl interpretiert werden. Auch die Rückmeldung „Bestätigt“ im Befehlsstatus bezeichnet die API-Annahme, nicht eine separate Ausführungsbestätigung aus dem Fahrzeug.
 
 ## 12. Datenschutz und externe Dienste
 
