@@ -239,9 +239,13 @@ trait MySkodaPublicApiVariablesTrait
             if (isset($known[$path]) || str_ends_with($path, '.carCapturedTimestamp')) {
                 continue;
             }
-            $definition = $this->dynamicApiVariableDefinition($path, $value);
-            if ($definition !== null) {
-                $this->registerVariableOnce($definition);
+            try {
+                $definition = $this->dynamicApiVariableDefinition($path, $value);
+                if ($definition !== null) {
+                    $this->registerVariableOnce($definition);
+                }
+            } catch (Throwable $error) {
+                $this->LogMessage(sprintf('MySkoda: API field %s: %s', $path, $error->getMessage()), KL_WARNING);
             }
         }
     }
@@ -263,19 +267,33 @@ trait MySkodaPublicApiVariablesTrait
             if (isset($known[$path]) || str_ends_with($path, '.carCapturedTimestamp')) {
                 continue;
             }
-            $ident = $this->dynamicApiIdent($path);
-            $id = @$this->GetIDForIdent($ident);
-            if ($id === false || !IPS_VariableExists($id)) {
-                continue;
+            $idents = [$this->dynamicApiIdent($path)];
+            if (str_starts_with($path, 'chargingProfiles.profiles.')) {
+                // Earlier development builds used the API prefix for these idents.
+                $idents[] = 'API' . $idents[0];
             }
-            if (is_bool($value)) {
-                $this->SetValue($ident, $value);
-            } elseif (is_int($value)) {
-                $this->SetValue($ident, $value);
-            } elseif (is_float($value)) {
-                $this->SetValue($ident, $value);
-            } else {
-                $this->SetValue($ident, (string) $value);
+            foreach (array_unique($idents) as $ident) {
+                $id = @$this->GetIDForIdent($ident);
+                if ($id === false || !IPS_VariableExists($id)) {
+                    continue;
+                }
+                try {
+                    $type = (int) IPS_GetVariable($id)['VariableType'];
+                    $typedValue = match ($type) {
+                        VARIABLETYPE_BOOLEAN => is_bool($value) ? $value : null,
+                        VARIABLETYPE_INTEGER => is_int($value) ? $value : null,
+                        VARIABLETYPE_FLOAT => is_numeric($value) ? (float) $value : null,
+                        VARIABLETYPE_STRING => is_scalar($value) ? (string) $value : null,
+                        default => null
+                    };
+                    if ($typedValue === null) {
+                        $this->SendDebug('API type mismatch', $ident . ': ' . get_debug_type($value), 0);
+                        continue;
+                    }
+                    $this->SetValue($ident, $typedValue);
+                } catch (Throwable $error) {
+                    $this->LogMessage(sprintf('MySkoda: API value %s: %s', $ident, $error->getMessage()), KL_WARNING);
+                }
             }
         }
     }
