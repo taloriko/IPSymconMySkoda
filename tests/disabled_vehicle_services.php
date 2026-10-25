@@ -81,55 +81,49 @@ invoke($n, 'updateDisabledVehicleServices', $reverse);
 check(count($GLOBALS['serviceNotificationCalls']) === 1, 'Error order cannot retrigger notification');
 
 $healthy = $envelope;
-$healthy['errors'] = [['type' => 'AIR_CONDITIONING_UNAVAILABLE']];
+$healthy['errors'] = [];
+$healthy['vehicle']['status'] = ['overall' => ['locked' => 'YES']];
+$healthy['vehicle']['odometer'] = ['mileageInKm' => 15000];
+$healthy['vehicle']['parkingPosition'] = ['state' => 'PARKED'];
 $n->WriteAttributeString('RawData', json_encode($healthy, JSON_THROW_ON_ERROR));
 invoke($n, 'updateDisabledVehicleServices', $healthy);
-$form = json_decode($n->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
-$connection = array_values(array_filter($form['elements'], static fn (array $e): bool => ($e['caption'] ?? '') === 'Connection'))[0];
-$warning = $connection['items'][$tokenIndex + 1];
-check($warning['visible'] === false, 'A successful response without disabled codes clears warning');
-check($n->ReadAttributeString('DisabledServicesNotifiedSignature') === '', 'Recovery clears notification state');
+check(!$n->ReadAttributeBoolean('DisabledServicesNotificationSent'), 'Recovery resets sent flag');
+check($n->ReadAttributeString('DisabledServicesPendingRecovery') === '', 'Recovery clears pending services');
 
 $n->WriteAttributeString('RawData', json_encode($envelope, JSON_THROW_ON_ERROR));
 invoke($n, 'updateDisabledVehicleServices', $envelope);
-check(count($GLOBALS['serviceNotificationCalls']) === 2, 'A new incident after recovery sends a new notification');
+check(count($GLOBALS['serviceNotificationCalls']) === 2, 'A second incident notifies again');
+check($n->ReadAttributeBoolean('DisabledServicesNotificationSent'), 'Successful send stores sent flag');
 
-$n->properties['VIN'] = 'TMBJC7NY0N0000002';
-check(invoke($n, 'disabledVehicleServiceWarningCaption') === '', 'The previous vehicle warning is not shown for a new VIN');
-$n->properties['VIN'] = $envelope['vehicle']['vin'];
+$n->WriteAttributeBoolean('DisabledServicesNotificationSent', false);
+$n->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', 0);
+$n->WriteAttributeString('DisabledServicesPendingRecovery', '');
+$n->WriteAttributeString('DisabledServicesNotifiedSignature', implode('|', array_column($errors, 'type')));
+$n->WriteAttributeInteger('DisabledServicesLastAttemptAt', time());
+invoke($n, 'updateDisabledVehicleServices', $envelope);
+check(count($GLOBALS['serviceNotificationCalls']) === 3, 'Legacy notification attempt attributes cannot suppress initial alert');
 
-$n->properties['NotifyKeyExpiry'] = false;
+$missingErrors = $envelope;
+$missingErrors['errors'] = [];
+$n->WriteAttributeString('RawData', json_encode($missingErrors, JSON_THROW_ON_ERROR));
+invoke($n, 'updateDisabledVehicleServices', $missingErrors);
+check($n->ReadAttributeBoolean('DisabledServicesNotificationSent'), 'Missing codes without restored fields retain sent flag');
+check(invoke($n, 'disabledVehicleServiceWarningCaption') !== '', 'Warning survives missing errors if data are still absent');
+
+$n->WriteAttributeString('RawData', json_encode($healthy, JSON_THROW_ON_ERROR));
 invoke($n, 'updateDisabledVehicleServices', $healthy);
-invoke($n, 'updateDisabledVehicleServices', $envelope);
-check(count($GLOBALS['serviceNotificationCalls']) === 3, 'Service alert is independent of API key expiry switch');
-$n->properties['NotifyKeyExpiry'] = true;
-$n->properties['NotificationInstanceID'] = 0;
-invoke($n, 'updateDisabledVehicleServices', $envelope);
-check(count($GLOBALS['serviceNotificationCalls']) === 3, 'Missing notification target prevents sending');
-$n->properties['NotificationInstanceID'] = 900;
-invoke($n, 'updateDisabledVehicleServices', $envelope);
-check(count($GLOBALS['serviceNotificationCalls']) === 3, 'Repeated event is not resent when target returns');
+check(!$n->ReadAttributeBoolean('DisabledServicesNotificationSent'), 'Complete recovery rearms alert');
 
-invoke($n, 'updateDisabledVehicleServices', $healthy);
 $GLOBALS['serviceNotificationFail'] = true;
 invoke($n, 'updateDisabledVehicleServices', $envelope);
-check(count($GLOBALS['serviceNotificationCalls']) === 4, 'Failed notification is attempted');
+check(!$n->ReadAttributeBoolean('DisabledServicesNotificationSent'), 'Failed send must not set flag');
+check(count($GLOBALS['serviceNotificationCalls']) === 4, 'Failed send is attempted once');
 invoke($n, 'updateDisabledVehicleServices', $envelope);
-check(count($GLOBALS['serviceNotificationCalls']) === 4, 'Failed notification is throttled for 24 hours');
-
-// A saved response can be evaluated when the module configuration is applied.
-invoke($n, 'updateDisabledVehicleServices', $healthy);
-$n->WriteAttributeString('RawData', json_encode($envelope, JSON_THROW_ON_ERROR));
+check(count($GLOBALS['serviceNotificationCalls']) === 4, 'Failed send is throttled');
+$n->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', 0);
 $GLOBALS['serviceNotificationFail'] = false;
-$n->properties['NotificationInstanceID'] = 900;
-$n->properties['NotifyKeyExpiry'] = false;
-invoke($n, 'updateDisabledVehicleServicesFromStoredData');
-check(count($GLOBALS['serviceNotificationCalls']) === 5, 'Stored matching vehicle response triggers info notification');
-invoke($n, 'updateDisabledVehicleServicesFromStoredData');
-check(count($GLOBALS['serviceNotificationCalls']) === 5, 'Stored response does not send duplicate notification');
-$n->properties['VIN'] = 'TMBJC7NY0N0000002';
-invoke($n, 'updateDisabledVehicleServicesFromStoredData');
-check(count($GLOBALS['serviceNotificationCalls']) === 5, 'Stored response for a different vehicle is ignored');
+invoke($n, 'updateDisabledVehicleServices', $envelope);
+check($n->ReadAttributeBoolean('DisabledServicesNotificationSent'), 'Successful retry sets flag');
 
 $translations = json_decode((string) file_get_contents(__DIR__ . '/../MySkoda/locale.json'), true, 512, JSON_THROW_ON_ERROR)['translations']['de'];
 $notice = $translations['Skoda has disabled these vehicle services: %s. The affected information is not being updated; existing values may be outdated. A possible reason is an expired Car Connect remote access service.'] ?? '';

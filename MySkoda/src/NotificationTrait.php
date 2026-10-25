@@ -128,50 +128,106 @@ trait MySkodaNotificationTrait
         }
 
         $codes = $this->disabledVehicleServiceCodes($raw);
+        if ($codes === []) {
+            $pending = $this->pendingDisabledVehicleServiceCodes();
+            if ($pending !== [] && !$this->disabledVehicleServicesRecovered($raw['vehicle'], $pending)) {
+                $codes = $pending;
+            }
+        }
         return $codes === [] ? '' : '⚠️ ' . $this->disabledVehicleServiceNoticeText($codes);
     }
 
     /**
-     * A successful API response is required before clearing a previous alert.
-     * The message is sent once per disabled-service combination, and a failed
-     * delivery is retried no more often than once per day.
+     * One Info notification per outage. The boolean flag is only set when
+     * Symcon accepts the notification, never when errors are merely observed.
+     * It is cleared only after the previously unavailable values actually
+     * reappear in a successful vehicle response.
      */
     private function updateDisabledVehicleServices(array $envelope): void
     {
         $codes = $this->disabledVehicleServiceCodes($envelope);
-        $signature = implode('|', $codes);
-        if ($signature === '') {
-            $this->WriteAttributeString('DisabledServicesNotifiedSignature', '');
-            $this->WriteAttributeString('DisabledServicesLastAttemptSignature', '');
-            $this->WriteAttributeInteger('DisabledServicesLastAttemptAt', 0);
+        $pendingCodes = $this->pendingDisabledVehicleServiceCodes();
+
+        if ($codes !== []) {
+            // Remember all affected services across partial recoveries.
+            $pendingCodes = array_values(array_unique(array_merge($pendingCodes, $codes)));
+            $this->WriteAttributeString('DisabledServicesPendingRecovery', implode('|', $pendingCodes));
+
+            if ($this->ReadAttributeBoolean('DisabledServicesNotificationSent')) {
+                return;
+            }
+
+            if (!$this->validateNotificationTarget(false)) {
+                $this->SendDebug('Disabled service notification', 'No valid visualization configured.', 0);
+                return;
+            }
+
+            // Only real failed attempts are throttled. Older 1.9.3/1.9.4
+            // signature/attempt attributes cannot suppress a first send.
+            $lastAttempt = $this->ReadAttributeInteger('DisabledServicesNotificationLastAttempt');
+            if ($lastAttempt > 0 && time() - $lastAttempt < 3600) {
+                return;
+            }
+
+            $this->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', time());
+            $sent = $this->sendSymconNotification(
+                $this->ReadPropertyInteger('NotificationInstanceID'),
+                $this->Translate('MySkoda: Vehicle services disabled'),
+                $this->disabledVehicleServiceNoticeText($codes)
+            );
+            if (!$sent) {
+                $this->SendDebug('Disabled service notification', 'Sending failed; retry is possible after one hour.', 0);
+                return;
+            }
+
+            $this->WriteAttributeBoolean('DisabledServicesNotificationSent', true);
+            $this->WriteAttributeInteger('DisabledServicesNotificationSentAt', time());
+            $this->SendDebug('Disabled service notification', 'Info accepted by the configured Symcon visualization.', 0);
             return;
         }
 
-        // Service availability alerts use the configured visualization. The
-        // API-key expiry checkbox must not suppress unrelated service alerts.
-        if (!$this->validateNotificationTarget(false)) {
-            return;
-        }
-        if ($this->ReadAttributeString('DisabledServicesNotifiedSignature') === $signature) {
+        if ($pendingCodes === [] || !is_array($envelope['vehicle'] ?? null)) {
             return;
         }
 
-        $lastAttemptSignature = $this->ReadAttributeString('DisabledServicesLastAttemptSignature');
-        $lastAttemptAt = $this->ReadAttributeInteger('DisabledServicesLastAttemptAt');
-        if ($lastAttemptSignature === $signature && $lastAttemptAt > 0 && time() - $lastAttemptAt < 86400) {
+        if (!$this->disabledVehicleServicesRecovered($envelope['vehicle'], $pendingCodes)) {
+            // Missing error messages alone do not prove data recovery.
             return;
         }
 
-        $this->WriteAttributeString('DisabledServicesLastAttemptSignature', $signature);
-        $this->WriteAttributeInteger('DisabledServicesLastAttemptAt', time());
+        $this->WriteAttributeBoolean('DisabledServicesNotificationSent', false);
+        $this->WriteAttributeString('DisabledServicesPendingRecovery', '');
+        $this->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', 0);
+        $this->WriteAttributeInteger('DisabledServicesNotificationSentAt', 0);
+        $this->SendDebug('Disabled service notification', 'Services recovered; notification flag reset.', 0);
+    }
 
-        if ($this->sendSymconNotification(
-            $this->ReadPropertyInteger('NotificationInstanceID'),
-            $this->Translate('MySkoda: Vehicle services disabled'),
-            $this->disabledVehicleServiceNoticeText($codes)
-        )) {
-            $this->WriteAttributeString('DisabledServicesNotifiedSignature', $signature);
+    private function pendingDisabledVehicleServiceCodes(): array
+    {
+        $stored = explode('|', $this->ReadAttributeString('DisabledServicesPendingRecovery'));
+        return array_values(array_filter(
+            array_keys(self::DISABLED_VEHICLE_SERVICES),
+            static fn (string $code): bool => in_array($code, $stored, true)
+        ));
+    }
+
+    private function disabledVehicleServicesRecovered(array $vehicle, array $codes): bool
+    {
+        foreach ($codes as $code) {
+            $restored = match ($code) {
+                'VEHICLE_STATUS_DISABLED' => is_array($vehicle['status'] ?? null)
+                    && $vehicle['status'] !== [],
+                'ODOMETER_DISABLED' => is_numeric($this->path($vehicle, 'odometer.mileageInKm')),
+                'PARKING_POSITION_DISABLED' => is_array($vehicle['parkingPosition'] ?? null)
+                    && $vehicle['parkingPosition'] !== [],
+                default => false
+            };
+
+            if (!$restored) {
+                return false;
+            }
         }
+        return true;
     }
 
     /**
