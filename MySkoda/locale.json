@@ -302,7 +302,12 @@
       "Info notification could not be sent.": "Info-Mitteilung konnte nicht versendet werden.",
       "Info notification accepted by Symcon.": "Info-Mitteilung von Symcon angenommen.",
       "No error codes, but affected data have not recovered.": "Fehlercodes fehlen, aber betroffene Fahrzeugdaten sind weiterhin nicht verfügbar.",
-      "No notification check performed yet.": "Noch keine Mitteilungsprüfung durchgeführt."
+      "No notification check performed yet.": "Noch keine Mitteilungsprüfung durchgeführt.",
+      "MySkoda: Services disabled": "MySkoda: Dienste deaktiviert",
+      "Vehicle status data": "Fahrzeugstatus",
+      "Odometer data": "Kilometerstand",
+      "Parking position data": "Parkposition",
+      "Skoda disabled: %s. These values are not updated. Possible cause: expired Car Connect remote access.": "Škoda deaktiviert: %s. Diese Daten werden nicht aktualisiert. Möglicher Grund: Car Connect-Fernzugriff abgelaufen."
     }
   }
 }
