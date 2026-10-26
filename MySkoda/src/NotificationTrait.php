@@ -111,6 +111,30 @@ trait MySkodaNotificationTrait
     }
 
     /**
+     * The Push service has tighter length limits than the configuration UI.
+     * Keep all the relevant warning detail in the instance configuration,
+     * but send a short actionable mobile message.
+     */
+    private function disabledVehicleServicePushText(array $codes): string
+    {
+        $shortNames = [
+            'VEHICLE_STATUS_DISABLED' => $this->Translate('Vehicle status data'),
+            'ODOMETER_DISABLED' => $this->Translate('Odometer data'),
+            'PARKING_POSITION_DISABLED' => $this->Translate('Parking position data')
+        ];
+        $affected = [];
+        foreach ($codes as $code) {
+            if (isset($shortNames[$code])) {
+                $affected[] = $shortNames[$code];
+            }
+        }
+        return sprintf(
+            $this->Translate('Skoda disabled: %s. These values are not updated. Possible cause: expired Car Connect remote access.'),
+            implode(', ', $affected)
+        );
+    }
+
+    /**
      * Use only the last successfully fetched response for the configured VIN.
      * A VIN change must not show the previous vehicle's warning.
      */
@@ -184,8 +208,8 @@ trait MySkodaNotificationTrait
             $this->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', time());
             $sent = $this->sendSymconNotification(
                 $this->ReadPropertyInteger('NotificationInstanceID'),
-                $this->Translate('MySkoda: Vehicle services disabled'),
-                $this->disabledVehicleServiceNoticeText($codes)
+                $this->Translate('MySkoda: Services disabled'),
+                $this->disabledVehicleServicePushText($codes)
             );
             if (!$sent) {
                 $this->WriteAttributeString('DisabledServicesAlertStatus', $this->Translate('Info notification could not be sent.'));
@@ -348,8 +372,24 @@ trait MySkodaNotificationTrait
         ];
     }
 
+    private function limitSymconNotificationLength(string $value, int $limit): string
+    {
+        $characters = preg_split('//u', $value, -1, PREG_SPLIT_NO_EMPTY);
+        if ($characters === false || count($characters) <= $limit) {
+            return $value;
+        }
+
+        return implode('', array_slice($characters, 0, $limit - 1)) . '…';
+    }
+
     private function sendSymconNotification(int $instanceId, string $title, string $text): bool
     {
+        // VISU_PostNotification limits title to 32 and text to 256
+        // characters. Enforce this for every notification, including future
+        // translations, without cutting multi-byte characters in half.
+        $title = $this->limitSymconNotificationLength($title, 32);
+        $text = $this->limitSymconNotificationLength($text, 256);
+
         if (($this->notificationTargetInfo($instanceId)['valid'] ?? false) !== true) {
             $this->LogMessage($this->Translate('The configured notification target is not a valid visualization instance.'), KL_WARNING);
             return false;
