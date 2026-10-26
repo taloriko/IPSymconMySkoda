@@ -2,6 +2,7 @@
 
 ## Initiale Veröffentlichung
 
+- Push-Titel und -Text für deaktivierte Fahrzeugdienste auf die Symcon-Limits von 32/256 Zeichen verkürzt; zusätzliche UTF-8-sichere Begrenzung für alle Benachrichtigungen. Ausführliche Warnung bleibt in der Instanz.
 - Automatische Prüfung deaktivierter Fahrzeugdienste unmittelbar nach jeder erfolgreichen API-Antwort, unabhängig von späteren Variablenfehlern. Mitteilungsbereich zeigt den Versandstatus. Alte Versandmerker werden einmalig bei der Migration auf 1.9.7 neu bewertet.
 - Eigener, standardmäßig deaktivierter Schalter `NotifyDisabledVehicleServices` im Bereich Mitteilungen; unabhängig von `NotifyKeyExpiry`. Deaktivieren unterdrückt ausschließlich den Versand, nicht die Warnung oder das Merken einer bestehenden Störung.
 - Interner Versandmerker für deaktivierte Fahrzeugdienste: nach erfolgreicher Info-Mitteilung gesetzt, erst bei tatsächlicher Wiederkehr aller betroffenen Fahrzeugdaten zurückgesetzt. Vor dem Update bestehende Fehler werden erkannt.
