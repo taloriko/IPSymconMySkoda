@@ -25,6 +25,8 @@ function IPS_GetInstance(int $instanceId): array
 
 function VISU_PostNotification(int $instanceId, string $title, string $text, string $type, int $duration): bool
 {
+    check(count(preg_split('//u', $title, -1, PREG_SPLIT_NO_EMPTY)) <= 32, 'VISU title must fit 32 characters');
+    check(count(preg_split('//u', $text, -1, PREG_SPLIT_NO_EMPTY)) <= 256, 'VISU body must fit 256 characters');
     $GLOBALS['serviceNotificationCalls'][] = compact('instanceId', 'title', 'text', 'type', 'duration');
     return !$GLOBALS['serviceNotificationFail'];
 }
@@ -81,7 +83,7 @@ invoke($n, 'updateDisabledVehicleServices', $envelope);
 check(count($GLOBALS['serviceNotificationCalls']) === 1, 'One info notification is sent for disabled services');
 $first = $GLOBALS['serviceNotificationCalls'][0];
 check($first['instanceId'] === 900 && $first['type'] === 'Info', 'Existing visualization receives an Info notification');
-check(str_contains($first['text'], 'not being updated'), 'Notification describes missing updates');
+check(str_contains($first['text'], 'not updated'), 'Notification describes missing updates');
 check(str_contains($first['text'], 'Car Connect'), 'Notification mentions only possible service expiry');
 invoke($n, 'updateDisabledVehicleServices', $envelope);
 check(count($GLOBALS['serviceNotificationCalls']) === 1, 'Polling does not repeat the same notification');
