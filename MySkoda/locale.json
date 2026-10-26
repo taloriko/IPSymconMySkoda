@@ -293,7 +293,16 @@
       "MySkoda: Vehicle services disabled": "MySkoda: Fahrzeugdienste deaktiviert",
       "Notify when the API key is expiring": "Mitteilung bei bevorstehendem Ablauf des API-Keys senden",
       "Notify when Skoda disables vehicle services": "Mitteilung senden, wenn Škoda Fahrzeugdienste deaktiviert",
-      "One Info notification per service outage. A new notification is possible when the vehicle data becomes available again.": "Einmalige Info-Mitteilung je Störung. Erst wenn die Fahrzeugdaten wieder verfügbar sind, kann bei einer neuen Störung erneut eine Mitteilung erfolgen."
+      "One Info notification per service outage. A new notification is possible when the vehicle data becomes available again.": "Einmalige Info-Mitteilung je Störung. Erst wenn die Fahrzeugdaten wieder verfügbar sind, kann bei einer neuen Störung erneut eine Mitteilung erfolgen.",
+      "No disabled services detected.": "Keine deaktivierten Fahrzeugdienste erkannt.",
+      "Info notification disabled in instance settings.": "Info-Mitteilung in der Instanz deaktiviert.",
+      "Info notification already sent for this outage.": "Info-Mitteilung für diese Störung bereits gesendet.",
+      "No valid visualization selected for Info notifications.": "Keine gültige Visualisierung für Info-Mitteilungen gewählt.",
+      "Previous notification attempt failed; retry after one hour.": "Vorheriger Versandversuch fehlgeschlagen; erneuter Versuch nach einer Stunde.",
+      "Info notification could not be sent.": "Info-Mitteilung konnte nicht versendet werden.",
+      "Info notification accepted by Symcon.": "Info-Mitteilung von Symcon angenommen.",
+      "No error codes, but affected data have not recovered.": "Fehlercodes fehlen, aber betroffene Fahrzeugdaten sind weiterhin nicht verfügbar.",
+      "No notification check performed yet.": "Noch keine Mitteilungsprüfung durchgeführt."
     }
   }
 }

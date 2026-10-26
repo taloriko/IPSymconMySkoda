@@ -136,6 +136,32 @@ $GLOBALS['serviceNotificationFail'] = false;
 invoke($n, 'updateDisabledVehicleServices', $envelope);
 check($n->ReadAttributeBoolean('DisabledServicesNotificationSent'), 'Successful retry sets flag');
 
+// Upgrade with a preexisting outage and a stale legacy sent flag:
+$previousCalls = count($GLOBALS['serviceNotificationCalls']);
+$GLOBALS['serviceNotificationFail'] = false;
+$upgrade = new MySkoda();
+$upgrade->InstanceID = 199;
+$upgrade->Create();
+$upgrade->properties['VIN'] = 'TMBJC7NY0N0000001';
+$upgrade->properties['APIToken'] = 'test-token-only';
+$upgrade->properties['NotificationInstanceID'] = 900;
+$upgrade->properties['NotifyDisabledVehicleServices'] = true;
+$upgrade->WriteAttributeString('RawData', json_encode($envelope, JSON_THROW_ON_ERROR));
+$upgrade->WriteAttributeString('ConfigFingerprint', hash('sha256', $upgrade->properties['VIN'] . '|' . $upgrade->properties['APIToken']));
+$upgrade->WriteAttributeBoolean('DisabledServicesNotificationSent', true);
+$upgrade->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', time());
+$upgrade->ApplyChanges();
+check($upgrade->ReadAttributeInteger('DisabledServicesAlertSchema') === 1, 'Upgrade performs schema migration');
+check(count($GLOBALS['serviceNotificationCalls']) === $previousCalls + 1, 'Preexisting outage is notified once after upgrade');
+check($upgrade->ReadAttributeBoolean('DisabledServicesNotificationSent'), 'New successful notification is latched');
+check(str_contains($upgrade->ReadAttributeString('DisabledServicesAlertStatus'), 'accepted'), 'The automatic delivery decision is visible');
+$upgrade->ApplyChanges();
+check(count($GLOBALS['serviceNotificationCalls']) === $previousCalls + 1, 'Second ApplyChanges must not notify again');
+$upForm = json_decode($upgrade->GetConfigurationForm(), true, 512, JSON_THROW_ON_ERROR);
+$notificationPanel = array_values(array_filter($upForm['elements'], static fn (array $e): bool => ($e['caption'] ?? '') === 'Notifications'))[0];
+$feedback = array_values(array_filter($notificationPanel['items'], static fn (array $e): bool => ($e['name'] ?? '') === 'DisabledServicesAlertFeedback'))[0];
+check(str_contains($feedback['caption'], 'already sent'), 'Configuration shows previously sent notification status');
+
 $translations = json_decode((string) file_get_contents(__DIR__ . '/../MySkoda/locale.json'), true, 512, JSON_THROW_ON_ERROR)['translations']['de'];
 $notice = $translations['Skoda has disabled these vehicle services: %s. The affected information is not being updated; existing values may be outdated. A possible reason is an expired Car Connect remote access service.'] ?? '';
 check(str_contains($notice, 'nicht aktualisiert'), 'German warning states values are not updated');

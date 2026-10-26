@@ -120,6 +120,11 @@
           "caption": "Select a Tile Visualization or WebFront for notifications."
         },
         {
+          "type": "Label",
+          "name": "DisabledServicesAlertFeedback",
+          "caption": "No notification check performed yet."
+        },
+        {
           "type": "Button",
           "caption": "Test notification",
           "onClick": "echo MSKODA_TestNotification($id) ? 'Mitteilung gesendet.' : 'Mitteilung konnte nicht gesendet werden. Ausgewählte Visualisierung und registrierte Mobilgeräte prüfen.';"

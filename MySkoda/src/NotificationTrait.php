@@ -146,6 +146,7 @@ trait MySkodaNotificationTrait
     private function updateDisabledVehicleServices(array $envelope): void
     {
         $codes = $this->disabledVehicleServiceCodes($envelope);
+        $this->WriteAttributeString('DisabledServicesAlertStatus', $this->Translate('No disabled services detected.'));
         $pendingCodes = $this->pendingDisabledVehicleServiceCodes();
 
         if ($codes !== []) {
@@ -157,14 +158,17 @@ trait MySkodaNotificationTrait
             // expiry warnings. Leaving this disabled must not set the
             // sent flag or discard the current outage information.
             if (!$this->ReadPropertyBoolean('NotifyDisabledVehicleServices')) {
+                $this->WriteAttributeString('DisabledServicesAlertStatus', $this->Translate('Info notification disabled in instance settings.'));
                 return;
             }
 
             if ($this->ReadAttributeBoolean('DisabledServicesNotificationSent')) {
+                $this->WriteAttributeString('DisabledServicesAlertStatus', $this->Translate('Info notification already sent for this outage.'));
                 return;
             }
 
             if (!$this->validateNotificationTarget(false)) {
+                $this->WriteAttributeString('DisabledServicesAlertStatus', $this->Translate('No valid visualization selected for Info notifications.'));
                 $this->SendDebug('Disabled service notification', 'No valid visualization configured.', 0);
                 return;
             }
@@ -173,6 +177,7 @@ trait MySkodaNotificationTrait
             // signature/attempt attributes cannot suppress a first send.
             $lastAttempt = $this->ReadAttributeInteger('DisabledServicesNotificationLastAttempt');
             if ($lastAttempt > 0 && time() - $lastAttempt < 3600) {
+                $this->WriteAttributeString('DisabledServicesAlertStatus', $this->Translate('Previous notification attempt failed; retry after one hour.'));
                 return;
             }
 
@@ -183,10 +188,12 @@ trait MySkodaNotificationTrait
                 $this->disabledVehicleServiceNoticeText($codes)
             );
             if (!$sent) {
+                $this->WriteAttributeString('DisabledServicesAlertStatus', $this->Translate('Info notification could not be sent.'));
                 $this->SendDebug('Disabled service notification', 'Sending failed; retry is possible after one hour.', 0);
                 return;
             }
 
+            $this->WriteAttributeString('DisabledServicesAlertStatus', $this->Translate('Info notification accepted by Symcon.'));
             $this->WriteAttributeBoolean('DisabledServicesNotificationSent', true);
             $this->WriteAttributeInteger('DisabledServicesNotificationSentAt', time());
             $this->SendDebug('Disabled service notification', 'Info accepted by the configured Symcon visualization.', 0);
@@ -198,7 +205,7 @@ trait MySkodaNotificationTrait
         }
 
         if (!$this->disabledVehicleServicesRecovered($envelope['vehicle'], $pendingCodes)) {
-            // Missing error messages alone do not prove data recovery.
+            $this->WriteAttributeString('DisabledServicesAlertStatus', $this->Translate('No error codes, but affected data have not recovered.'));
             return;
         }
 
@@ -207,6 +214,15 @@ trait MySkodaNotificationTrait
         $this->WriteAttributeInteger('DisabledServicesNotificationLastAttempt', 0);
         $this->WriteAttributeInteger('DisabledServicesNotificationSentAt', 0);
         $this->SendDebug('Disabled service notification', 'Services recovered; notification flag reset.', 0);
+    }
+
+    private function disabledServicesAlertFeedbackCaption(): string
+    {
+        $status = trim($this->ReadAttributeString('DisabledServicesAlertStatus'));
+        if ($status === '') {
+            $status = $this->Translate('No notification check performed yet.');
+        }
+        return 'ℹ️ ' . $status;
     }
 
     private function pendingDisabledVehicleServiceCodes(): array
