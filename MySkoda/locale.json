@@ -307,7 +307,12 @@
       "Vehicle status data": "Fahrzeugstatus",
       "Odometer data": "Kilometerstand",
       "Parking position data": "Parkposition",
-      "Skoda disabled: %s. These values are not updated. Possible cause: expired Car Connect remote access.": "Škoda deaktiviert: %s. Diese Daten werden nicht aktualisiert. Möglicher Grund: Car Connect-Fernzugriff abgelaufen."
+      "Skoda disabled: %s. These values are not updated. Possible cause: expired Car Connect remote access.": "Škoda deaktiviert: %s. Diese Daten werden nicht aktualisiert. Möglicher Grund: Car Connect-Fernzugriff abgelaufen.",
+      "Charging error reason": "Ladefehler Ursache",
+      "Charging error": "Ladefehler",
+      "Charging system fault": "Ladesystemfehler",
+      "Charging connector lock fault": "Verriegelungsfehler Ladestecker",
+      "No grid voltage": "Keine Netzspannung"
     }
   }
 }
