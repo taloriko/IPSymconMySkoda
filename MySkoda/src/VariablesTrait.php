@@ -300,7 +300,7 @@ trait MySkodaVariablesTrait
             $chargeState = strtoupper(trim($chargeStateValue));
             if (in_array($chargeState, ['CHARGING', 'CONSERVING'], true)) {
                 $this->setIfExists('Charging', true);
-            } elseif (in_array($chargeState, ['READY_FOR_CHARGING', 'CONNECT_CABLE', 'CHARGING_INTERRUPTED', 'ERROR'], true)) {
+            } elseif (in_array($chargeState, ['READY_FOR_CHARGING', 'CONNECT_CABLE', 'CHARGING_INTERRUPTED', 'CHARGING_ERROR', 'ERROR'], true)) {
                 $this->setIfExists('Charging', false);
             }
         }
@@ -592,6 +592,7 @@ trait MySkodaVariablesTrait
             ['CONSERVING', 'Charge conservation', 'battery-full', $green],
             ['CONNECT_CABLE', 'Connect charging cable', 'plug', $orange],
             ['CHARGING_INTERRUPTED', 'Charging interrupted', 'triangle-exclamation', $orange],
+            ['CHARGING_ERROR', 'Charging error', 'triangle-exclamation', $red],
             ['ERROR', 'Error', 'circle-exclamation', $red],
             ['UNKNOWN', 'Unknown', 'circle-question', $gray]
         ];
