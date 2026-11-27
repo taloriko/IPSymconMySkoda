@@ -46,6 +46,12 @@ trait MySkodaPublicApiVariablesTrait
             ]))],
             'APIChargingSettingsMaxChargeCurrentAcAmpere' => ['path' => 'charging.settings.maxChargeCurrentAcAmpere', 'upgradeDynamic' => true, 'definition' => $this->variable('APIChargingSettingsMaxChargeCurrentAcAmpere', 'Maximum AC charging current in ampere', VARIABLETYPE_INTEGER, 255, $this->valuePresentation('bolt', ' A', 0))],
             'APIChargingSettingsAvailableChargeModes' => ['path' => 'charging.settings.availableChargeModes', 'upgradeDynamic' => true, 'definition' => $this->variable('APIChargingSettingsAvailableChargeModes', 'Available charging modes', VARIABLETYPE_STRING, 258, $this->valuePresentation('bolt'))],
+            'ChargingErrorReason' => ['path' => 'charging.status.chargingErrorReason', 'definition' => $this->variable('ChargingErrorReason', 'Charging error reason', VARIABLETYPE_STRING, 335, $this->publicApiEnumPresentation('triangle-exclamation', [
+                ['ERROR_CHARGING_SYSTEM', 'Charging system fault', 'triangle-exclamation', 0xEF4444],
+                ['ERROR_LOCK', 'Charging connector lock fault', 'lock', 0xEF4444],
+                ['NO_GRID_VOLTAGE', 'No grid voltage', 'plug', 0xEF4444],
+                ['UNKNOWN', 'Unknown', 'circle-question', 0x6B7280]
+            ]))],
             'PlugConnectionState' => ['path' => 'charging.status.plugConnectionState', 'definition' => $this->variable('PlugConnectionState', 'Plug connection state', VARIABLETYPE_STRING, 312, $this->publicApiEnumPresentation('plug', [
                 ['CONNECTED', 'Connected', 'plug-circle-check', 0x22C55E],
                 ['DISCONNECTED', 'Disconnected', 'plug', 0x6B7280],
@@ -150,6 +156,14 @@ trait MySkodaPublicApiVariablesTrait
             $availableModes = implode(', ', array_map(static fn (mixed $mode): string => (string) $mode, $availableModes));
         }
         $this->setPublicApiString('APIChargingSettingsAvailableChargeModes', $availableModes, true);
+        $chargeErrorReason = $this->path($vehicle, 'charging.status.chargingErrorReason', null);
+        $chargingState = strtoupper((string) $this->path($vehicle, 'charging.status.state', ''));
+        if ($chargingState === 'CHARGING_ERROR' && is_string($chargeErrorReason) && trim($chargeErrorReason) !== '') {
+            $this->setPublicApiString('ChargingErrorReason', $chargeErrorReason, true);
+        } elseif ($chargingState !== 'CHARGING_ERROR' && @$this->GetIDForIdent('ChargingErrorReason') !== false) {
+            // No longer in an error state: clear the previously reported cause.
+            $this->safeSetVehicleValue('ChargingErrorReason', '');
+        }
         $this->setPublicApiString('PlugConnectionState', $this->path($vehicle, 'charging.status.plugConnectionState', null), true);
         $this->setPublicApiString('PlugLockState', $this->path($vehicle, 'charging.status.plugLockState', null), true);
         $this->setPublicApiInteger('RemainingChargingTime', $this->path($vehicle, 'charging.status.remainingTimeToFullyChargedInMinutes', null));
