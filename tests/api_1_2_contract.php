@@ -32,6 +32,7 @@ $vehicle = [
 ];
 invoke($m, 'ensureVehicleVariables', $vehicle);
 invoke($m, 'updateCoreValues', $vehicle);
+invoke($m, 'updateDetailValues', $vehicle, ['vehicle' => $vehicle]);
 $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_THROW_ON_ERROR));
 invoke($m, 'updatePublicApiValuesFromRawData');
 check($m->GetValue('Charging') === false, 'Charging ERROR state must stop active charging indication.');
