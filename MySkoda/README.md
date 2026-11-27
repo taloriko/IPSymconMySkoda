@@ -138,6 +138,7 @@ API-Pfade beziehen sich, sofern nicht anders angegeben, auf `vehicle` der Fahrze
 | 320 | `RemainingChargingTime` | Restladezeit | Integer | API-Feld | `charging.status.remainingTimeToFullyChargedInMinutes`; min |
 | 325 | `APIChargingStatusChargingRateInKilometersPerHour` | Ladegeschwindigkeit | Float | API-Feld | `charging.status.chargingRateInKilometersPerHour`; km/h; Speicherung als Float, Anzeige mit einer Nachkommastelle |
 | 330 | `ChargingState` | Ladestatus | String | API-Feld | `charging.status.state` |
+| 335 | `ChargingErrorReason` | Ladefehler Ursache | String | API-Feld | `charging.status.chargingErrorReason`; nur bei `CHARGING_ERROR` vorhanden, nach Rückkehr zu normalem Status geleert |
 | 340 | `ChargeType` | Ladeart | String | API-Feld | `charging.status.chargeType` |
 | 360 | `FuelLevelPercent` | Tankfüllstand | Integer | API-Feld | `fuelStatus.primaryEngineRange.currentFuelLevelInPercent`; % |
 | 370 | `PrimaryEngineSOC` | Primärer Antrieb SoC | Integer | API-Feld | `fuelStatus.primaryEngineRange.currentSoCInPercent`; %; nicht pauschal mit einem Elektro-Batteriestand gleichsetzen |
@@ -303,7 +304,7 @@ if ($climateId === false || !IPS_VariableExists($climateId)) {
 RequestAction($climateId, true);
 ```
 
-Battery Care Mode, maximaler AC-Ladestrom, automatische Steckerentriegelung, Scheibenheizung und Standheizungsdauer sind im Modul lesbare Werte. Dafür stellt das Modul keine Schreibmethoden bereit. Klima-Timer, intelligentes Klimatisieren und Sitzheizungssteuerung gehören ebenfalls nicht zur implementierten Bedienung. Ladeprofile werden getrennt über die PHP-Schnittstelle verarbeitet.
+Seit MyŠkoda Public API 1.2.0 wird außerdem `CHARGING_ERROR` mit dem optionalen Fehlergrund `chargingErrorReason` ausgewertet. Vorhandene Ladezustands-Idents werden weiterverwendet.\n\nBattery Care Mode, maximaler AC-Ladestrom, automatische Steckerentriegelung, Scheibenheizung und Standheizungsdauer sind im Modul lesbare Werte. Dafür stellt das Modul keine Schreibmethoden bereit. Klima-Timer, intelligentes Klimatisieren und Sitzheizungssteuerung gehören ebenfalls nicht zur implementierten Bedienung. Ladeprofile werden getrennt über die PHP-Schnittstelle verarbeitet.
 
 ## 7. Öffentliche PHP-Funktionen
 
@@ -340,9 +341,9 @@ public function StartAuxiliaryHeating(
 ): bool
 ```
 
-Für den üblichen Start genügt `MSKODA_StartAuxiliaryHeating(12345);`. Der Request enthält die konfigurierte S-PIN. Nur wenn `vehicle.auxiliaryHeating.targetTemperature` sowohl `value` als auch `unit` liefert, wird zusätzlich eine Zieltemperatur übertragen. Der Parameter `TargetTemperature` wird dabei auf 16–30 begrenzt; die Einheit stammt aus den Standheizungsdaten des Fahrzeugs.
+Für den üblichen Start genügt `MSKODA_StartAuxiliaryHeating(12345);`. Der Request enthält die konfigurierte S-PIN. Die Zieltemperatur wird ausschließlich übertragen, wenn die Operation `startAuxiliaryHeating` sie über `vehicleDependentParameters` ausdrücklich unterstützt **und** `vehicle.auxiliaryHeating.targetTemperature` sowohl `value` als auch `unit` liefert. Der Parameter `TargetTemperature` wird dabei auf 16–30 begrenzt; die Einheit stammt aus den Standheizungsdaten des Fahrzeugs.
 
-**`DurationMinutes` und `Mode` werden vom aktuellen Modul nicht ausgewertet und nicht gesendet.** Ihre Übergabe setzt daher weder Laufzeit noch Betriebsart. `AuxiliaryHeatingDuration` zeigt lediglich eine vom Fahrzeug gelieferte Dauer an. Die separate aktive Lüftung verwendet `StartVentilation` und `StopVentilation`, nicht den wirkungslosen Modusparameter des Standheizungsstarts.
+**`DurationMinutes` wird weiterhin nicht gesendet.** Der optionale Parameter `Mode` (`HEATING` oder `VENTILATION`) wird nun nur bei ausdrücklich gemeldeter Unterstützung für `startMode` übertragen. Fehlt die Freigabeliste, wird ausschließlich die S-PIN gesendet und die übrigen Parameter werden bewusst ausgelassen, um HTTP 422 zu vermeiden. `AuxiliaryHeatingDuration` zeigt lediglich eine vom Fahrzeug gelieferte Dauer an. Die separate aktive Lüftung verwendet `StartVentilation` und `StopVentilation`, nicht den wirkungslosen Modusparameter des Standheizungsstarts.
 
 ## 8. API-Anbindung und Zwischenspeicher
 
