@@ -160,7 +160,7 @@ trait MySkodaPublicApiVariablesTrait
         $chargingState = strtoupper((string) $this->path($vehicle, 'charging.status.state', ''));
         if ($chargingState === 'CHARGING_ERROR' && is_string($chargeErrorReason) && trim($chargeErrorReason) !== '') {
             $this->setPublicApiString('ChargingErrorReason', $chargeErrorReason, true);
-        } elseif ($chargingState !== 'CHARGING_ERROR' && @$this->GetIDForIdent('ChargingErrorReason') !== false) {
+        } elseif ($chargingState !== '' && $chargingState !== 'CHARGING_ERROR' && @$this->GetIDForIdent('ChargingErrorReason') !== false) {
             // No longer in an error state: clear the previously reported cause.
             $this->safeSetVehicleValue('ChargingErrorReason', '');
         }
