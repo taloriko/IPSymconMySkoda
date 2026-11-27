@@ -240,7 +240,7 @@ trait MySkodaCommandTrait
             );
         }
 
-        $body = $this->auxiliaryHeatingStartBody($spin, $TargetTemperature);
+        $body = $this->auxiliaryHeatingStartBody($spin, $TargetTemperature, $Mode);
 
         return $this->executeDirectCommand(
             'StartAuxiliaryHeating',
@@ -255,21 +255,51 @@ trait MySkodaCommandTrait
         );
     }
 
-    private function auxiliaryHeatingStartBody(string $spin, float $targetTemperature): array
+    private function auxiliaryHeatingStartBody(string $spin, float $targetTemperature, string $mode = 'HEATING'): array
     {
-        // The Public API requires only the S-PIN. Optional fields are sent only
-        // when the vehicle itself reports the corresponding setting.
+        // API 1.2: optional body fields must be explicitly advertised by the
+        // matching vehicle operation. Older vehicles without this metadata
+        // receive only the mandatory S-PIN to avoid HTTP 422 errors.
         $body = ['spin' => $spin];
-
         $raw = json_decode($this->ReadAttributeString('RawData'), true);
-        $target = is_array($raw)
-            ? $this->path($raw, 'vehicle.auxiliaryHeating.targetTemperature', null)
-            : null;
-        if (is_array($target) && isset($target['value'], $target['unit'])) {
-            $body['targetTemperature'] = [
-                'value' => max(16.0, min(30.0, $targetTemperature)),
-                'unit' => strtoupper((string) $target['unit'])
-            ];
+        $vehicle = is_array($raw['vehicle'] ?? null) ? $raw['vehicle'] : [];
+        $operations = $vehicle['operations'] ?? $vehicle['remoteOperations'] ?? [];
+        $supportedParameters = [];
+        if (is_array($operations)) {
+            foreach ($operations as $operation) {
+                if (!is_array($operation)
+                    || strcasecmp((string) ($operation['name'] ?? $operation['operationId'] ?? ''), 'startAuxiliaryHeating') !== 0) {
+                    continue;
+                }
+
+                $parameters = $operation['vehicleDependentParameters'] ?? [];
+                if (is_array($parameters)) {
+                    foreach ($parameters as $parameter) {
+                        if (is_string($parameter) && $parameter !== '') {
+                            $supportedParameters[$parameter] = true;
+                        }
+                    }
+                }
+                break;
+            }
+        }
+
+        if (isset($supportedParameters['targetTemperature'])) {
+            $target = $this->path($vehicle, 'auxiliaryHeating.targetTemperature', null);
+            if (is_array($target)
+                && is_numeric($target['value'] ?? null)
+                && is_string($target['unit'] ?? null)
+                && $target['unit'] !== '') {
+                $body['targetTemperature'] = [
+                    'value' => max(16.0, min(30.0, $targetTemperature)),
+                    'unit' => strtoupper($target['unit'])
+                ];
+            }
+        }
+
+        $mode = strtoupper(trim($mode));
+        if (isset($supportedParameters['startMode']) && in_array($mode, ['HEATING', 'VENTILATION'], true)) {
+            $body['startMode'] = $mode;
         }
 
         return $body;

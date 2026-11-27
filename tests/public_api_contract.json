@@ -335,6 +335,10 @@
     "AuxiliaryHeatingDuration": [
       1380,
       "Integer"
+    ],
+    "ChargingErrorReason": [
+      335,
+      "String"
     ]
   },
   "public_functions": [
