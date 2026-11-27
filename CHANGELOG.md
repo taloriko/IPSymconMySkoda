@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.10.0 – MyŠkoda Public API 1.2.0
+
+- Neuer Ladestatus `CHARGING_ERROR` wird als Ladefehler angezeigt und als nicht aktiver Ladevorgang behandelt.
+- Neue Variable `ChargingErrorReason` für die API-Ladefehlerursache (z. B. `NO_GRID_VOLTAGE`, `ERROR_LOCK`, `ERROR_CHARGING_SYSTEM`), einschließlich Rücksetzen bei behobenem Ladefehler.
+- Standheizungsstart berücksichtigt `vehicle.operations[].vehicleDependentParameters`: `targetTemperature` und `startMode` werden nur bei ausdrücklicher Fahrzeugfreigabe übertragen, sonst ausschließlich die S-PIN.
+- Vorhandene Idents bleiben unverändert; ältere API-Antworten ohne Freigabeliste bleiben kompatibel.
+
 ## Initiale Veröffentlichung
 
 - Push-Titel und -Text für deaktivierte Fahrzeugdienste auf die Symcon-Limits von 32/256 Zeichen verkürzt; zusätzliche UTF-8-sichere Begrenzung für alle Benachrichtigungen. Ausführliche Warnung bleibt in der Instanz.
