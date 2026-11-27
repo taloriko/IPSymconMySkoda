@@ -94,6 +94,7 @@ $m->WriteAttributeString('RawData', json_encode(['vehicle' => $vehicle], JSON_TH
 invoke($m, 'updatePublicApiValuesFromRawData');
 check($m->GetValue('ChargingErrorReason') === '', 'Confirmed non-error state clears outdated error reason.');
 invoke($m, 'updateCoreValues', $vehicle);
+invoke($m, 'updateDetailValues', $vehicle, ['vehicle' => $vehicle]);
 check($m->GetValue('ChargingState') === 'READY_FOR_CHARGING', 'Previously created state ident survives API 1.2.');
 
 echo 'API 1.2.0 contract tests passed (' . $GLOBALS['checks'] . " total checks).\n";
